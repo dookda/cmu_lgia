@@ -1,0 +1,40 @@
+POST http://localhost/api/layer_create.php HTTP/1.1
+content-type: application/json
+
+{
+    "division": "division",
+    "layername": "dd",
+    "layertype": "layertype",
+    "layerdesc": "layerdesc",
+    "data": [
+    {
+        "column_name": "aa",
+        "column_type": "ตัวอักษร",
+        "column_desc": "aa"
+    },
+    {
+        "column_name": "bb",
+        "column_type": "ตัวอักษร",
+        "column_desc": "bb"
+    }
+]
+}
+
+### get test table
+GET http://localhost/api/list_form.php HTTP/1.1
+
+### delete test table
+DELETE http://localhost/api/layer_delete.php HTTP/1.1
+content-type: application/json
+
+{
+    "formid": "fid_1698768482"
+}
+
+### get one
+POST http://localhost/api/layer_read_one.php HTTP/1.1
+content-type: application/json
+
+{
+    "formid": "fid_1698771850"
+}

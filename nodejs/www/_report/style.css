@@ -1,0 +1,16 @@
+body {
+    font-family: 'Noto Sans Thai', sans-serif;
+}
+
+#map {
+    width: 100%;
+    height: 75vh;
+}
+
+.chart {
+    height: 200px;
+}
+
+table.dataTable thead th {
+    white-space: nowrap
+}
