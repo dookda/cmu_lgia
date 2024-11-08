@@ -250,27 +250,40 @@ app.post('/api/create_table', async (req, res) => {
     const formid = 'fid_' + Date.now();
 
     try {
-        const sqlTable = `INSERT INTO layer_name (formid, division, layername, layertype, ts) VALUES ('${formid}', '${division}', '${layername}', '${layertype}', now())`;
-        await queryAsync(sqlTable);
-        console.log('insert layer_name');
-
-        const createTable = `CREATE TABLE ${formid} (id SERIAL NOT NULL PRIMARY KEY, refid text, geom GEOMETRY(${layertype}, 4326), ts timestamp, style text)`;
+        const sqlTable = `INSERT INTO layer_name (formid, division, layername, layertype, ts) 
+                          VALUES ($1, $2, $3, $4, now())`;
+        await queryAsync(sqlTable, [formid, division, layername, layertype]);
+        const createTable = `CREATE TABLE ${formid} (
+                                id SERIAL PRIMARY KEY, 
+                                refid TEXT, 
+                                geom GEOMETRY(${layertype}, 4326), 
+                                ts TIMESTAMP, 
+                                style TEXT
+                             )`;
         await queryAsync(createTable);
-        console.log('create table');
+        const insertColumns = [];
+        const alterTable = [];
 
-        for (const [key, column] of columes.entries()) {
-            const sqlColumn = `INSERT INTO layer_column (formid, col_id, col_name, col_type, col_desc) VALUES ('${formid}', '${formid}_${key}', '${column.column_name}', '${column.column_type}', '${column.column_desc}')`;
-            await queryAsync(sqlColumn);
-            console.log('insert layer_column');
+        columes.forEach((column, index) => {
+            const colId = `${formid}_${index}`;
+            const colType = column.column_type === 'file' ? 'TEXT' : column.column_type;
+            insertColumns.push(queryAsync(
+                `INSERT INTO layer_column (formid, col_id, col_name, col_type, col_desc) 
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [formid, colId, column.column_name, column.column_type, column.column_desc]
+            ));
+            alterTable.push(`ADD COLUMN ${colId} ${colType}`);
+        });
 
-            const alterTable = `ALTER TABLE ${formid} ADD COLUMN ${formid}_${key} ${column.column_type == 'file' ? 'text' : column.column_type}`;
-            await queryAsync(alterTable);
-            console.log('alter table');
+        await Promise.all(insertColumns);
+        if (alterTable.length) {
+            const alterTableQuery = `ALTER TABLE ${formid} ${alterTable.join(', ')}`;
+            await queryAsync(alterTableQuery);
         }
 
         res.status(200).json({ formid });
     } catch (error) {
-        console.error(error);
+        console.error('Error creating table:', error);
         res.status(500).send('An error occurred while creating the table.');
     }
 });
@@ -421,23 +434,33 @@ app.post('/api/summarize_layer', async (req, res) => {
 app.post('/api/save_layer', async (req, res) => {
     const { formid, geojson, dataarr } = req.body;
     const dataArr = JSON.parse(dataarr);
+    const refid = 'ref' + Date.now();
 
     try {
-        const refid = 'ref' + Date.now();
-        const sql = `INSERT INTO ${formid} (refid, geom, ts) VALUES ('${refid}', ST_GeomFromGeoJSON('${geojson}'), now())`;
-        const { rows } = await pg.query(sql);
-        for (const e of dataArr) {
+        const insertSql = `INSERT INTO ${formid} (refid, geom, ts) VALUES ($1, ST_GeomFromGeoJSON($2), now()) RETURNING *`;
+        const { rows } = await pg.query(insertSql, [refid, geojson]);
+
+        const updateFields = [];
+        const updateValues = [];
+        dataArr.forEach((e, idx) => {
             if (e.value.length > 0) {
-                const updateSql = `UPDATE ${formid} SET ${e.name} = '${e.value == '' ? 0 : e.value}' WHERE refid = '${refid}'`;
-                await pg.query(updateSql);
+                updateFields.push(`${e.name} = $${idx + 3}`);
+                updateValues.push(e.value === '' ? 0 : e.value);
             }
+        });
+
+        if (updateFields.length > 0) {
+            const updateSql = `UPDATE ${formid} SET ${updateFields.join(', ')} WHERE refid = $1`;
+            await pg.query(updateSql, [refid, ...updateValues]);
         }
+
         res.status(200).json(rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while getting the selected layer.');
+        console.error('Error saving layer data:', error);
+        res.status(500).send('An error occurred while saving the layer data.');
     }
-})
+});
+
 
 app.post('/api/update_layer', async (req, res) => {
     const { formid, id, geojson, dataarr } = req.body;
