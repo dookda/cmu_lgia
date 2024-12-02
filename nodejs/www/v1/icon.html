@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom SVG Marker Shape with Background Color</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Custom SVG Marker Shape Generator</h1>
+    <label for="backgroundColor">Choose Marker Background Color:</label>
+    <input type="color" id="backgroundColor" value="#e75759">
+
+    <br><br>
+
+    <label for="iconColor">Choose Icon Color:</label>
+    <input type="color" id="iconColor" value="#ffffff">
+
+    <br><br>
+
+    <label for="iconSelect">Choose Bootstrap Icon:</label>
+    <select id="iconSelect">
+    </select>
+
+    <br><br>
+
+    <button id="generateMarker">Generate Marker</button>
+    <button id="downloadMarker">Download Marker</button>
+
+    <br><br>
+
+    <canvas id="markerCanvas" width="100" height="100" style="border:1px solid #000;"></canvas>
+
+    <script>
+        const canvas = document.getElementById("markerCanvas");
+        const ctx = canvas.getContext("2d");
+        const backgroundColorPicker = document.getElementById("backgroundColor");
+        const iconColorPicker = document.getElementById("iconColor");
+        const iconSelect = document.getElementById("iconSelect");
+        const generateBtn = document.getElementById("generateMarker");
+        const downloadBtn = document.getElementById("downloadMarker");
+
+        const bootstrapIcons = [
+            "alarm",
+            "emoji-smile",
+            "star",
+            "bell",
+            "camera",
+            "chat",
+            "cloud",
+            "gear",
+            "heart",
+            "house",
+            "key",
+            "lock",
+            "music-note",
+            "pencil",
+            "person",
+            "search",
+            "trash",
+            "umbrella",
+        ];
+
+        // Populate the dropdown with Bootstrap Icons
+        function populateIconList() {
+            bootstrapIcons.forEach((icon) => {
+                const option = document.createElement("option");
+                option.value = icon;
+                option.textContent = icon;
+                iconSelect.appendChild(option);
+            });
+        }
+
+        // SVG template for the marker shape
+        const markerSvgTemplate = (backgroundColor) => `
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" viewBox="0 0 32 32">
+        <g>
+          <path fill="${backgroundColor}" d="M28.17 8.21A12.91 12.91 0 0 0 16 0 12.91 12.91 0 0 0 3.83 8.21a12.9 12.9 0 0 0 3.05 14.36L16 31.39l9.13-8.82a12.91 12.91 0 0 0 3.04-14.36z" opacity="1"></path>
+        </g>
+      </svg>
+    `;
+
+        // Function to draw the marker shape with the selected background color
+        async function drawMarkerShape(backgroundColor) {
+            const markerSvg = markerSvgTemplate(backgroundColor);
+            const svgBlob = new Blob([markerSvg], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+                    ctx.drawImage(img, 0, 0, 100, 100); // Draw SVG marker body
+                    URL.revokeObjectURL(url);
+                    resolve();
+                };
+                img.src = url;
+            });
+        }
+
+        // Function to draw the selected icon on top of the marker shape
+        async function drawIcon(iconName, iconColor) {
+            const svgUrl = `https://raw.githubusercontent.com/twbs/icons/main/icons/${iconName}.svg`;
+            const response = await fetch(svgUrl);
+            let svgText = await response.text();
+
+            // Modify the `fill` attribute to change the icon color
+            svgText = svgText.replace(/fill=".*?"/g, `fill="${iconColor}"`);
+
+            const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    ctx.drawImage(img, 25, 15, 50, 50); // Center the icon
+                    URL.revokeObjectURL(url);
+                    resolve();
+                };
+                img.src = url;
+            });
+        }
+
+        generateBtn.addEventListener("click", async () => {
+            const backgroundColor = backgroundColorPicker.value;
+            const iconColor = iconColorPicker.value;
+            const iconName = iconSelect.value;
+
+            await drawMarkerShape(backgroundColor); // Draw the custom marker shape
+            await drawIcon(iconName, iconColor); // Overlay the icon
+        });
+
+        downloadBtn.addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.download = "marker.png";
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        window.onload = populateIconList;
+    </script>
+</body>
+
+</html>

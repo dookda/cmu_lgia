@@ -189,7 +189,7 @@ let onEachFeatureHotspot = (feature, layer) => {
         );
     }
 }
-var fc = L.featureGroup()
+var fc = L.featureGroup();
 let loadHotspot = async () => {
     let hp = await hpData;
     const fs = hp.data.features;
@@ -695,7 +695,13 @@ const pointToLayer = (feature, latlng) => {
             dashArray: feature.properties.style.dashArray
         });
     } else {
-        return L.marker(latlng);
+        let icon = L.icon({
+            iconUrl: './../img/pin_blue.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+        return L.marker(latlng, { icon });
     }
 }
 
