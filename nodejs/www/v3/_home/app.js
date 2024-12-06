@@ -3,11 +3,23 @@ document.getElementById('listMenu').innerHTML = menuWithLayer;
 document.getElementById('footer').innerHTML = footer;
 
 // Initialize MapLibre map
+// var map = new maplibregl.Map({
+//     container: 'map',
+//     style: 'https://demotiles.maplibre.org/style.json',
+//     center: [99.01730749096882, 18.5761825900007],
+//     zoom: 15
+// });
+
+
+const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
 var map = new maplibregl.Map({
-    container: 'map', // ID of the map container
-    style: 'https://demotiles.maplibre.org/style.json', // Map style URL
-    center: [99.01730749096882, 18.5761825900007], // [Longitude, Latitude]
-    zoom: 15 // Initial zoom level
+    style: `https://api.maptiler.com/tiles/v3-openmaptiles/{z}/{x}/{y}.json?key=${MAPTILER_KEY}`,
+    center: [99.01730749096882, 18.5761825900007],
+    zoom: 15.5,
+    pitch: 45,
+    bearing: -17.6,
+    container: 'map',
+    antialias: true
 });
 
 // Add navigation controls
@@ -66,6 +78,25 @@ map.on('load', function () {
         layout: { visibility: 'none' }, // Initially hidden
     });
 
+    // Add MapTiler layer
+    map.addSource('maptiler', {
+        type: 'vector',
+        tiles: [
+            `https://api.maptiler.com/tiles/v3-openmaptiles/{z}/{x}/{y}.json?key=${MAPTILER_KEY}`
+        ]
+    });
+
+    map.addLayer({
+        id: 'maptiler-layer',
+        type: 'fill',
+        source: 'maptiler',
+        'source-layer': 'openmaptiles',  // You may need to change this layer name based on the actual MapTiler setup
+        paint: {
+            'fill-color': '#888888',
+            'fill-opacity': 0.5
+        }
+    });
+
     // Handle base map selector changes
     const baseMapSelector = document.getElementById('baseMapSelector');
     baseMapSelector.addEventListener('change', (event) => {
@@ -75,11 +106,13 @@ map.on('load', function () {
         map.setLayoutProperty('osm', 'visibility', 'none');
         map.setLayoutProperty('grod', 'visibility', 'none');
         map.setLayoutProperty('ghyb', 'visibility', 'none');
+        map.setLayoutProperty('maptiler', 'visibility', 'none'); // Hide MapTiler layer
 
         // Show the selected base map layer
         map.setLayoutProperty(selectedBaseMap, 'visibility', 'visible');
     });
 });
+
 
 
 // Function to add radar and weather layers
