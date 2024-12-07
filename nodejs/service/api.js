@@ -315,9 +315,8 @@ app.post('/api/load_column_description', async (req, res) => {
 })
 
 app.post('/api/load_layer', async (req, res) => {
-    const { formid } = req.body;
-
     try {
+        const { formid } = req.body;
         const sql = `SELECT *, ST_AsGeoJSON(geom) as geojson FROM ${formid} ORDER BY ts DESC`;
         const { rows } = await pg.query(sql);
         res.status(200).json(rows);
@@ -328,9 +327,8 @@ app.post('/api/load_layer', async (req, res) => {
 })
 
 app.post('/api/load_layer_by_id', async (req, res) => {
-    const { formid, id } = req.body;
-
     try {
+        const { formid, id } = req.body;
         const sql = `SELECT *, ST_AsGeoJSON(geom) as geojson FROM ${formid} WHERE id = ${id}`;
         const { rows } = await pg.query(sql);
         res.status(200).json(rows);

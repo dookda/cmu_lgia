@@ -5,16 +5,14 @@ var map = new maplibregl.Map({
     center: [99.01730749096882, 18.5761825900007],
     zoom: 15.5,
     pitch: 45,
-    bearing: -17.6,
+    // bearing: -17.6,
     container: 'map',
     antialias: true
 });
 
-// Add navigation controls
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
 map.on('load', function () {
-    // Add OpenStreetMap (OSM) layer
     map.addSource('osm', {
         type: 'raster',
         tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
@@ -25,10 +23,9 @@ map.on('load', function () {
         id: 'osm',
         type: 'raster',
         source: 'osm',
-        layout: { visibility: 'none' }, // Initially hidden
+        layout: { visibility: 'none' },
     });
 
-    // Add Google Roads (GROD) layer
     map.addSource('grod', {
         type: 'raster',
         tiles: [
@@ -44,10 +41,9 @@ map.on('load', function () {
         id: 'grod',
         type: 'raster',
         source: 'grod',
-        layout: { visibility: 'none' }, // Initially hidden
+        layout: { visibility: 'none' },
     });
 
-    // Add Google Hybrid (GHYB) layer
     map.addSource('ghyb', {
         type: 'raster',
         tiles: [
@@ -63,10 +59,9 @@ map.on('load', function () {
         id: 'ghyb',
         type: 'raster',
         source: 'ghyb',
-        layout: { visibility: 'none' }, // Initially hidden
+        layout: { visibility: 'none' },
     });
 
-    // Add Google Satellite (GSAT) layer
     map.addSource('gsat', {
         type: 'raster',
         tiles: [
@@ -82,58 +77,32 @@ map.on('load', function () {
         id: 'gsat',
         type: 'raster',
         source: 'gsat',
-        layout: { visibility: 'none' }, // Initially hidden
+        layout: { visibility: 'none' },
     });
 
-    // Add MapTiler Vector Tile Layer
     map.addSource('maptiler', {
         type: 'vector',
         url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
     });
 
-    // Replace 'roads' with the correct source-layer name from your MapTiler vector tiles
     map.addLayer({
         id: 'maptiler',
-        type: 'symbol',  // You can use 'fill', 'line', 'symbol' depending on the data
+        type: 'symbol',  // 'fill', 'line', 'symbol' 
         source: 'maptiler',
         'source-layer': 'landuse',
-        layout: { visibility: 'none' }, // Initially hidden
+        layout: { visibility: 'none' },
     });
 
-    // random 500 marker
-    for (var i = 0; i < 2000; i++) {
-        var marker = new maplibregl.Marker()
-            .setLngLat([
-                99.01730749096882 + (Math.random() - 0.5) * 0.1,
-                18.5761825900007 + (Math.random() - 0.5) * 0.1
-            ])
-        // .addTo(map);
-    }
-
-    // Add a marker at the center of the map
-    var marker = new maplibregl.Marker()
-        .setLngLat([99.01730749096882, 18.5761825900007])
-        .addTo(map);
-
-    var popup = new maplibregl.Popup({ offset: 25 })
-        .setText('This is a marker at [99.01730749096882, 18.5761825900007]')
-        .addTo(map);
-
-    marker.setPopup(popup);
-
-    // Handle base map selector changes
     const baseMapSelector = document.getElementById('baseMapSelector');
     baseMapSelector.addEventListener('change', (event) => {
         const selectedBaseMap = event.target.value;
 
-        // Hide all base map layers
         map.setLayoutProperty('osm', 'visibility', 'none');
         map.setLayoutProperty('grod', 'visibility', 'none');
         map.setLayoutProperty('gsat', 'visibility', 'none');
         map.setLayoutProperty('ghyb', 'visibility', 'none');
         map.setLayoutProperty('maptiler', 'visibility', 'none');
 
-        // Show the selected base map layer
         map.setLayoutProperty(selectedBaseMap, 'visibility', 'visible');
     });
 });
@@ -141,43 +110,32 @@ map.on('load', function () {
 let listLayer = () => {
     axios.post('/api/list_layer')
         .then(response => {
-            console.log(response.data);  // Log the response data to see its structure
-
-            // Assuming the response contains an array of layers
             const layers = response.data;
+            // console.log(layers);
 
-            // Get the parent element for the checkboxes
             const layerList = document.getElementById('layerList');
-
-            // Clear any existing list items
             layerList.innerHTML = '';
-
-            // Loop through the layers and create checkboxes
             layers.forEach(layer => {
-                // Create a list item and a checkbox
                 const listItem = document.createElement('li');
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = layer.formid;
-                checkbox.name = layer.layertype;
+                // checkbox.datatype = layer.layertype;
+                checkbox.name = layer.layername;
                 checkbox.checked = false;
 
-                // Create a label for the checkbox
                 const label = document.createElement('label');
-                label.setAttribute('for', layer.formid);  // Associate label with checkbox
+                label.setAttribute('for', layer.formid);
                 label.textContent = layer.layername;
 
-                // Append the checkbox and label to the list item
                 listItem.appendChild(checkbox);
                 listItem.appendChild(label);
 
-                // Append the list item to the parent list
                 layerList.appendChild(listItem);
 
-                // Add Bootstrap classes for styling and layout
-                listItem.classList.add('list-group-item', 'd-flex', 'align-items-center');  // Make the list item a flex container
-                checkbox.classList.add('form-check-input', 'me-2', 'checkbox');  // Add margin-right for spacing
-                label.classList.add('form-check-label', 'stretched-link');  // Make label clickable and aligned
+                listItem.classList.add('list-group-item', 'd-flex', 'align-items-center');
+                checkbox.classList.add('form-check-input', 'me-2', 'checkbox');
+                label.classList.add('form-check-label', 'stretched-link');
 
             });
         })
@@ -186,26 +144,216 @@ let listLayer = () => {
         });
 };
 
-let checkboxChanged = () => {
-    removeLayer();
-    const checkboxes = document.querySelectorAll('.checkbox');
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            drawLayer(checkbox.value, checkbox.name);
+const addFeatures = async (checkboxId, checkboxName) => {
+    let formid = checkboxId;
+    let resp = await axios.post('/api/load_layer', { formid });
+
+    const featureArray = [];
+    resp.data.forEach((data) => {
+        // console.log(data);
+        const geojson = JSON.parse(data.geojson);
+        const geometryType = geojson.type;
+
+        switch (geometryType) {
+            case 'Point':
+                const coordinates = geojson.coordinates;
+                const marker = new maplibregl.Marker()
+                    .setLngLat([coordinates[0], coordinates[1]])
+                    .setPopup(new maplibregl.Popup().setHTML(`<strong>${data.id}</strong><br>${data.id}`))  // Add a popup
+                    .addTo(map);
+                featureArray.push(marker);
+                break;
+
+            case 'LineString':
+                map.addSource(data.refid, {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: geojson
+                    }
+                });
+                map.addLayer({
+                    id: data.refid,
+                    type: 'line',
+                    source: data.refid,
+                    paint: {
+                        'line-color': '#ff0000',
+                        'line-width': 3
+                    }
+                });
+                featureArray.push(data.refid);
+                break;
+
+            case 'Polygon':
+                map.addSource(data.refid, {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: geojson
+                    }
+                });
+                map.addLayer({
+                    id: data.refid,
+                    type: 'fill',
+                    source: data.refid,
+                    paint: {
+                        'fill-color': '#00ff00',
+                        'fill-opacity': 0.5
+                    }
+                });
+                featureArray.push(data.refid);
+                break;
+
+            default:
+                console.warn(`Unsupported geometry type: ${geometryType}`);
         }
     });
+
+    featuresMap[checkboxId] = featureArray;
+    addToLayerSelect(checkboxId, checkboxName);
+}
+
+const addToLayerSelect = async (checkboxId, checkboxName) => {
+    const layerSelect = document.getElementById('layerSelect');
+    const option = document.createElement('option');
+    option.value = checkboxId;
+    option.textContent = checkboxName;
+
+    // Check if the option already exists before adding it
+    if (!Array.from(layerSelect.options).some(opt => opt.value === checkboxId)) {
+        layerSelect.appendChild(option);
+    }
+}
+
+let featuresMap = {};
+let optionsMap = {};
+let table;
+document.getElementById('layerList').addEventListener('change', (event) => {
+    const checkbox = event.target;
+
+    if (checkbox.checked) {
+        addFeatures(checkbox.id, checkbox.name);
+    } else {
+        // Remove the feature from the map
+        if (featuresMap[checkbox.id]) {
+            featuresMap[checkbox.id].forEach(feature => {
+                if (typeof feature === 'string') {
+                    map.removeLayer(feature);
+                    map.removeSource(feature);
+                } else {
+                    feature.remove();
+                }
+            });
+            featuresMap[checkbox.id] = [];
+            // console.log(`Removed feature for ${checkbox.id}, ${checkbox.name}`);
+
+            $('#table').DataTable().destroy();
+            document.getElementById('table').innerHTML = '';
+        }
+
+        // Remove from the select dropdown
+        const layerSelect = document.getElementById('layerSelect');
+        const option = Array.from(layerSelect.options).find(opt => opt.value === checkbox.id);
+        if (option) {
+            layerSelect.removeChild(option);
+        }
+    }
+});
+
+const zoomToLayer = async (formid, id) => {
+    try {
+        let data = await axios.post('/api/load_layer_by_id', { formid, id });
+
+        let geojson = JSON.parse(data.data[0].geojson);
+        const bounds = new maplibregl.LngLatBounds();
+        let zoomLevel = 16;
+        if (geojson.type === "FeatureCollection" && geojson.features) {
+            geojson.features.forEach(feature => {
+                if (feature.geometry.type === 'Point') {
+                    bounds.extend(feature.geometry.coordinates);
+                    zoomLevel = 19;
+                } else if (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon') {
+                    feature.geometry.coordinates.forEach(ring => {
+                        ring.forEach(coord => bounds.extend(coord));
+                    });
+                } else if (feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString') {
+                    feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
+                }
+            });
+        } else if (geojson.type && geojson.coordinates) {
+            if (geojson.type === 'Point') {
+                bounds.extend(geojson.coordinates);
+                zoomLevel = 19;
+            } else if (geojson.type === 'Polygon' || geojson.type === 'MultiPolygon') {
+                geojson.coordinates.forEach(ring => {
+                    ring.forEach(coord => bounds.extend(coord));
+                });
+            } else if (geojson.type === 'LineString' || geojson.type === 'MultiLineString') {
+                geojson.coordinates.forEach(coord => bounds.extend(coord));
+            }
+        }
+        if (!bounds.isEmpty()) {
+            map.fitBounds(bounds, {
+                padding: 50,
+                maxZoom: zoomLevel,
+            });
+        } else {
+            console.warn('GeoJSON data has no valid geometry to zoom to.');
+        }
+    } catch (error) {
+        console.error('Failed to zoom to layer:', error);
+    }
 };
 
-// checkbox change event
-document.getElementById('layerList').addEventListener('change', (event) => {
-    const checkboxes = document.querySelectorAll('.checkbox');
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            // drawLayer(checkbox.value, checkbox.name);
-            console.log(checkbox.id, checkbox.name);
+const loadColumnList = async (formid) => {
+    try {
+        if ($.fn.DataTable.isDataTable('#table')) {
+            $('#table').DataTable().destroy();
+            document.getElementById('table').innerHTML = '';
         }
-    });
-    // map.setLayoutProperty(layerId, 'visibility', visibility);
+
+        const columnsResponse = await axios.post('/api/load_column_description', { formid });
+
+        const tb = columnsResponse.data.map(i => `<th>${i.col_name}</th>`);  // Column headers for the table
+        const col = columnsResponse.data.map(i => ({ 'data': i.col_id, "className": "text-center" })); // Column data
+
+        const tb_btn = ['<th>ซูม</th>', ...tb].join('');
+        const col_btn = [{
+            "data": null,
+            "className": "text-left",
+            "render": function (data, type, row, meta) {
+                return `<button class="btn btn-primary" onclick="zoomToLayer('${formid}', ${data.id})"><i class="bi bi-search"></i> </button>`;
+            }
+        }, ...col];
+
+        document.getElementById('table').innerHTML = `<thead><tr>${tb_btn}</tr></thead><tbody></tbody>`;
+
+        const r = await axios.post('/api/load_layer', { formid });
+
+        const table = $('#table').DataTable({
+            data: r.data,
+            columns: col_btn,
+            "scrollX": true,
+        });
+
+        $('#keyword').on('input', function () {
+            const keyword = $(this).val();
+            // Apply search to the entire DataTable
+            table.search(keyword).draw();
+        });
+
+        table.on('search.dt', function () {
+            const resp = table.rows({ search: 'applied' }).data().toArray();
+        });
+
+    } catch (error) {
+        console.error('Failed to load column list:', error);
+    }
+};
+
+document.getElementById('layerSelect').addEventListener('change', async (event) => {
+    const selectedLayerId = event.target.value;
+    loadColumnList(selectedLayerId);
 });
 
 
