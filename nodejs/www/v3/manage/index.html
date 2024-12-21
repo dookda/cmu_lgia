@@ -44,27 +44,26 @@
                 <div class="list-group" id="list-tab" role="tablist">
                     <a class="list-group-item list-group-item-action active" id="list-input-list" data-bs-toggle="list"
                         href="#list-input" role="tab" aria-controls="list-input">จัดการผู้ใช้งาน</a>
-                    <a class="list-group-item list-group-item-action" id="list-createlayer-list" data-bs-toggle="list"
-                        href="#list-createlayer" role="tab" aria-controls="list-createlayer">จัดการหน่วยงาน</a>
-                    <a class="list-group-item list-group-item-action" id="list-map-list" data-bs-toggle="list"
-                        href="#list-map" role="tab" aria-controls="list-map">แก้ไขแผนที่</a>
+
+                    <a class="list-group-item list-group-item-action " id="list-input-list" data-bs-toggle="list"
+                        href="#list-input" role="tab" aria-controls="list-input">จัดการสมาชิก</a>
                 </div>
             </div>
             <div class="col-9 mt-2">
                 <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane fade show active" id="list-input" role="tabpanel"
                         aria-labelledby="list-input-list">
-                        <div class="row">
-                            <div class="col-12">
-                                <form class=" g-3 needs-validation" novalidate id="myForm">
-                                    <div class="col-md-6">
+                        <div class="card border-no-radius">
+                            <div class="card-body">
+                                <form class="g-3 needs-validation" novalidate id="myForm">
+                                    <div class="col-md-12">
                                         <label for="name" class="form-label">ชื่อ-นามสกุล</label>
                                         <input type="text" class="form-control" id="username" required minlength="3">
                                         <div class="invalid-feedback">
                                             อย่างน้อย 3 ตัวอักษร
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <label for="email" class="form-label">อีเมล</label>
                                         <input type="email" class="form-control" id="email" required>
                                         <div class="invalid-feedback">
@@ -72,22 +71,27 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <label for="division" class="form-label">หน่วยงาน</label>
                                         <select class="form-select" id="division" required>
                                             <option selected disabled value="">เลือก...</option>
-                                            <option value="สำนักปลัดฝ่ายอำนวยการ">สำนักปลัด: ฝ่ายอำนวยการ</option>
+                                            <option value="สำนักปลัดฝ่ายอำนวยการ">สำนักปลัด: ฝ่ายอำนวยการ
+                                            </option>
                                             <option value="สำนักปลัดฝ่ายปกครองงานนิติการ">สำนักปลัด: ฝ่ายปกครอง
                                                 งานนิติการ</option>
-                                            <option value="สำนักปลัดฝ่ายปกครองงานป้องกันบรรเทาสาธารณภัย">สำนักปลัด:
+                                            <option value="สำนักปลัดฝ่ายปกครองงานป้องกันบรรเทาสาธารณภัย">
+                                                สำนักปลัด:
                                                 ฝ่ายปกครอง งานป้องกันบรรเทาสาธารณภัย</option>
-                                            <option value="สำนักปลัดฝ่ายพัฒนาชุมชน">สำนักปลัด: ฝ่ายพัฒนาชุมชน</option>
+                                            <option value="สำนักปลัดฝ่ายพัฒนาชุมชน">สำนักปลัด: ฝ่ายพัฒนาชุมชน
+                                            </option>
                                             <option value="กองคลัง">กองคลัง</option>
                                             <option value="กองช่าง">กองช่าง</option>
-                                            <option value="กองสาธารณสุขและสิ่งแวดล้อม">กองสาธารณสุขและสิ่งแวดล้อม
+                                            <option value="กองสาธารณสุขและสิ่งแวดล้อม">
+                                                กองสาธารณสุขและสิ่งแวดล้อม
                                             </option>
                                             <option value="กองการศึกษา">กองการศึกษา</option>
-                                            <option value="สำนักปลัดฝ่ายอำนวยการงานวิเคราะห์นโยบายและแผน">สำนักปลัด:
+                                            <option value="สำนักปลัดฝ่ายอำนวยการงานวิเคราะห์นโยบายและแผน">
+                                                สำนักปลัด:
                                                 งานวิเคราะห์นโยบายและแผน</option>
                                             <option
                                                 value="สำนักปลัดฝ่ายอำนวยการงานส่งเสริมการท่องเที่ยวและประชาสัมพันธ์">
@@ -96,7 +100,7 @@
                                     </div>
 
                                     <!-- password -->
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <label for="password1" class="form-label">กำหนดรหัสผ่าน</label>
                                         <input type="password" class="form-control" id="password1" required
                                             minlength="4">
@@ -105,7 +109,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <label for="password2" class="form-label">กำหนดรหัสผ่านอีกครั้ง</label>
                                         <input type="password" class="form-control" id="password2" required
                                             minlength="4">
@@ -117,24 +121,6 @@
                                     <button class="btn btn-success mt-3" type="submit">ตกลง</button>
                                 </form>
                             </div>
-                        </div>
-                    </div>
-
-
-                    <div class="tab-pane fade" id="list-map" role="tabpanel" aria-labelledby="list-map-list">
-
-                        <div class="content" id="map">
-                        </div>
-
-                        <div>
-                            <label for="layerToggle">เลือกแผนที่ฐาน:</label>
-                            <select class="form-select" id="baseMapSelector">
-                                <option value="maptiler">Maptiler 3D</option>
-                                <option value="osm">OpenStreetMap</option>
-                                <option value="grod">Google Roads</option>
-                                <option value="gsat">Google Satellite</option>
-                                <option value="ghyb">Google Hybrid</option>
-                            </select>
                         </div>
                     </div>
                 </div>
