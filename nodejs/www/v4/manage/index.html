@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Geo-Info Application</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css" />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css' />
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <h4 class="text-center">ระบบภูมิสารสนเทศชุมชน (LGIA: Local Geo-Info Application)</h4>
+    </div>
+    <div class="container-fluid">
+        <ul class="nav justify-content-end">
+            <li class="nav-item mt-2">
+                <a class="btn btn-light" aria-current="page" href="./../home/index.html">รายงาน</a>&nbsp;
+            </li>
+            <li class="nav-item mt-2">
+                <a class="btn btn-light" href="./../input/index.html">การจัดการข้อมูล</a>&nbsp;
+            </li>
+            <li class="nav-item mt-2">
+                <a class="btn btn-light" href="#">การจัดการระบบ</a>&nbsp;
+            </li>
+            <li class="nav-item mt-2">
+                <a class="btn btn-light" href="#">ออกจากระบบ</a>
+            </li>
+        </ul>
+
+        <div class="row">
+            <div class="col-3 mt-2">
+                <div class="list-group" id="list-tab" role="tablist">
+                    <a class="list-group-item list-group-item-action active" id="list-input-list" data-bs-toggle="list"
+                        href="#list-input" role="tab" aria-controls="list-input">จัดการผู้ใช้งาน</a>
+
+                    <a class="list-group-item list-group-item-action " id="list-input-list" data-bs-toggle="list"
+                        href="#list-input" role="tab" aria-controls="list-input">จัดการสมาชิก</a>
+                </div>
+            </div>
+            <div class="col-9 mt-2">
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="list-input" role="tabpanel"
+                        aria-labelledby="list-input-list">
+                        <div class="card border-no-radius">
+                            <div class="card-body">
+                                <form class="g-3 needs-validation" novalidate id="myForm">
+                                    <div class="col-md-12">
+                                        <label for="name" class="form-label">ชื่อ-นามสกุล</label>
+                                        <input type="text" class="form-control" id="username" required minlength="3">
+                                        <div class="invalid-feedback">
+                                            อย่างน้อย 3 ตัวอักษร
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label for="email" class="form-label">อีเมล</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                        <div class="invalid-feedback">
+                                            กรุณากรอกอีเมลให้ถูกต้อง
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label for="division" class="form-label">หน่วยงาน</label>
+                                        <select class="form-select" id="division" required>
+                                            <option selected disabled value="">เลือก...</option>
+                                            <option value="สำนักปลัดฝ่ายอำนวยการ">สำนักปลัด: ฝ่ายอำนวยการ
+                                            </option>
+                                            <option value="สำนักปลัดฝ่ายปกครองงานนิติการ">สำนักปลัด: ฝ่ายปกครอง
+                                                งานนิติการ</option>
+                                            <option value="สำนักปลัดฝ่ายปกครองงานป้องกันบรรเทาสาธารณภัย">
+                                                สำนักปลัด:
+                                                ฝ่ายปกครอง งานป้องกันบรรเทาสาธารณภัย</option>
+                                            <option value="สำนักปลัดฝ่ายพัฒนาชุมชน">สำนักปลัด: ฝ่ายพัฒนาชุมชน
+                                            </option>
+                                            <option value="กองคลัง">กองคลัง</option>
+                                            <option value="กองช่าง">กองช่าง</option>
+                                            <option value="กองสาธารณสุขและสิ่งแวดล้อม">
+                                                กองสาธารณสุขและสิ่งแวดล้อม
+                                            </option>
+                                            <option value="กองการศึกษา">กองการศึกษา</option>
+                                            <option value="สำนักปลัดฝ่ายอำนวยการงานวิเคราะห์นโยบายและแผน">
+                                                สำนักปลัด:
+                                                งานวิเคราะห์นโยบายและแผน</option>
+                                            <option
+                                                value="สำนักปลัดฝ่ายอำนวยการงานส่งเสริมการท่องเที่ยวและประชาสัมพันธ์">
+                                                สำนักปลัด: งานส่งเสริมการท่องเที่ยวและประชาสัมพันธ์</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- password -->
+                                    <div class="col-md-12">
+                                        <label for="password1" class="form-label">กำหนดรหัสผ่าน</label>
+                                        <input type="password" class="form-control" id="password1" required
+                                            minlength="4">
+                                        <div class="invalid-feedback">
+                                            อย่างน้อย 4 ตัวอักษร
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label for="password2" class="form-label">กำหนดรหัสผ่านอีกครั้ง</label>
+                                        <input type="password" class="form-control" id="password2" required
+                                            minlength="4">
+                                        <div class="invalid-feedback">
+                                            กำหนดรหัสผ่านให้ตรงกัน
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-success mt-3" type="submit">ตกลง</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="update_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>สร้างชั้นข้อมูลสำเร็จ</p>
+                    <input type="hidden" id="_formid">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btn_add_data"><i
+                            class="bi bi-arrow-right-circle"></i>
+                        ไปยังหน้าเพิ่มข้อมูล</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="btn_reload"><i
+                            class="bi bi-x-circle"></i> ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- boostrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+
+    <!-- datatable -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.js"></script>
+
+    <!-- map -->
+    <script src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'></script>
+    <script src="https://unpkg.com/turf@3.0.14/turf.min.js"></script>
+    <script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+    <script src="https://unpkg.com/mapbox-gl-draw-snap-mode"></script>
+
+    <!-- axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+
+    <script src="./app.js"></script>
+</body>
+
+</html>

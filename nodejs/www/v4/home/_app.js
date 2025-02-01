@@ -1,4 +1,7 @@
 const MAPTILER_KEY = 'QcH5sAeCUv5rMXKrnJms';
+let featuresMap = {};
+let optionsMap = {};
+let table;
 
 var map = new maplibregl.Map({
     style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
@@ -144,102 +147,104 @@ let listLayer = () => {
         });
 };
 
-const addFeatures = async (checkboxId, checkboxName) => {
-    let formid = checkboxId;
-    let resp = await axios.post('/api/load_layer', { formid });
+const getFeatures = async (checkboxId, checkboxName) => {
+    try {
+        let resp = await axios.post('/api/load_layer', { formid: checkboxId });
 
-    const featureArray = [];
-    resp.data.forEach((data) => {
-        // console.log(data);
-        const geojson = JSON.parse(data.geojson);
-        const geometryType = geojson.type;
+        console.log(resp.data);
 
-        switch (geometryType) {
-            case 'Point':
-                const emojiElement = document.createElement('div');
+        let featureArray = [];
+        resp.data.forEach((data) => {
+            const geojson = JSON.parse(data.geojson);
+            const geometryType = geojson.type;
 
-                // 2. Set the emoji text, and optionally style it
-                emojiElement.textContent = '🐯'; // Choose any emoji you like
-                emojiElement.style.fontSize = '24px'; // Adjust size as needed
-                emojiElement.style.lineHeight = '1';
+            switch (geometryType) {
+                case 'Point':
+                    const emojiElement = document.createElement('div');
+                    emojiElement.textContent = '🐯';
+                    emojiElement.style.fontSize = '24px';
+                    emojiElement.style.lineHeight = '1';
 
-                const triangleElement = document.createElement('div');
-                triangleElement.style.width = '0';
-                triangleElement.style.height = '0';
-                triangleElement.style.borderLeft = '10px solid transparent';
-                triangleElement.style.borderRight = '10px solid transparent';
-                triangleElement.style.borderBottom = '20px solid #007cbf';
+                    const triangleElement = document.createElement('div');
+                    triangleElement.style.width = '0';
+                    triangleElement.style.height = '0';
+                    triangleElement.style.borderLeft = '10px solid transparent';
+                    triangleElement.style.borderRight = '10px solid transparent';
+                    triangleElement.style.borderBottom = '20px solid #007cbf';
 
-                const circleElement = document.createElement('div');
-                circleElement.style.width = '12px';
-                circleElement.style.height = '12px';
-                circleElement.style.borderRadius = '50%';
-                circleElement.style.backgroundColor = '#007cbf';
-                circleElement.style.border = '2px solid #ffffff';
+                    const circleElement = document.createElement('div');
+                    circleElement.style.width = '12px';
+                    circleElement.style.height = '12px';
+                    circleElement.style.borderRadius = '50%';
+                    circleElement.style.backgroundColor = '#007cbf';
+                    circleElement.style.border = '2px solid #ffffff';
 
-                // Use the new element in the Marker constructor
-                const coordinates = geojson.coordinates;
-                const marker = new maplibregl.Marker({
-                    element: emojiElement,
-                    anchor: 'center'  // centers the circle on the coordinate
-                })
-                    .setLngLat([coordinates[0], coordinates[1]])
-                    .setPopup(
-                        new maplibregl.Popup()
-                            .setHTML(`<strong>${data.id}</strong><br>${data.id}`)
-                    )
-                    .addTo(map);
+                    const coordinates = geojson.coordinates;
+                    const marker = new maplibregl.Marker({
+                        element: emojiElement,
+                        anchor: 'center'
+                    })
+                        .setLngLat([coordinates[0], coordinates[1]])
+                        .setPopup(
+                            new maplibregl.Popup()
+                                .setHTML(`<strong>${data.id}</strong><br>${data.id}`)
+                        )
+                        .addTo(map);
 
-                featureArray.push(marker);
-                break;
+                    featureArray.push(marker);
+                    break;
 
-            case 'LineString':
-                map.addSource(data.refid, {
-                    type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        geometry: geojson
-                    }
-                });
-                map.addLayer({
-                    id: data.refid,
-                    type: 'line',
-                    source: data.refid,
-                    paint: {
-                        'line-color': '#ff0000',
-                        'line-width': 3
-                    }
-                });
-                featureArray.push(data.refid);
-                break;
+                case 'LineString':
+                    map.addSource(data.refid, {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            geometry: geojson
+                        }
+                    });
+                    map.addLayer({
+                        id: data.refid,
+                        type: 'line',
+                        source: data.refid,
+                        paint: {
+                            'line-color': '#ff0000',
+                            'line-width': 3
+                        }
+                    });
+                    featureArray.push(data.refid);
+                    break;
 
-            case 'Polygon':
-                map.addSource(data.refid, {
-                    type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        geometry: geojson
-                    }
-                });
-                map.addLayer({
-                    id: data.refid,
-                    type: 'fill',
-                    source: data.refid,
-                    paint: {
-                        'fill-color': '#00ff00',
-                        'fill-opacity': 0.5
-                    }
-                });
-                featureArray.push(data.refid);
-                break;
+                case 'Polygon':
+                    map.addSource(data.refid, {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            geometry: geojson
+                        }
+                    });
+                    map.addLayer({
+                        id: data.refid,
+                        type: 'fill',
+                        source: data.refid,
+                        paint: {
+                            'fill-color': '#00ff00',
+                            'fill-opacity': 0.5
+                        }
+                    });
+                    featureArray.push(data.refid);
+                    break;
 
-            default:
-                console.warn(`Unsupported geometry type: ${geometryType}`);
-        }
-    });
+                default:
+                    console.warn(`Unsupported geometry type: ${geometryType}`);
+            }
+        });
+        featuresMap[checkboxId] = featureArray;
+        await addToLayerSelect(checkboxId, checkboxName);
 
-    featuresMap[checkboxId] = featureArray;
-    addToLayerSelect(checkboxId, checkboxName);
+    } catch (error) {
+        console.error('Failed to get features:', error);
+
+    }
 }
 
 const addToLayerSelect = async (checkboxId, checkboxName) => {
@@ -247,23 +252,17 @@ const addToLayerSelect = async (checkboxId, checkboxName) => {
     const option = document.createElement('option');
     option.value = checkboxId;
     option.textContent = checkboxName;
-
-    // Check if the option already exists before adding it
     if (!Array.from(layerSelect.options).some(opt => opt.value === checkboxId)) {
         layerSelect.appendChild(option);
     }
 }
 
-let featuresMap = {};
-let optionsMap = {};
-let table;
 document.getElementById('layerList').addEventListener('change', (event) => {
     const checkbox = event.target;
 
     if (checkbox.checked) {
-        addFeatures(checkbox.id, checkbox.name);
+        getFeatures(checkbox.id, checkbox.name);
     } else {
-        // Remove the feature from the map
         if (featuresMap[checkbox.id]) {
             featuresMap[checkbox.id].forEach(feature => {
                 if (typeof feature === 'string') {
@@ -274,13 +273,10 @@ document.getElementById('layerList').addEventListener('change', (event) => {
                 }
             });
             featuresMap[checkbox.id] = [];
-            // console.log(`Removed feature for ${checkbox.id}, ${checkbox.name}`);
 
             $('#table').DataTable().destroy();
             document.getElementById('table').innerHTML = '';
         }
-
-        // Remove from the select dropdown
         const layerSelect = document.getElementById('layerSelect');
         const option = Array.from(layerSelect.options).find(opt => opt.value === checkbox.id);
         if (option) {
@@ -343,15 +339,15 @@ const loadColumnList = async (formid) => {
 
         const columnsResponse = await axios.post('/api/load_column_description', { formid });
 
-        const tb = columnsResponse.data.map(i => `<th>${i.col_name}</th>`);  // Column headers for the table
+        const tb = columnsResponse.data.map(i => `<th>${i.col_name}</th>`).join('');  // Column headers for the table
         const col = columnsResponse.data.map(i => ({ 'data': i.col_id, "className": "text-center" })); // Column data
 
-        const tb_btn = ['<th>ซูม</th>', ...tb].join('');
+        const tb_btn = `<th>ซูม</th>${tb}`;
         const col_btn = [{
             "data": null,
             "className": "text-left",
             "render": function (data, type, row, meta) {
-                return `<button class="btn btn-primary" onclick="zoomToLayer('${formid}', ${data.id})"><i class="bi bi-search"></i> </button>`;
+                return `<button class="btn btn-primary" onclick="zoomToLayer('${formid}', ${data.id})"><i class="bi bi-search"></i></button>`;
             }
         }, ...col];
 
@@ -362,17 +358,21 @@ const loadColumnList = async (formid) => {
         const table = $('#table').DataTable({
             data: r.data,
             columns: col_btn,
-            "scrollX": true,
+            scrollX: true,
+            autoWidth: true,
+            initComplete: function () {
+                this.api().columns.adjust();
+            }
         });
 
         $('#keyword').on('input', function () {
             const keyword = $(this).val();
-            // Apply search to the entire DataTable
             table.search(keyword).draw();
         });
 
         table.on('search.dt', function () {
             const resp = table.rows({ search: 'applied' }).data().toArray();
+            console.log(resp);
         });
 
     } catch (error) {
