@@ -1,132 +1,146 @@
-const MAPTILER_KEY = 'QcH5sAeCUv5rMXKrnJms';
+// app.js
 
-let map;
+// Function to handle file upload
+function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
 
-const initializeMap = () => {
-    // Initialize the map only once when the tab is shown
-    if (!map) {
-        map = new maplibregl.Map({
-            style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
-            center: [99.01730749096882, 18.5761825900007],
-            zoom: 15.5,
-            pitch: 45,
-            bearing: -17.6,
-            container: 'map',
-            antialias: true
-        });
+    if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        axios.post('/api/v2/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+            .then(response => {
+                alert('File uploaded successfully!');
+                console.log(response.data);
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                alert('Error uploading file.');
+            });
     } else {
-        // Resize the map if it is already initialized
-        map.resize();
+        alert('Please select a file to upload.');
     }
+}
 
-    // Add navigation controls
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+// Function to add a new column to the table
+function addRow() {
+    const columnName = document.getElementById('columnname').value;
+    const columnType = document.getElementById('columntype').value;
+    const columnDesc = document.getElementById('columndesc').value;
 
-    map.on('load', function () {
-        // Add OpenStreetMap (OSM) layer
-        map.addSource('osm', {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-        });
+    if (columnName && columnType) {
+        const tbody = document.getElementById('tbody');
+        const newRow = document.createElement('tr');
 
-        map.addLayer({
-            id: 'osm',
-            type: 'raster',
-            source: 'osm',
-            layout: { visibility: 'none' }, // Initially hidden
-        });
+        newRow.innerHTML = `
+            <td>${tbody.children.length + 1}</td>
+            <td>${columnName}</td>
+            <td>${columnType}</td>
+            <td>${columnDesc}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button></td>
+        `;
 
-        // Add Google Roads (GROD) layer
-        map.addSource('grod', {
-            type: 'raster',
-            tiles: [
-                'https://mt0.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
-                'https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
-                'https://mt2.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
-                'https://mt3.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
-            ],
-            tileSize: 256,
-        });
+        tbody.appendChild(newRow);
 
-        map.addLayer({
-            id: 'grod',
-            type: 'raster',
-            source: 'grod',
-            layout: { visibility: 'none' }, // Initially hidden
-        });
+        // Clear input fields
+        document.getElementById('columnname').value = '';
+        document.getElementById('columntype').value = '';
+        document.getElementById('columndesc').value = '';
+    } else {
+        alert('Please fill in all required fields.');
+    }
+}
 
-        // Add Google Hybrid (GHYB) layer
-        map.addSource('ghyb', {
-            type: 'raster',
-            tiles: [
-                'https://mt0.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
-                'https://mt1.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
-                'https://mt2.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
-                'https://mt3.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
-            ],
-            tileSize: 256,
-        });
+// Function to delete a row from the table
+function deleteRow(button) {
+    const row = button.parentElement.parentElement;
+    row.remove();
+}
 
-        map.addLayer({
-            id: 'ghyb',
-            type: 'raster',
-            source: 'ghyb',
-            layout: { visibility: 'none' }, // Initially hidden
-        });
+// Function to handle form submission for creating a new layer
+document.getElementById('btn_getdata').addEventListener('click', function (event) {
+    event.preventDefault();
 
-        // Add Google Satellite (GSAT) layer
-        map.addSource('gsat', {
-            type: 'raster',
-            tiles: [
-                'https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-                'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-                'https://mt2.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-                'https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-            ],
-            tileSize: 256,
-        });
+    const division = document.getElementById('division').value;
+    const layerName = document.getElementById('layername').value;
+    const layerType = document.getElementById('layertype').value;
 
-        map.addLayer({
-            id: 'gsat',
-            type: 'raster',
-            source: 'gsat',
-            layout: { visibility: 'none' }, // Initially hidden
-        });
+    const columns = [];
+    const rows = document.querySelectorAll('#tbody tr');
+    rows.forEach(row => {
+        const columnName = row.children[1].textContent;
+        const columnType = row.children[2].textContent;
+        const columnDesc = row.children[3].textContent;
 
-        // Add MapTiler Vector Tile Layer
-        map.addSource('maptiler', {
-            type: 'vector',
-            url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`,
-        });
-
-        // Replace 'roads' with the correct source-layer name from your MapTiler vector tiles
-        map.addLayer({
-            id: 'maptiler',
-            type: 'symbol',  // You can use 'fill', 'line', 'symbol' depending on the data
-            source: 'maptiler',
-            'source-layer': 'landuse',
-            layout: { visibility: 'none' }, // Initially hidden
-        });
-
-        // Handle base map selector changes
-        const baseMapSelector = document.getElementById('baseMapSelector');
-        baseMapSelector.addEventListener('change', (event) => {
-            const selectedBaseMap = event.target.value;
-
-            // Hide all base map layers
-            map.setLayoutProperty('osm', 'visibility', 'none');
-            map.setLayoutProperty('grod', 'visibility', 'none');
-            map.setLayoutProperty('gsat', 'visibility', 'none');
-            map.setLayoutProperty('ghyb', 'visibility', 'none');
-            map.setLayoutProperty('maptiler', 'visibility', 'none');
-
-            // Show the selected base map layer
-            map.setLayoutProperty(selectedBaseMap, 'visibility', 'visible');
+        columns.push({
+            name: columnName,
+            type: columnType,
+            description: columnDesc
         });
     });
-};
 
+    const data = {
+        division,
+        layerName,
+        layerType,
+        columns
+    };
 
-initializeMap();
+    axios.post('/api/v2/create-layer', data)
+        .then(response => {
+            alert('Layer created successfully!');
+            console.log(response.data);
+        })
+        .catch(error => {
+            console.error('Error creating layer:', error);
+            alert('Error creating layer.');
+        });
+});
 
+// Initialize the map
+function initMap() {
+    const MAPTILER_KEY = 'QcH5sAeCUv5rMXKrnJms';
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=' + MAPTILER_KEY,
+        center: [100.523186, 13.736717], // Bangkok coordinates
+        zoom: 10
+    });
+
+    // Add map controls
+    map.addControl(new maplibregl.NavigationControl());
+
+    // Handle base map selection
+    document.getElementById('baseMapSelector').addEventListener('change', function (event) {
+        const selectedStyle = event.target.value;
+        let styleUrl = '';
+
+        switch (selectedStyle) {
+            case 'maptiler':
+                styleUrl = 'https://api.maptiler.com/maps/streets/style.json?key=' + MAPTILER_KEY;
+                break;
+            case 'osm':
+                styleUrl = 'https://api.maptiler.com/maps/openstreetmap/style.json?key=' + MAPTILER_KEY;
+                break;
+            case 'grod':
+                styleUrl = 'https://api.maptiler.com/maps/streets/style.json?key=' + MAPTILER_KEY;
+                break;
+            case 'gsat':
+                styleUrl = 'https://api.maptiler.com/maps/satellite/style.json?key=' + MAPTILER_KEY;
+                break;
+            case 'ghyb':
+                styleUrl = 'https://api.maptiler.com/maps/hybrid/style.json?key=' + MAPTILER_KEY;
+                break;
+        }
+
+        map.setStyle(styleUrl);
+    });
+}
+
+// Initialize the map when the page loads
+document.addEventListener('DOMContentLoaded', initMap);
