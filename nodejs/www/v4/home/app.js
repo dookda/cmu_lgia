@@ -74,6 +74,10 @@ const getFeatures = async (checkboxId, checkboxName) => {
 
             if (type === 'Point') {
                 const marker = new maplibregl.Marker().setLngLat(data.coordinates).addTo(map);
+                const popup = new maplibregl.Popup({ offset: 25 })
+                    .setHTML(`<b>Feature ID:</b> ${refid}`);
+
+                marker.setPopup(popup);
                 markersArray.push(marker);
             } else {
                 map.addSource(refid, { type: 'geojson', data: { type: 'Feature', geometry: data } });
@@ -84,6 +88,14 @@ const getFeatures = async (checkboxId, checkboxName) => {
                     paint: type === 'LineString' ? { 'line-color': '#ff0000', 'line-width': 3 } : { 'fill-color': '#00ff00', 'fill-opacity': 0.5 }
                 });
                 featureArray.push(refid);
+
+                map.on('click', refid, (e) => {
+                    const coordinates = e.lngLat;
+                    new maplibregl.Popup()
+                        .setLngLat(coordinates)
+                        .setHTML(`<b>Feature ID:</b> ${refid}`)
+                        .addTo(map);
+                });
             }
         });
 
@@ -214,17 +226,43 @@ const zoomToFeature = (refid, formid, featureData) => {
     if (!feature || !feature.geojson) return;
 
     const data = JSON.parse(feature.geojson);
+    let popupContent = `<strong>Reference ID:</strong> ${refid}<br>`;
+
+    // Add properties to the popup content
+    Object.entries(feature).forEach(([key, value]) => {
+        if (key !== 'geojson' && key !== 'refid') {
+            popupContent += `<strong>${key}:</strong> ${value}<br>`;
+        }
+    });
+
     if (data.type === 'Point') {
+        // Fly to point and open popup
         map.flyTo({
             center: data.coordinates,
             zoom: 18,
             essential: true
         });
+
+        new maplibregl.Popup({ offset: 25 })
+            .setLngLat(data.coordinates)
+            .setHTML(popupContent)
+            .addTo(map);
+
     } else if (data.type === 'Polygon' || data.type === 'LineString') {
-        const bbox = turf.bbox(data); // Compute bounding box using Turf.js
+        // Compute bounding box using Turf.js
+        const bbox = turf.bbox(data);
         map.fitBounds(bbox, { padding: 50 });
+
+        // Get center of geometry to place popup
+        const center = turf.centerOfMass(data).geometry.coordinates;
+
+        new maplibregl.Popup({ offset: 25 })
+            .setLngLat(center)
+            .setHTML(popupContent)
+            .addTo(map);
     }
 };
+
 
 document.getElementById('layerList').addEventListener('change', event => {
     const checkbox = event.target;
