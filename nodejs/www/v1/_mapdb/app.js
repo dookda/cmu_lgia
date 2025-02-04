@@ -35,7 +35,7 @@ let deleteRow = (button) => {
 
 let gotoCreatePage = () => {
     let formid = document.getElementById('_formid').value;
-    window.location.href = '/_create/index.html?formid=' + formid + '&mode=edit'
+    window.location.href = '/v1/_create/index.html?formid=' + formid + '&mode=edit'
 }
 
 let getTableData = () => {
@@ -54,7 +54,7 @@ let getTableData = () => {
         columes.push({ column_name, column_type, column_desc });
     }
 
-    axios.post('/api/create_table', {
+    axios.post('/api/create_table2', {
         division,
         layername,
         layertype,

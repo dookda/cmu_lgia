@@ -1,5 +1,6 @@
 services:
   postgis:
+    platform: linux/amd64 #amd64
     image: postgis/postgis
     container_name: lgia_postgis
     restart: always
@@ -15,6 +16,7 @@ services:
   nodejs:
     image: node:latest
     container_name: lgia_nodejs
+    restart: always
     working_dir: /usr/src/app
     depends_on:
       - postgis

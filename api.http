@@ -1,27 +1,26 @@
-POST http://localhost/api/layer_create.php HTTP/1.1
+POST http://localhost:3000/api/create_table2 HTTP/1.1
 content-type: application/json
 
 {
-    "division": "division",
-    "layername": "dd",
-    "layertype": "layertype",
-    "layerdesc": "layerdesc",
-    "data": [
+  "division": "Engineering",
+  "layerName": "Roads",
+  "layerType": "LINESTRING",
+  "columns": [
     {
-        "column_name": "aa",
-        "column_type": "ตัวอักษร",
-        "column_desc": "aa"
+      "name": "road_name",
+      "type": "TEXT",
+      "description": "Name of the road"
     },
     {
-        "column_name": "bb",
-        "column_type": "ตัวอักษร",
-        "column_desc": "bb"
+      "name": "length",
+      "type": "FLOAT",
+      "description": "Length of the road in kilometers"
     }
-]
+  ]
 }
 
 ### get test table
-GET http://localhost/api/list_form.php HTTP/1.1
+POST http://localhost:3000/api/load_layer_by_id HTTP/1.1
 
 ### delete test table
 DELETE http://localhost/api/layer_delete.php HTTP/1.1
