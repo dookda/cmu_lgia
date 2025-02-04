@@ -47,19 +47,19 @@
                         aria-controls="list-input">นำเข้าข้อมูล CSV</a>
                     <a class="list-group-item list-group-item-action" href="./../input_form/index.html"
                         aria-controls="list-createlayer">สร้างชั้นข้อมูลแผนที่</a>
-                    <a class="list-group-item list-group-item-action" href="./../input_edit/index.html"
-                        aria-controls="list-map">แก้ไขแผนที่</a>
+                    <a class="list-group-item list-group-item-action" href="./../input_list/index.html"
+                        aria-controls="list-map">รายการข้อมูล</a>
                 </div>
             </div>
             <div class="col-9 mt-2">
-                <form class="row g-3 needs-validation" novalidate>
+                <form class="row g-3 needs-validation" id="uploadForm">
                     <div class="card border-no-radius">
                         <div class="card-body">
                             <div class="row mt-2">
                                 <h3>สร้างชั้นข้อมูล</h3>
                                 <div class="col-md-4">
                                     <label for="validationCustom01" class="form-label">ชื่อหน่วยงาน</label>
-                                    <select class="form-select" id="division" required>
+                                    <select class="form-select" id="division" name="division" required>
                                         <option selected disabled value="">เลือก...</option>
                                         <option value="สำนักปลัดฝ่ายอำนวยการ">สำนักปลัด: ฝ่ายอำนวยการ</option>
                                         <option value="สำนักปลัดฝ่ายปกครอง งานนิติการ">สำนักปลัด: ฝ่ายปกครอง
@@ -86,18 +86,16 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="validationCustom02" class="form-label">ชื่อชั้นข้อมูล</label>
-                                    <input type="text" class="form-control" id="layername" placeholder="ระบุ.."
-                                        onblur="getLayerName()" required>
+                                    <input type="text" class="form-control" id="layername" name="layername" required
+                                        placeholder="ระบุ..">
                                     <div class="valid-feedback">
                                         มีชื่อชั้นข้อมูลแผนที่
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="validationDataType" class="form-label">ประเภทของชั้นข้อมูล</label>
-                                    <select class="form-select" id="layertype" required>
+                                    <select class="form-select" id="layertype" name="layertype" required>
                                         <option value="point" selected>จุด (point) </option>
-                                        <option value="linestring">เส้น (Polyline)</option>
-                                        <option value="polygon">รูปปิด (Polygon) </option>
                                     </select>
                                     <div class="invalid-feedback">
                                         ต้องเลือกประเภทข้อมูลแผนที่
@@ -106,14 +104,16 @@
                             </div>
                             <hr>
                             <h5>Upload CSV File</h5>
-                            <input type="file" id="fileInput" accept=".csv">
+                            <input type="file" id="file" name="file" accept=".csv" required>
                             <div class="mt-3">
-                                <button class="btn btn-success" onclick="uploadFile()">Upload</button>
+                                <button class="btn btn-success" type="submit">Upload</button>
 
                             </div>
                         </div>
                     </div>
                 </form>
+
+                <div id="message" class="message"></div>
             </div>
         </div>
 

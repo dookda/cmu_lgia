@@ -1,29 +1,38 @@
-// Function to handle file upload
-const uploadFile = () => {
-    const fileInput = document.getElementById('fileInput');
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const division = document.getElementById('division').value;
+    const layername = document.getElementById('layername').value;
+    const layertype = document.getElementById('layertype').value;
+    const fileInput = document.getElementById('file');
     const file = fileInput.files[0];
 
-    if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
+    const formData = new FormData();
+    formData.append('division', division);
+    formData.append('layername', layername);
+    formData.append('layertype', layertype);
+    formData.append('file', file);
 
-        axios.post('/api/v2/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-            .then(response => {
-                alert('File uploaded successfully!');
-                console.log(response.data);
-            })
-            .catch(error => {
-                console.error('Error uploading file:', error);
-                alert('Error uploading file.');
-            });
-    } else {
-        alert('Please select a file to upload.');
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = '';
+    messageDiv.classList.remove('success', 'error');
+
+    try {
+        const response = await fetch('/api/v2/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            messageDiv.textContent = 'File uploaded and is being processed.';
+            messageDiv.classList.add('success');
+        } else {
+            const errorData = await response.text();
+            messageDiv.textContent = `Error: ${errorData}`;
+            messageDiv.classList.add('error');
+        }
+    } catch (error) {
+        messageDiv.textContent = `Error: ${error.message}`;
+        messageDiv.classList.add('error');
     }
-}
-
-
-
+});

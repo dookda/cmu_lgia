@@ -52,21 +52,27 @@
                 </div>
             </div>
             <div class="col-9 mt-2">
-                <div class="content" id="map"> </div>
-
-                <div>
-                    <label for="layerToggle">เลือกแผนที่ฐาน:</label>
-                    <select class="form-select" id="baseMapSelector">
-                        <option value="maptiler">Maptiler 3D</option>
-                        <option value="osm">OpenStreetMap</option>
-                        <option value="grod">Google Roads</option>
-                        <option value="gsat">Google Satellite</option>
-                        <option value="ghyb">Google Hybrid</option>
-                    </select>
+                <div class="nk-block nk-block-lg">
+                    <div class="card card-preview">
+                        <div class="card-inner">
+                            <table id="layerTable" class="datatable-init-export nowrap table"
+                                data-export-title="Export">
+                                <thead>
+                                    <tr>
+                                        <th>gid</th>
+                                        <th>formid</th>
+                                        <th>division</th>
+                                        <th>layername</th>
+                                        <th>layertype</th>
+                                        <th>ts</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="modal fade" id="update_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -112,7 +118,10 @@
 
 <!-- axios -->
 <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
-
+<!-- <script src="./../assets/js/bundlee1e3.js?ver=3.2.4"></script> -->
+<!-- <script src="./../assets/js/scriptse1e3.js?ver=3.2.4"></script> -->
+<!-- <script src="./../assets/js/demo-settingse1e3.js?ver=3.2.4"></script> -->
+<!-- <script src="./../assets/js/libs/datatable-btnse1e3.js?ver=3.2.4"></script> -->
 <script src="./app.js"></script>
 
 </html>

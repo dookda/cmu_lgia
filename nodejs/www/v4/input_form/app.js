@@ -17,9 +17,9 @@ document.getElementById('btn_create').addEventListener('click', function (event)
         const columnDesc = row.children[3].textContent;
 
         columns.push({
-            name: columnName,
-            type: columnType,
-            description: columnDesc
+            column_name: columnName,
+            column_type: columnType,
+            column_desc: columnDesc
         });
     });
 
@@ -31,7 +31,7 @@ document.getElementById('btn_create').addEventListener('click', function (event)
     };
     console.log(data);
 
-    fetch('/api/create_table', {
+    fetch('/api/v2/create_table', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

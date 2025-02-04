@@ -43,30 +43,56 @@
         <div class="row">
             <div class="col-3 mt-2">
                 <div class="list-group" id="list-tab" role="tablist">
-                    <a class="list-group-item list-group-item-action" href="./../input_csv/index.html"
+                    <a class="list-group-item list-group-item-action active" href="#"
                         aria-controls="list-input">นำเข้าข้อมูล CSV</a>
                     <a class="list-group-item list-group-item-action" href="./../input_form/index.html"
                         aria-controls="list-createlayer">สร้างชั้นข้อมูลแผนที่</a>
-                    <a class="list-group-item list-group-item-action active" href="#"
+                    <a class="list-group-item list-group-item-action" href="./../input_list/index.html"
                         aria-controls="list-map">รายการข้อมูล</a>
                 </div>
             </div>
             <div class="col-9 mt-2">
-                <div class="content" id="map"> </div>
-
-                <div>
-                    <label for="layerToggle">เลือกแผนที่ฐาน:</label>
-                    <select class="form-select" id="baseMapSelector">
-                        <option value="maptiler">Maptiler 3D</option>
-                        <option value="osm">OpenStreetMap</option>
-                        <option value="grod">Google Roads</option>
-                        <option value="gsat">Google Satellite</option>
-                        <option value="ghyb">Google Hybrid</option>
-                    </select>
+                <div class="nk-block nk-block-lg">
+                    <div class="card card-preview">
+                        <div class="card-inner">
+                            <form class="row g-3 needs-validation" id="addDivisionName">
+                                <div class="mt-2">
+                                    <h3>สร้างชั้นข้อมูล</h3>
+                                    <div class="col-md">
+                                        <label for="division" class="form-label">ชื่อหน่วยงาน</label>
+                                        <input type="text" class="form-control" id="division" required>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-success" type="submit">เพิ่ม</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- datatable -->
+                <div class="nk-block nk-block-lg">
+                    <div class="card card-preview">
+                        <div class="card-inner">
+                            <table id="divisionTable" class="datatable-init-export nowrap table"
+                                data-export-title="Export">
+                                <thead>
+                                    <tr>
+                                        <th>จัดการ</th>
+                                        <th>ลำดับ</th>
+                                        <th>ชื่อหน่วยงาน</th>
+                                        <th>วันที่</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="modal fade" id="update_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

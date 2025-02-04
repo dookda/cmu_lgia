@@ -26,3 +26,9 @@ CREATE TABLE devision (
     division_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS divisions (
+    id SERIAL PRIMARY KEY,
+    division_name TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
