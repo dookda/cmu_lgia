@@ -2,11 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const { Pool } = require('pg');
-require('dotenv').config();
+
+const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const SECRET_KEY = "your_secret_key";
 
 const fs = require('fs');
 const csvParser = require('csv-parser');
-const bcrypt = require('bcryptjs');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -23,39 +26,41 @@ const pool = new Pool({
     port: process.env.PG_PORT
 });
 
-// Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-    if (err) {
-        console.error('Error connecting to the database:', err);
-    } else {
-        console.log('Connected to the database at:', res.rows[0].now);
+app.post("/api/v2/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    try {
+        const result = await pool.query("SELECT * FROM tb_user WHERE email = $1", [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+
+        const user = result.rows[0];
+        const isMatch = await bcrypt.compare(password, user.pass);
+
+        if (!isMatch) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+
+        const token = jwt.sign({ id: user.id, email: user.email, auth: user.auth }, SECRET_KEY, {
+            expiresIn: "1h",
+        });
+
+        res.json({ message: "Login successful", token, user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
     }
 });
 
 const queryAsync = (text, params) => {
     return pool.query(text, params);
 };
-
-// app.post('/api/v2/upload', upload.single('file'), async (req, res) => {
-//     if (!req.file) {
-//         return res.status(400).json({ message: 'No file uploaded.' });
-//     }
-//     const { filename, path: filepath } = req.file;
-//     try {
-//         const result = await pool.query(
-//             'INSERT INTO uploaded_files (filename, filepath) VALUES ($1, $2) RETURNING *',
-//             [filename, filepath]
-//         );
-
-//         const fileData = fs.readFileSync(filepath, 'utf8');
-//         console.log('CSV data:', fileData);
-
-//         res.json({ message: 'File uploaded and processed successfully.', file: result.rows[0] });
-//     } catch (err) {
-//         console.error('Error uploading file:', err);
-//         res.status(500).json({ message: 'Error uploading file.' });
-//     }
-// });
 
 app.post('/api/v2/upload', upload.single('file'), async (req, res) => {
     try {
