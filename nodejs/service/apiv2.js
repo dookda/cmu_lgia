@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const fs = require('fs');
 const csvParser = require('csv-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -269,13 +270,75 @@ app.delete("/api/v2/divisions/:id", async (req, res) => {
 });
 
 
-// Fetch all users from tb_user
+// Fetch all users
 app.get("/api/v2/users", async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT id, username, email, ts, auth, division FROM tb_user ORDER BY id ASC"
         );
         res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Update user
+app.put("/api/v2/users/:id", async (req, res) => {
+    const { id } = req.params;
+    const { username, email, auth, division } = req.body;
+
+    try {
+        const result = await pool.query(
+            "UPDATE tb_user SET username = $1, email = $2, auth = $3, division = $4 WHERE id = $5 RETURNING *",
+            [username, email, auth, division, id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({ message: "User updated successfully", user: result.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Delete user
+app.delete("/api/v2/users/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query("DELETE FROM tb_user WHERE id = $1 RETURNING *", [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// add user
+app.post("/api/v2/users", async (req, res) => {
+    const { username, email, password, auth, division } = req.body;
+
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await pool.query(
+            "INSERT INTO tb_user (username, email, pass, ts, auth, division) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *",
+            [username, email, hashedPassword, auth || "user", division || "N/A"]
+        );
+
+        res.status(201).json({ message: "User registered successfully", user: result.rows[0] });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });
