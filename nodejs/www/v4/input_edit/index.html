@@ -58,8 +58,8 @@
                     <label for="layerToggle">เลือกแผนที่ฐาน:</label>
                     <select class="form-select" id="baseMapSelector">
                         <option value="maptiler">Maptiler 3D</option>
-                        <option value="osm">OpenStreetMap</option>
-                        <option value="grod">Google Roads</option>
+                        <option value="osm" selected>OpenStreetMap</option>
+                        <option value="grod">Google Road</option>
                         <option value="gsat">Google Satellite</option>
                         <option value="ghyb">Google Hybrid</option>
                     </select>
@@ -68,6 +68,93 @@
         </div>
 
     </div>
+
+    <!-- Map container -->
+    <div id="map" style="width: 100%; height: 500px;"></div>
+
+    <!-- Bootstrap Modal for editing feature symbols -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Feature Symbol</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Fields for a Marker (Point) -->
+                        <div id="pointFields" class="mb-3">
+                            <label for="markerColor" class="form-label">Marker Color:</label>
+                            <input type="color" class="form-control" id="markerColor" name="markerColor"
+                                value="#007cbf">
+
+                            <label for="markerSymbol" class="form-label">Marker Symbol (Text):</label>
+                            <input type="text" class="form-control" id="markerSymbol" name="markerSymbol"
+                                placeholder="e.g., &#9733;">
+
+                            <label for="markerBorderColor" class="form-label">Marker Border Color:</label>
+                            <input type="color" class="form-control" id="markerBorderColor" name="markerBorderColor"
+                                value="#000000">
+
+                            <label for="markerBorderWidth" class="form-label">Marker Border Width (px):</label>
+                            <input type="number" class="form-control" id="markerBorderWidth" name="markerBorderWidth"
+                                min="0" max="10" value="2">
+                        </div>
+                        <!-- Fields for a Polyline (LineString) -->
+                        <div id="lineFields" class="mb-3" style="display: none;">
+                            <label for="lineColor" class="form-label">Line Color:</label>
+                            <input type="color" class="form-control" id="lineColor" name="lineColor" value="#ff0000">
+
+                            <label for="lineWidth" class="form-label">Line Width:</label>
+                            <input type="number" class="form-control" id="lineWidth" name="lineWidth" min="1" max="20"
+                                value="3">
+
+                            <label for="lineDash" class="form-label">Line Dash (comma‑separated numbers):</label>
+                            <input type="text" class="form-control" id="lineDash" name="lineDash"
+                                placeholder="e.g., 5,2">
+                        </div>
+                        <!-- Fields for a Polygon -->
+                        <div id="polygonFields" class="mb-3" style="display: none;">
+                            <label for="fillColor" class="form-label">Fill Color:</label>
+                            <input type="color" class="form-control" id="fillColor" name="fillColor" value="#00ff00">
+
+                            <label for="fillOpacity" class="form-label">Fill Opacity:</label>
+                            <input type="number" class="form-control" id="fillOpacity" name="fillOpacity" min="0"
+                                max="1" step="0.1" value="0.5">
+
+                            <label for="polygonBorderColor" class="form-label">Border Color:</label>
+                            <input type="color" class="form-control" id="polygonBorderColor" name="polygonBorderColor"
+                                value="#000000">
+
+                            <label for="polygonBorderDash" class="form-label">Border Dash (comma‑separated
+                                numbers):</label>
+                            <input type="text" class="form-control" id="polygonBorderDash" name="polygonBorderDash"
+                                placeholder="e.g., 5,2">
+
+                            <label for="polygonBorderWidth" class="form-label">Border Width:</label>
+                            <input type="number" class="form-control" id="polygonBorderWidth" name="polygonBorderWidth"
+                                min="1" max="10" value="2">
+                        </div>
+                        <!-- Hidden fields to store feature id and type -->
+                        <input type="hidden" id="featureId" name="featureId">
+                        <input type="hidden" id="featureType" name="featureType">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Apply Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const formid = urlParams.get('formid');
+
+    console.log('formid:', formid);
+
+
+
 
     <div class="modal fade" id="update_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">

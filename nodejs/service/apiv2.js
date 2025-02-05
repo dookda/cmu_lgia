@@ -350,4 +350,16 @@ app.post("/api/v2/users", async (req, res) => {
     }
 });
 
+app.post('/api/v2/load_layer', async (req, res) => {
+    try {
+        const { formid } = req.body;
+        const sql = `SELECT *, ST_AsGeoJSON(geom) as geojson FROM ${formid} ORDER BY ts DESC`;
+        const { rows } = await pool.query(sql);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while getting the selected layer.');
+    }
+})
+
 module.exports = app;
