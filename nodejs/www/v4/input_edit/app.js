@@ -150,39 +150,54 @@ const rgbToHex = (rgb) => {
 };
 
 /**
- * Updates the feature symbol using values from the modal form.
+ * Helper: Updates the style for a single feature based on its type.
  */
-const updateFeatureSymbol = (refid, type, values) => {
+const applyStyleToFeature = (id, type, values) => {
     if (type === 'Point') {
-        // For markers, update background color, inner text (symbol), and border.
-        const marker = featuresMeta[refid].marker;
+        const marker = featuresMeta[id].marker;
         const markerEl = marker.getElement();
         markerEl.style.backgroundColor = values.markerColor;
         markerEl.innerHTML = values.markerSymbol;
         markerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
     } else if (type === 'LineString') {
-        // Update polyline properties.
-        map.setPaintProperty(refid, 'line-color', values.lineColor);
-        map.setPaintProperty(refid, 'line-width', parseFloat(values.lineWidth));
+        map.setPaintProperty(id, 'line-color', values.lineColor);
+        map.setPaintProperty(id, 'line-width', parseFloat(values.lineWidth));
         if (values.lineDash && values.lineDash.trim() !== "") {
             const dashArray = values.lineDash.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
-            map.setPaintProperty(refid, 'line-dasharray', dashArray);
+            map.setPaintProperty(id, 'line-dasharray', dashArray);
         } else {
-            map.setPaintProperty(refid, 'line-dasharray', null);
+            map.setPaintProperty(id, 'line-dasharray', null);
         }
     } else if (type === 'Polygon') {
-        // Update fill properties.
-        map.setPaintProperty(refid, 'fill-color', values.fillColor);
-        map.setPaintProperty(refid, 'fill-opacity', parseFloat(values.fillOpacity));
+        // Update fill layer properties.
+        map.setPaintProperty(id, 'fill-color', values.fillColor);
+        map.setPaintProperty(id, 'fill-opacity', parseFloat(values.fillOpacity));
         // Update border (line layer) properties.
-        map.setPaintProperty(`${refid}_border`, 'line-color', values.polygonBorderColor);
-        map.setPaintProperty(`${refid}_border`, 'line-width', parseFloat(values.polygonBorderWidth));
+        map.setPaintProperty(`${id}_border`, 'line-color', values.polygonBorderColor);
+        map.setPaintProperty(`${id}_border`, 'line-width', parseFloat(values.polygonBorderWidth));
         if (values.polygonBorderDash && values.polygonBorderDash.trim() !== "") {
             const dashArray = values.polygonBorderDash.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
-            map.setPaintProperty(`${refid}_border`, 'line-dasharray', dashArray);
+            map.setPaintProperty(`${id}_border`, 'line-dasharray', dashArray);
         } else {
-            map.setPaintProperty(`${refid}_border`, 'line-dasharray', []);
+            map.setPaintProperty(`${id}_border`, 'line-dasharray', []);
         }
+    }
+};
+
+/**
+ * Updates the feature symbol using values from the modal form.
+ * If the "applyToAll" checkbox is checked, the style is applied to all features of that type.
+ */
+const updateFeatureSymbol = (refid, type, values) => {
+    if (values.applyToAll) {
+        // Iterate through all features and apply style to those of the same type.
+        Object.keys(featuresMeta).forEach(id => {
+            if (featuresMeta[id].type === type) {
+                applyStyleToFeature(id, type, values);
+            }
+        });
+    } else {
+        applyStyleToFeature(refid, type, values);
     }
 };
 
@@ -348,7 +363,7 @@ document.getElementById('editForm').addEventListener('submit', (e) => {
     const type = document.getElementById('featureType').value;
     const formData = new FormData(e.target);
     const values = Object.fromEntries(formData.entries());
-
+    // The checkbox value will be "on" if checked.
     updateFeatureSymbol(refid, type, values);
 
     // Hide the modal using Bootstrap's API.
@@ -398,6 +413,7 @@ const initMap = () => {
         // Load features after the map is ready.
         const urlParams = new URLSearchParams(window.location.search);
         const formid = urlParams.get('formid');
+
         await getFeatures(formid);
     });
 };
