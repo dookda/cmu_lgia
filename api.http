@@ -37,3 +37,25 @@ content-type: application/json
 {
     "formid": "fid_1698771850"
 }
+
+### get telegram update
+GET https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/getUpdates
+
+
+###
+POST https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-4641885288",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ 111"
+}
+
+###
+POST https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-4641885288",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ 111"
+}

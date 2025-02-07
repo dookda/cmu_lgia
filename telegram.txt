@@ -1,0 +1,34 @@
+
+
+
+https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/getUpdates
+
+https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/getUpdates
+
+ขั้นตอนการสร้าง Telegram Notify เพื่อส่งข้อความไปยังกลุ่ม มีขั้นตอนหลักๆ มีดังนี้
+
+1. การสร้าง Bot ใน Telegram app
+1.1 เปิดแชทกับ @BotFather ใน Telegram
+1.2 พิมพ์ /newbot เพื่อสร้าง bot ใหม่
+1.3 ตั้งชื่อและ username ให้กับ bot
+1.4 เจ้าหน้าที่จด token ที่ได้รับ -> ส่งมาให้เรา
+
+
+2. การเพิ่ม Bot เข้ากลุ่ม
+2.1 ให้เจ้าหน้าที่สร้างกลุ่มใหม่หรือใช้กลุ่มที่มีอยู่
+2.2 เพิ่ม bot เข้ากลุ่มโดยค้นหาจาก username ของ bot ที่สร้างไว้ในข้อ 1.3
+
+
+3. การหา Chat ID ของกลุ่ม
+3.1 เปิดเว็บ https://api.telegram.org/bot<token>/getUpdates
+3.2 ค้นหา "chat":{"id": ...  }
+3.3 จด chat id 
+
+4. หลังจากได้ token และ chat id แล้ว เราสามารถส่งข้อความไปยังกลุ่ม ดังนี้
+POST https://api.telegram.org/bot<token>/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-4641885288",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ 111"
+}

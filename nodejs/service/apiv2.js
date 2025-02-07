@@ -362,4 +362,6 @@ app.post('/api/v2/load_layer', async (req, res) => {
     }
 })
 
+app.get('/api/v2/')
+
 module.exports = app;
