@@ -147,105 +147,154 @@ let listLayer = () => {
         });
 };
 
-const getFeatures = async (checkboxId, checkboxName) => {
+const getFeatures = async (formid, markerColor = '#007cbf') => {
+    const allCoords = [];
+
+    const extractCoordinates = (geometry) => {
+        const { type, coordinates } = geometry;
+        if (type === 'Point') {
+            allCoords.push(coordinates);
+        } else if (type === 'LineString') {
+            for (const coord of coordinates) {
+                allCoords.push(coord);
+            }
+        } else if (type === 'Polygon') {
+            for (const ring of coordinates) {
+                for (const coord of ring) {
+                    allCoords.push(coord);
+                }
+            }
+        }
+    };
+
     try {
-        let resp = await axios.post('/api/load_layer', { formid: checkboxId });
+        const response = await fetch('/api/v2/load_layer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ formid })
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const features = await response.json();
+        console.log(features);
+        for (const { geojson, refid } of features) {
+            let geometry;
+            try {
+                geometry = JSON.parse(geojson);
+            } catch (error) {
+                console.error(`Invalid GeoJSON for refid ${refid}:`, error);
+                continue;
+            }
+            if (!geometry || !geometry.type) {
+                console.error(`Empty or invalid geometry for feature: ${refid}`);
+                continue;
+            }
+            const { type } = geometry;
+            extractCoordinates(geometry);
 
-        console.log(resp.data);
+            if (type === 'Point') {
+                // Use the provided markerColor option here.
+                const el = createMarkerElement(markerColor);
+                console.log(el);
 
-        let featureArray = [];
-        resp.data.forEach((data) => {
-            const geojson = JSON.parse(data.geojson);
-            const geometryType = geojson.type;
+                var trainStationIcon = document.createElement('div');
+                trainStationIcon.style.width = '38px';
+                trainStationIcon.style.height = '55px';
+                // Explicitly set scaleFactor=2 in the call 
+                // and backgroundSize=contain to get better 
+                // Marker Icon quality with MapLibre GL
+                trainStationIcon.style.backgroundSize = "contain";
+                trainStationIcon.style.backgroundImage = "url(https://api.geoapify.com/v1/icon/?type=awesome&scaleFactor=2&color=%23e68d6f&size=large&icon=train&iconSize=large&apiKey=6dc7fb95a3b246cfa0f3bcef5ce9ed9a)";
+                trainStationIcon.style.cursor = "pointer";
 
-            switch (geometryType) {
-                case 'Point':
-                    const emojiElement = document.createElement('div');
-                    emojiElement.textContent = '🐯';
-                    emojiElement.style.fontSize = '24px';
-                    emojiElement.style.lineHeight = '1';
+                // const marker = new maplibregl.Marker({ element: el })
+                const marker = new maplibregl.Marker({ element: trainStationIcon })
+                    .setLngLat(geometry.coordinates)
+                    .addTo(map);
 
-                    const triangleElement = document.createElement('div');
-                    triangleElement.style.width = '0';
-                    triangleElement.style.height = '0';
-                    triangleElement.style.borderLeft = '10px solid transparent';
-                    triangleElement.style.borderRight = '10px solid transparent';
-                    triangleElement.style.borderBottom = '20px solid #007cbf';
-
-                    const circleElement = document.createElement('div');
-                    circleElement.style.width = '12px';
-                    circleElement.style.height = '12px';
-                    circleElement.style.borderRadius = '50%';
-                    circleElement.style.backgroundColor = '#007cbf';
-                    circleElement.style.border = '2px solid #ffffff';
-
-                    const coordinates = geojson.coordinates;
-                    const marker = new maplibregl.Marker({
-                        element: emojiElement,
-                        anchor: 'center'
-                    })
-                        .setLngLat([coordinates[0], coordinates[1]])
-                        .setPopup(
-                            new maplibregl.Popup()
-                                .setHTML(`<strong>${data.id}</strong><br>${data.id}`)
-                        )
-                        .addTo(map);
-
-                    featureArray.push(marker);
-                    break;
-
-                case 'LineString':
-                    map.addSource(data.refid, {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            geometry: geojson
-                        }
-                    });
-                    map.addLayer({
-                        id: data.refid,
+                featuresMeta[refid] = { type, marker };
+                marker.setPopup(
+                    new maplibregl.Popup({ offset: 25 }).setHTML(
+                        `<b>Feature ID:</b> ${refid}<br>
+               <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                    )
+                );
+            } else {
+                const sourceData = { type: 'Feature', geometry };
+                if (!map.getSource(refid)) {
+                    map.addSource(refid, { type: 'geojson', data: sourceData });
+                }
+                let layerConfig;
+                if (type === 'LineString') {
+                    layerConfig = {
+                        id: refid,
                         type: 'line',
-                        source: data.refid,
+                        source: refid,
                         paint: {
                             'line-color': '#ff0000',
                             'line-width': 3
                         }
-                    });
-                    featureArray.push(data.refid);
-                    break;
-
-                case 'Polygon':
-                    map.addSource(data.refid, {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            geometry: geojson
-                        }
-                    });
-                    map.addLayer({
-                        id: data.refid,
+                    };
+                } else {
+                    layerConfig = {
+                        id: refid,
                         type: 'fill',
-                        source: data.refid,
+                        source: refid,
                         paint: {
                             'fill-color': '#00ff00',
                             'fill-opacity': 0.5
                         }
+                    };
+                }
+                if (!map.getLayer(refid)) {
+                    map.addLayer(layerConfig);
+                    bindFeatureEvents(refid);
+                }
+                if (type === 'Polygon' && !map.getLayer(`${refid}_border`)) {
+                    map.addLayer({
+                        id: `${refid}_border`,
+                        type: 'line',
+                        source: refid,
+                        paint: {
+                            'line-color': '#000000',
+                            'line-width': 2,
+                            'line-dasharray': []
+                        }
                     });
-                    featureArray.push(data.refid);
-                    break;
-
-                default:
-                    console.warn(`Unsupported geometry type: ${geometryType}`);
+                }
+                featuresMeta[refid] = { type };
             }
-        });
-        featuresMap[checkboxId] = featureArray;
-        await addToLayerSelect(checkboxId, checkboxName);
-
+        }
+        if (allCoords.length > 0) {
+            const lons = allCoords.map(coord => coord[0]);
+            const lats = allCoords.map(coord => coord[1]);
+            const minLng = Math.min(...lons);
+            const minLat = Math.min(...lats);
+            const maxLng = Math.max(...lons);
+            const maxLat = Math.max(...lats);
+            map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, duration: 1000 });
+        }
     } catch (error) {
         console.error('Failed to get features:', error);
-
     }
+};
+
+function createMarkerElement(color = '#007cbf') {
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    Object.assign(el.style, {
+        backgroundColor: color,
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: '2px solid #000000'
+    });
+    el.innerHTML = "";
+    return el;
 }
+
 
 const addToLayerSelect = async (checkboxId, checkboxName) => {
     const layerSelect = document.getElementById('layerSelect');

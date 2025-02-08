@@ -313,17 +313,21 @@ const updateFeatureSymbol = (refid, type, values) => {
 
 const getFeatures = async (formid) => {
     const allCoords = [];
-    const table = $('#markersTable').DataTable();
-    table.clear(); // Clear existing data
 
     const extractCoordinates = (geometry) => {
         const { type, coordinates } = geometry;
         if (type === 'Point') {
             allCoords.push(coordinates);
         } else if (type === 'LineString') {
-            coordinates.forEach(coord => allCoords.push(coord));
+            for (const coord of coordinates) {
+                allCoords.push(coord);
+            }
         } else if (type === 'Polygon') {
-            coordinates.forEach(ring => ring.forEach(coord => allCoords.push(coord)));
+            for (const ring of coordinates) {
+                for (const coord of ring) {
+                    allCoords.push(coord);
+                }
+            }
         }
     };
 
@@ -338,48 +342,48 @@ const getFeatures = async (formid) => {
         }
         const features = await response.json();
         console.log(features);
-        features.forEach(({ geojson, refid }) => {
+
+        for (const { geojson, refid } of features) {
             let geometry;
             try {
                 geometry = JSON.parse(geojson);
             } catch (error) {
                 console.error(`Invalid GeoJSON for refid ${refid}:`, error);
-                return;
+                continue;
             }
             if (!geometry || !geometry.type) {
                 console.error(`Empty or invalid geometry for feature: ${refid}`);
-                return;
+                continue;
             }
             const { type } = geometry;
             extractCoordinates(geometry);
+
             if (type === 'Point') {
-                const el = document.createElement('div');
-                el.className = 'custom-marker';
-                el.style.backgroundColor = '#007cbf';
-                el.style.width = '20px';
-                el.style.height = '20px';
-                el.style.borderRadius = '50%';
-                el.style.cursor = 'pointer';
-                el.style.border = "2px solid #000000";
-                el.innerHTML = "";
-                const marker = new maplibregl.Marker({ element: el })
+                var customIcon = document.createElement('div');
+                customIcon.style.width = '38px';
+                customIcon.style.height = '55px';
+                customIcon.style.backgroundSize = 'contain';
+                customIcon.style.backgroundImage = 'url(https://api.geoapify.com/v1/icon/?type=awesome&color=red&size=small&icon=cloud&iconSize=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b)';
+                customIcon.style.cursor = 'pointer';
+
+                const marker = new maplibregl.Marker({
+                    element: customIcon
+                })
                     .setLngLat(geometry.coordinates)
                     .addTo(map);
+
+                // const el = createMarkerElement();
+                // const marker = new maplibregl.Marker({ element: el })
+                // .setLngLat(geometry.coordinates)
+                // .addTo(map);
+
                 featuresMeta[refid] = { type, marker };
                 marker.setPopup(
                     new maplibregl.Popup({ offset: 25 }).setHTML(
                         `<b>Feature ID:</b> ${refid}<br>
-             <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+               <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
                     )
                 );
-
-                // Add row to DataTable
-                table.row.add([
-                    refid,
-                    type,
-                    JSON.stringify(geometry.coordinates),
-                    `<button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
-                ]).draw(false);
             } else {
                 const sourceData = { type: 'Feature', geometry };
                 if (!map.getSource(refid)) {
@@ -396,7 +400,7 @@ const getFeatures = async (formid) => {
                             'line-width': 3
                         }
                     };
-                } else {
+                } else { // Polygon
                     layerConfig = {
                         id: refid,
                         type: 'fill',
@@ -425,7 +429,8 @@ const getFeatures = async (formid) => {
                 }
                 featuresMeta[refid] = { type };
             }
-        });
+        }
+
         if (allCoords.length > 0) {
             const lons = allCoords.map(coord => coord[0]);
             const lats = allCoords.map(coord => coord[1]);
@@ -435,20 +440,166 @@ const getFeatures = async (formid) => {
             const maxLat = Math.max(...lats);
             map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, duration: 1000 });
         }
-
-        $('#markersTable tbody').on('click', 'tr', function () {
-            const data = table.row(this).data();
-            const refid = data[0];
-            const marker = featuresMeta[refid].marker;
-            if (marker) {
-                map.flyTo({ center: marker.getLngLat(), zoom: 15 });
-                marker.togglePopup();
-            }
-        });
     } catch (error) {
         console.error('Failed to get features:', error);
     }
 };
+
+function createMarkerElement() {
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    Object.assign(el.style, {
+        backgroundColor: '#007cbf',
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: '2px solid #000000'
+    });
+    el.innerHTML = "";
+    return el;
+}
+
+
+
+// const getFeatures = async (formid) => {
+//     const allCoords = [];
+//     const table = $('#markersTable').DataTable();
+//     table.clear(); // Clear existing data
+
+//     const extractCoordinates = (geometry) => {
+//         const { type, coordinates } = geometry;
+//         if (type === 'Point') {
+//             allCoords.push(coordinates);
+//         } else if (type === 'LineString') {
+//             coordinates.forEach(coord => allCoords.push(coord));
+//         } else if (type === 'Polygon') {
+//             coordinates.forEach(ring => ring.forEach(coord => allCoords.push(coord)));
+//         }
+//     };
+
+//     try {
+//         const response = await fetch('/api/v2/load_layer', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ formid })
+//         });
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+//         const features = await response.json();
+//         console.log(features);
+//         features.forEach(({ geojson, refid }) => {
+//             let geometry;
+//             try {
+//                 geometry = JSON.parse(geojson);
+//             } catch (error) {
+//                 console.error(`Invalid GeoJSON for refid ${refid}:`, error);
+//                 return;
+//             }
+//             if (!geometry || !geometry.type) {
+//                 console.error(`Empty or invalid geometry for feature: ${refid}`);
+//                 return;
+//             }
+//             const { type } = geometry;
+//             extractCoordinates(geometry);
+//             if (type === 'Point') {
+//                 const el = document.createElement('div');
+//                 el.className = 'custom-marker';
+//                 el.style.backgroundColor = '#007cbf';
+//                 el.style.width = '20px';
+//                 el.style.height = '20px';
+//                 el.style.borderRadius = '50%';
+//                 el.style.cursor = 'pointer';
+//                 el.style.border = "2px solid #000000";
+//                 el.innerHTML = "";
+//                 const marker = new maplibregl.Marker({ element: el })
+//                     .setLngLat(geometry.coordinates)
+//                     .addTo(map);
+//                 featuresMeta[refid] = { type, marker };
+//                 marker.setPopup(
+//                     new maplibregl.Popup({ offset: 25 }).setHTML(
+//                         `<b>Feature ID:</b> ${refid}<br>
+//              <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+//                     )
+//                 );
+
+//                 // Add row to DataTable
+//                 table.row.add([
+//                     refid,
+//                     type,
+//                     JSON.stringify(geometry.coordinates),
+//                     `<button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+//                 ]).draw(false);
+//             } else {
+//                 const sourceData = { type: 'Feature', geometry };
+//                 if (!map.getSource(refid)) {
+//                     map.addSource(refid, { type: 'geojson', data: sourceData });
+//                 }
+//                 let layerConfig;
+//                 if (type === 'LineString') {
+//                     layerConfig = {
+//                         id: refid,
+//                         type: 'line',
+//                         source: refid,
+//                         paint: {
+//                             'line-color': '#ff0000',
+//                             'line-width': 3
+//                         }
+//                     };
+//                 } else {
+//                     layerConfig = {
+//                         id: refid,
+//                         type: 'fill',
+//                         source: refid,
+//                         paint: {
+//                             'fill-color': '#00ff00',
+//                             'fill-opacity': 0.5
+//                         }
+//                     };
+//                 }
+//                 if (!map.getLayer(refid)) {
+//                     map.addLayer(layerConfig);
+//                     bindFeatureEvents(refid);
+//                 }
+//                 if (type === 'Polygon' && !map.getLayer(`${refid}_border`)) {
+//                     map.addLayer({
+//                         id: `${refid}_border`,
+//                         type: 'line',
+//                         source: refid,
+//                         paint: {
+//                             'line-color': '#000000',
+//                             'line-width': 2,
+//                             'line-dasharray': []
+//                         }
+//                     });
+//                 }
+//                 featuresMeta[refid] = { type };
+//             }
+//         });
+//         if (allCoords.length > 0) {
+//             const lons = allCoords.map(coord => coord[0]);
+//             const lats = allCoords.map(coord => coord[1]);
+//             const minLng = Math.min(...lons);
+//             const minLat = Math.min(...lats);
+//             const maxLng = Math.max(...lons);
+//             const maxLat = Math.max(...lats);
+//             map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, duration: 1000 });
+//         }
+
+//         $('#markersTable tbody').on('click', 'tr', function () {
+//             const data = table.row(this).data();
+//             const refid = data[0];
+//             const marker = featuresMeta[refid].marker;
+//             if (marker) {
+//                 map.flyTo({ center: marker.getLngLat(), zoom: 15 });
+//                 marker.togglePopup();
+//             }
+//         });
+//     } catch (error) {
+//         console.error('Failed to get features:', error);
+//     }
+// };
 
 // --- Modal Event Handlers ---
 
