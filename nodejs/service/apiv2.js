@@ -362,6 +362,17 @@ app.post('/api/v2/load_layer', async (req, res) => {
     }
 })
 
-app.get('/api/v2/')
+app.post('/api/v2/update_feature_style', async (req, res) => {
+    try {
+        const { formid, refid, style } = req.body;
+
+        const sql = `UPDATE ${formid} SET style = $1 WHERE refid = $2`;
+        await pool.query(sql, [style, refid]);
+        res.status(200).send('Style updated successfully.');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while updating the feature style.');
+    }
+});
 
 module.exports = app;

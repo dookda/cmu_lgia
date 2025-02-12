@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="./../assets/css/themee1e3.css?ver=3.2.4" id="skin-default">
     <link rel="stylesheet" href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css" />
     <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css' />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="./style.css">
 </head>
 
@@ -90,17 +92,11 @@
     </div>
 
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="editForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Feature Symbol</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
                     <div class="modal-body">
-                        <!-- Fields for a Marker (Point) -->
                         <div id="pointFields" class="mb-3">
-                            <!-- Marker Type Switch -->
                             <label class="form-label">Marker Type:</label>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="markerType" id="markerTypeSimple"
@@ -113,56 +109,41 @@
                                 <label class="form-check-label" for="markerTypeEmoji">Emoji Marker</label>
                             </div>
 
-                            <!-- Simple Marker Fields -->
                             <div id="simpleMarkerFields">
                                 <label for="markerColor" class="form-label">Marker Color:</label>
                                 <input type="color" class="form-control" id="markerColor" name="markerColor"
                                     value="#007cbf">
 
-                                <label for="markerBorderColor" class="form-label">Marker Border Color:</label>
-                                <input type="color" class="form-control" id="markerBorderColor" name="markerBorderColor"
-                                    value="#000000">
-
-                                <label for="markerBorderWidth" class="form-label">Marker Border Width (px):</label>
-                                <input type="number" class="form-control" id="markerBorderWidth"
-                                    name="markerBorderWidth" min="0" max="10" value="2">
+                                <div id="awesomePanel" class="mt-2">
+                                    <label class="form-label mb-1">Choose Icon:</label>
+                                    <div id="awesomeIconSelection" class="markerList">
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Emoji Marker Fields -->
                             <div id="emojiMarkerFields" style="display: none;">
                                 <label for="markerSymbol" class="form-label">Marker Emoji:</label>
                                 <input type="text" class="form-control" id="markerSymbol" name="markerSymbol"
-                                    placeholder="e.g., 😀">
-                                <label for="markerEmojiSize" class="form-label">Emoji Size (px):</label>
-                                <input type="number" class="form-control" id="markerEmojiSize" name="markerEmojiSize"
-                                    min="10" max="200" value="30">
+                                    placeholder="😀" hidden>
+                                <label for="emojiSize" class="form-label">Emoji Size (px):</label>
+                                <input type="number" class="form-control" id="emojiSize" name="emojiSize">
 
                                 <!-- Emoji Panel -->
-                                <div id="emojiPanel" class="mt-2"
-                                    style="border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+                                <div id="emojiPanel" class="mt-2">
                                     <label class="form-label mb-1">Choose an Emoji:</label>
-                                    <div>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😀</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😃</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😄</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😁</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😆</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😅</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😂</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😊</span>
-                                        <span class="emoji-choice"
-                                            style="cursor:pointer; font-size: 24px; margin-right: 6px;">😍</span>
-                                        <span class="emoji-choice" style="cursor:pointer; font-size: 24px;">😘</span>
+                                    <div id="emojiSelection" class="markerList">
+
+
+
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Custom Marker Preview -->
+                            <div id="markerPreviewContainer" class="mt-3">
+                                <label class="form-label">Marker Preview:</label>
+                                <div id="markerPreview"></div>
                             </div>
                         </div>
 
@@ -225,9 +206,9 @@
     </div>
 
 
+
     const urlParams = new URLSearchParams(window.location.search);
     const formid = urlParams.get('formid');
-
     console.log('formid:', formid);
 
 
