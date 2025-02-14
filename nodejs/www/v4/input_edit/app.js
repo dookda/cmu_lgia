@@ -12,31 +12,11 @@ const map = new maplibregl.Map({
     style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
     center: [99.0173, 18.5762],
     zoom: 15.5,
-    pitch: 65,
+    pitch: 0,
     antialias: true,
 });
 
-class CustomControl {
-    onAdd(map) {
-        this._map = map;
-        this._container = document.createElement('div');
-        this._container.className = 'maplibregl-ctrl maplibregl-ctrl-custom';
-        // Add a button with the Font Awesome "table" icon
-        this._container.innerHTML = '<button><i class="fas fa-table"></i></button>';
-        this._container.addEventListener('click', () => {
-            toggleSidebar();
-        });
-        return this._container;
-    }
-
-    onRemove() {
-        this._container.parentNode.removeChild(this._container);
-        this._map = undefined;
-    }
-}
-
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
-// map.addControl(new CustomControl(), 'top-right');
 
 const featuresMeta = {};
 
@@ -249,8 +229,6 @@ const getFeatures = async (formid) => {
         }
         const features = await response.json();
         for (const { geojson, refid, style } of features) {
-            // console.log('Feature:', refid, style);
-
             const defaultStyle = {
                 "markerType": "simple",
                 "markerColor": "#007cbf",
@@ -269,8 +247,6 @@ const getFeatures = async (formid) => {
             let appliedStyle = defaultStyle;
             if (style) {
                 const parsedStyle = JSON.parse(style);
-                console.log('Parsed style:', parsedStyle);
-
                 if (Object.keys(parsedStyle).length > 0) {
                     appliedStyle = parsedStyle;
                 }
@@ -290,7 +266,6 @@ const getFeatures = async (formid) => {
             extractCoordinates(geometry);
 
             if (type === 'Point') {
-                // Ensure featuresMeta[refid] exists before updating it.
                 if (!featuresMeta[refid]) {
                     featuresMeta[refid] = {};
                 }
@@ -312,7 +287,6 @@ const getFeatures = async (formid) => {
                     newMarkerEl.style.backgroundColor = "";
                     newMarkerEl.style.cursor = 'pointer';
 
-                    // Use the existing marker's location to position the new marker.
                     const newMarker = new maplibregl.Marker({ element: newMarkerEl })
                         .setLngLat(geometry.coordinates)
                         .addTo(map);
@@ -385,7 +359,6 @@ const getFeatures = async (formid) => {
                     bindFeatureEvents(refid);
                 }
 
-                // Add a border for Polygon geometries if not already present.
                 if (type === 'Polygon' && !map.getLayer(`${refid}_border`)) {
                     map.addLayer({
                         id: `${refid}_border`,
@@ -398,7 +371,6 @@ const getFeatures = async (formid) => {
                         }
                     });
                 }
-
                 featuresMeta[refid] = { type };
             }
         }
@@ -417,6 +389,254 @@ const getFeatures = async (formid) => {
     }
 };
 
+const saveChanges = async (formid, changes) => {
+    try {
+        const response = await fetch('/api/v2/update_layer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ formid, changes }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Changes saved successfully:', result);
+    } catch (error) {
+        console.error('Failed to save changes:', error);
+    }
+};
+
+const getTableData = async (formid) => {
+    try {
+        const response = await fetch('/api/v2/load_layer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ formid })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('No data received or invalid data format');
+        }
+
+        const nonEditableColumns = ['refid', 'id', 'geojson', 'style', 'type'];
+
+        const columns = [
+            {
+                title: 'Actions',
+                data: null,
+                orderable: false,
+                searchable: false,
+                width: '80px',
+                render: function (data, type, row) {
+                    return `
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-info edit-btn" data-refid="${row.refid}" data-type="${row.type || ''}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-refid="${row.refid}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>`;
+                }
+            },
+            ...Object.keys(data[0])
+                .filter(key => !['geojson', 'style'].includes(key))
+                .map(key => {
+                    // Set visible to false for "refid" and "ts"
+                    const isHidden = key === 'refid' || key === 'ts';
+                    return {
+                        title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+                        data: key,
+                        className: nonEditableColumns.includes(key) ? '' : 'editable',
+                        visible: !isHidden,
+                        render: function (data, type, row) {
+                            if (type === 'display' && !nonEditableColumns.includes(key)) {
+                                return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
+                            }
+                            return data;
+                        }
+                    };
+                })
+        ];
+
+        if ($.fn.DataTable.isDataTable('#dataTable')) {
+            $('#dataTable').DataTable().destroy();
+        }
+
+        $('#dataTable').empty();
+
+        const table = $('#dataTable').DataTable({
+            data,
+            columns,
+            autoWidth: true,
+            scrollX: true,
+            dom: '<"top"Bf>rt<"bottom"lip><"clear">',
+            buttons: [
+                {
+                    text: '<i class="fas fa-plus"></i> Add New',
+                    className: 'btn-primary',
+                    action: function (e, dt, node, config) {
+                        alert('Add new item');
+                    }
+                },
+                {
+                    extend: 'collection',
+                    text: '<i class="fas fa-download"></i> Export',
+                    buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+                },
+                {
+                    text: '<i class="fas fa-save"></i> Save All Changes',
+                    className: 'btn-success save-changes-btn',
+                    action: function (e, dt, node, config) {
+                        saveAllChanges();
+                    }
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search records...",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)"
+            },
+            initComplete: function () {
+                $('.dataTables_filter input')
+                    .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
+                    .css('text-indent', '20px');
+                $('.dataTables_length select').addClass('custom-select custom-select-sm');
+            },
+            responsive: false
+        });
+
+        const originalData = $.extend(true, [], data);
+        let modifiedRows = {};
+
+        $('#dataTable').on('click', 'td.editable', function (e) {
+            const cell = $(this);
+            const cellData = table.cell(this).data();
+            const row = table.row($(this).closest('tr'));
+            const rowData = row.data();
+            const rowIndex = row.index();
+            const colIndex = table.cell(this).index().column;
+            const colName = columns[colIndex].data;
+
+            // Skip if already in edit mode
+            if (cell.hasClass('editing')) return;
+
+            // Create input element
+            const input = $('<input type="text" class="form-control input-sm cell-editor" />');
+            input.val(cellData !== null && cellData !== undefined ? cellData : '');
+
+            // Replace cell content with input
+            cell.addClass('editing');
+            cell.html(input);
+            input.focus();
+
+            // Handle input blur - save the value
+            input.on('blur', async function () {
+                const newValue = input.val();
+
+                // Update the cell and DataTable data
+                table.cell(cell).data(newValue).draw(false);
+
+                // Track modified rows
+                if (!modifiedRows[rowIndex]) {
+                    modifiedRows[rowIndex] = { refid: rowData.refid, changes: {} };
+                }
+                modifiedRows[rowIndex].changes[colName] = newValue;
+
+                // Highlight the row as modified
+                $(row.node()).addClass('modified-row');
+
+                // Auto-save changes
+                const changes = [modifiedRows[rowIndex]];
+                await saveChanges(formid, changes);
+
+                // Remove the row from modifiedRows after saving
+                delete modifiedRows[rowIndex];
+
+                cell.removeClass('editing');
+            });
+
+            // Handle enter key
+            input.on('keypress', function (e) {
+                if (e.which === 13) {
+                    input.blur();
+                }
+            });
+        });
+
+        $('#dataTable').on('click', '.edit-btn', function (e) {
+            e.stopPropagation();
+            const refid = $(this).data('refid');
+            const type = $(this).data('type');
+            openEditModal(refid, type);
+        });
+
+        $('#dataTable').on('click', '.delete-btn', function (e) {
+            e.stopPropagation();
+            const refid = $(this).data('refid');
+            if (confirm('Are you sure you want to delete this item?')) {
+                console.log('Delete item:', refid);
+            }
+        });
+
+        // Function to save all changes
+        const saveAllChanges = async () => {
+            if (Object.keys(modifiedRows).length === 0) {
+                alert('No changes to save');
+                return;
+            }
+
+            // Convert modifiedRows object to array of changes
+            const changes = Object.values(modifiedRows);
+
+            try {
+                // Show loading state
+                $('.save-changes-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+                // Send changes to server
+                const response = await fetch('/api/v2/update_layer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ formid, changes })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Clear modified rows and remove highlights
+                modifiedRows = {};
+                $('.modified-row').removeClass('modified-row');
+
+                alert(`Successfully saved ${changes.length} row(s)`);
+            } catch (error) {
+                console.error('Failed to save changes:', error);
+                alert(`Error saving changes: ${error.message}`);
+            } finally {
+                // Restore button state
+                $('.save-changes-btn').prop('disabled', false).html('<i class="fas fa-save"></i> Save All Changes');
+            }
+        };
+
+    } catch (error) {
+        console.error('Failed to get table data:', error);
+        $('#tableError').text('Failed to load data: ' + error.message).show();
+    }
+};
+
 const updateFeatureSymbol = (refid, type, values) => {
     if (values.applyToAll) {
         Object.keys(featuresMeta).forEach(refid => {
@@ -431,7 +651,7 @@ const updateFeatureSymbol = (refid, type, values) => {
 
 const updateFeatureStyleToTable = async (refid, type, values) => {
     let style = values;
-    const formid = window.currentFormId; // Set when getFeatures() was called.
+    const formid = window.currentFormId;
     try {
         if (values.applyToAll) {
             for (const id in featuresMeta) {
@@ -494,6 +714,7 @@ const initMap = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const formid = urlParams.get('formid');
         await getFeatures(formid);
+        await getTableData(formid);
     });
 };
 
@@ -508,28 +729,7 @@ const updateMarkerPreview = () => {
 
 const getRandomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min)) + min;
-}
-
-const closeSidebar = () => {
-    const sidebar = document.getElementById('describe');
-    const map = document.getElementById('map');
-    sidebar.classList.add('collapsed');
-    map.classList.add('expanded');
-}
-
-const openSidebar = () => {
-    const sidebar = document.getElementById('describe');
-    const map = document.getElementById('map');
-    sidebar.classList.remove('collapsed');
-    map.classList.remove('expanded');
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('describe');
-    const map = document.getElementById('map');
-    sidebar.classList.toggle('collapsed');
-    map.classList.toggle('expanded');
-}
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
@@ -659,7 +859,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initMap();
-    $('#markersTable').DataTable();
-    closeSidebar();
+    // $('#markersTable').DataTable();
 });
 

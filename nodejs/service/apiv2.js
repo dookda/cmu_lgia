@@ -380,4 +380,51 @@ app.post('/api/v2/update_feature_style', async (req, res) => {
     }
 });
 
+app.post('/api/v2/update_layer', async (req, res) => {
+    const { formid, changes } = req.body;
+
+    if (!formid || !changes || !Array.isArray(changes)) {
+        return res.status(400).json({ error: 'Invalid request body' });
+    }
+
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
+        return res.status(400).json({ error: 'Invalid table name' });
+    }
+
+    try {
+        await pool.query('BEGIN');
+        for (const change of changes) {
+            const { refid, changes: fieldUpdates } = change;
+            if (!refid || !fieldUpdates || typeof fieldUpdates !== 'object') {
+                throw new Error('Invalid change object: missing refid or changes');
+            }
+
+            const updateKeys = Object.keys(fieldUpdates);
+            if (updateKeys.length === 0) continue;
+
+            for (const col of updateKeys) {
+                if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col)) {
+                    throw new Error(`Invalid column name: ${col}`);
+                }
+            }
+
+            const setClause = updateKeys
+                .map((col, idx) => `"${col}" = $${idx + 1}`)
+                .join(', ');
+            const values = updateKeys.map(col => fieldUpdates[col]);
+
+            values.push(refid);
+            const queryText = `UPDATE "${formid}" SET ${setClause} WHERE refid = $${values.length}`;
+
+            await pool.query(queryText, values);
+        }
+
+        await pool.query('COMMIT');
+        res.status(200).json({ message: 'Layers updated successfully', changes });
+    } catch (error) {
+        await pool.query('ROLLBACK');
+        console.error('Error updating layers:', error);
+        res.status(500).json({ error: 'Failed to update layers', details: error.message });
+    }
+});
 module.exports = app;

@@ -77,49 +77,76 @@ body {
 /* Map styles */
 #map {
     height: 100%;
-    width: 50%;
-    /* Default width when sidebar is visible */
-    background-color: #e9ecef;
-    transition: width 0.5s;
-    position: relative;
-    overflow: auto;
-}
-
-/* When sidebar is collapsed, the map expands */
-#map.expanded {
     width: 100%;
 }
 
-/* Sidebar styles (placed on the right) */
-#describe {
-    height: 100%;
-    width: 50%;
-    /* Default width for sidebar */
+/* Styles for inline editing */
+.editable-cell {
+    min-height: 20px;
+    cursor: pointer;
+}
+
+.editable-cell:hover {
     background-color: #f8f9fa;
-    border-left: 1px solid #ddd;
-    /* Border on left side */
-    transition: width 0.5s;
-    overflow: auto;
 }
 
-/* Collapse the sidebar by setting its width to 0 */
-#describe.collapsed {
-    width: 0;
-    border-left: none;
+td.editing {
+    padding: 0 !important;
 }
 
-.maplibregl-ctrl-custom {
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 1px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-}
-
-.maplibregl-ctrl-custom button {
-    font-size: 14px;
+.cell-editor {
+    width: 100%;
+    height: 100%;
     border: none;
-    background: none;
-    cursor: pointer;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.modified-row {
+    background-color: rgba(255, 248, 230, 0.5) !important;
+}
+
+.modified-row:hover {
+    background-color: rgba(255, 248, 230, 0.7) !important;
+}
+
+/* Button and layout styles */
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.dt-buttons .btn {
+    margin-right: 5px;
+}
+
+.dataTables_filter {
+    position: relative;
+}
+
+/* Action buttons in first column */
+.btn-group {
+    display: flex;
+    gap: 3px;
+}
+
+.btn-group .btn {
+    padding: 2px 6px;
+}
+
+.custom-select {
+    padding: 0.375rem 1.75rem 0.375rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+/* Ensure horizontal scrolling works properly */
+#dataTable {
+    width: 100% !important;
+}
+
+.dataTables_wrapper {
+    overflow-x: auto;
 }
