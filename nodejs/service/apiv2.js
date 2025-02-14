@@ -355,7 +355,12 @@ app.post('/api/v2/load_layer', async (req, res) => {
         const { formid } = req.body;
         const sql = `SELECT *, ST_AsGeoJSON(geom) as geojson FROM ${formid} ORDER BY ts DESC`;
         const { rows } = await pool.query(sql);
-        res.status(200).json(rows);
+        // Remove the 'geom' column from each row
+        const filteredRows = rows.map(row => {
+            const { geom, ...rest } = row;
+            return rest;
+        });
+        res.status(200).json(filteredRows);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while getting the selected layer.');

@@ -42,21 +42,19 @@
             </li>
         </ul>
 
-        <div class="row">
-            <div class="col-3 mt-2">
-                <div class="list-group" id="list-tab" role="tablist">
-                    <a class="list-group-item list-group-item-action" href="./../input_csv/index.html"
-                        aria-controls="list-input">นำเข้าข้อมูล CSV</a>
-                    <a class="list-group-item list-group-item-action" href="./../input_form/index.html"
-                        aria-controls="list-createlayer">สร้างชั้นข้อมูลแผนที่</a>
-                    <a class="list-group-item list-group-item-action active" href="#"
-                        aria-controls="list-map">รายการข้อมูล</a>
+        <div class="container mt-2">
+            <div class="flex-container">
+                <!-- Map (left side) -->
+                <div id="map"></div>
+
+                <div id="describe">
+                    <p class="p-3">Sidebar Content
+
+                    </p>
                 </div>
             </div>
-            <div class="col-9 mt-2">
-                <div class="content" id="map"> </div>
-
-                <div>
+            <div class="row mt-2">
+                <div class="col-6">
                     <label for="layerToggle">เลือกแผนที่ฐาน:</label>
                     <select class="form-select" id="baseMapSelector">
                         <option value="maptiler">Maptiler 3D</option>
@@ -66,24 +64,25 @@
                         <option value="ghyb">Google Hybrid</option>
                     </select>
                 </div>
+            </div>
 
-                <div class="container mt-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <table id="markersTable" class="display" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Type</th>
-                                        <th>Coordinates</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
+
+            <div class="container mt-3">
+                <div class="card">
+                    <div class="card-body">
+                        <table id="markersTable" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Coordinates</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be populated dynamically -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -124,18 +123,14 @@
                             <!-- Emoji Marker Fields -->
                             <div id="emojiMarkerFields" style="display: none;">
                                 <label for="markerSymbol" class="form-label">Marker Emoji:</label>
-                                <input type="text" class="form-control" id="markerSymbol" name="markerSymbol"
-                                    placeholder="😀" hidden>
-                                <label for="emojiSize" class="form-label">Emoji Size (px):</label>
-                                <input type="number" class="form-control" id="emojiSize" name="emojiSize">
+                                <input type="text" class="form-control" id="markerSymbol" name="markerSymbol" hidden>
+                                <label for="markerSize" class="form-label">Emoji Size (px):</label>
+                                <input type="number" class="form-control" id="markerSize" name="markerSize">
 
                                 <!-- Emoji Panel -->
                                 <div id="emojiPanel" class="mt-2">
                                     <label class="form-label mb-1">Choose an Emoji:</label>
                                     <div id="emojiSelection" class="markerList">
-
-
-
                                     </div>
                                 </div>
                             </div>

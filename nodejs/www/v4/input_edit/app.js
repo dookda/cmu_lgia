@@ -12,14 +12,33 @@ const map = new maplibregl.Map({
     style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
     center: [99.0173, 18.5762],
     zoom: 15.5,
-    pitch: 45,
+    pitch: 65,
     antialias: true,
 });
 
-// Global object to store feature metadata (for updating styles)
-const featuresMeta = {};
+class CustomControl {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'maplibregl-ctrl maplibregl-ctrl-custom';
+        // Add a button with the Font Awesome "table" icon
+        this._container.innerHTML = '<button><i class="fas fa-table"></i></button>';
+        this._container.addEventListener('click', () => {
+            toggleSidebar();
+        });
+        return this._container;
+    }
 
-// --- Helper Functions ---
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+// map.addControl(new CustomControl(), 'top-right');
+
+const featuresMeta = {};
 
 const addRasterLayer = (id, url) => {
     if (id === 'maptiler') return;
@@ -74,12 +93,10 @@ const openEditModal = (refid, type) => {
 
     if (type === 'Point') {
         const markerEl = featuresMeta[refid].marker.getElement();
-
         document.getElementById('markerColor').value = rgbToHex(markerEl.style.backgroundColor || '#007cbf');
-
         document.getElementById('markerSymbol').value = markerEl.innerHTML || "";
         const computedFontSize = window.getComputedStyle(markerEl).fontSize;
-        document.getElementById('emojiSize').value = computedFontSize ? parseInt(computedFontSize) : 30;
+        document.getElementById('markerSize').value = computedFontSize ? parseInt(computedFontSize) : 30;
     } else if (type === 'LineString') {
         const currentColor = map.getPaintProperty(refid, 'line-color') || '#ff0000';
         const currentWidth = map.getPaintProperty(refid, 'line-width') || 3;
@@ -103,6 +120,7 @@ const openEditModal = (refid, type) => {
     const modalEl = document.getElementById('editModal');
     const editModal = new bootstrap.Modal(modalEl);
     editModal.show();
+    // openSidebar();
 };
 
 const rgbToHex = (rgb) => {
@@ -116,75 +134,88 @@ const rgbToHex = (rgb) => {
         : rgb;
 };
 
-const applyStyleToFeature = (id, type, values) => {
-    console.log('Applying style to feature:', id, type, values);
+const applyStyleToFeature = (refid, type, values) => {
+    console.log('Applying style to feature:', refid, type, values);
 
-    if (type === 'Point' && featuresMeta[id]?.marker) {
-        const marker = featuresMeta[id].marker;
-        const markerEl = marker.getElement();
+    if (type === 'Point' && featuresMeta[refid]?.marker) {
+        const marker = featuresMeta[refid].marker;
+        marker.getElement(); if (featuresMeta[refid] && featuresMeta[refid].marker) {
+            featuresMeta[refid].marker.remove();
+        }
+
         if (values.markerType === "simple") {
-            featuresMeta[id].markerType = "simple";
-            markerEl.style.backgroundColor = values.markerColor;
-            markerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
-            markerEl.innerHTML = "";
-            markerEl.style.fontSize = "";
-            markerEl.style.lineHeight = "";
+            featuresMeta[refid].markerType = "simple";
+            let color = values.markerColor;
+            if (color.startsWith('#')) {
+                color = color.substring(1);
+            }
+            const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${values.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
+
+            const newMarkerEl = document.createElement('div');
+            newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:38px; height:55px; display:block;">`;
+            newMarkerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
+            newMarkerEl.style.fontSize = "";
+            newMarkerEl.style.lineHeight = "";
+            newMarkerEl.style.backgroundColor = "";
+            newMarkerEl.style.cursor = 'pointer';
+
+            const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+                .setLngLat(featuresMeta[refid].marker.getLngLat())
+                .addTo(map);
+
+            newMarker.setPopup(
+                new maplibregl.Popup({ offset: 25 }).setHTML(
+                    `<b>Feature ID:</b> ${refid}<br>
+                        <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                )
+            );
+
+            featuresMeta[refid].marker = newMarker;
         } else {
-            featuresMeta[id].markerType = "emoji";
-            markerEl.innerHTML = values.markerSymbol;
-            markerEl.style.fontSize = values.markerEmojiSize + 'px';
-            markerEl.style.lineHeight = values.markerEmojiSize + 'px';
-            markerEl.style.backgroundColor = "transparent";
-            markerEl.style.border = "none";
+            featuresMeta[refid].markerType = "emoji";
+            const newMarkerEl = document.createElement('div');
+            newMarkerEl.innerHTML = values.markerSymbol;
+            newMarkerEl.style.fontSize = values.markerSize + 'px';
+            newMarkerEl.style.lineHeight = values.markerSize + 'px';
+            newMarkerEl.style.backgroundColor = "transparent";
+            newMarkerEl.style.border = "none";
+            newMarkerEl.style.cursor = 'pointer';
+
+            const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+                .setLngLat(featuresMeta[refid].marker.getLngLat())
+                .addTo(map);
+
+            newMarker.setPopup(
+                new maplibregl.Popup({ offset: 25 }).setHTML(
+                    `<b>Feature ID:</b> ${refid}<br>
+                        <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                )
+            );
+
+            featuresMeta[refid].marker = newMarker;
         }
     } else if (type === 'LineString') {
-        map.setPaintProperty(id, 'line-color', values.lineColor);
-        map.setPaintProperty(id, 'line-width', parseFloat(values.lineWidth));
+        map.setPaintProperty(refid, 'line-color', values.lineColor);
+        map.setPaintProperty(refid, 'line-width', parseFloat(values.lineWidth));
         if (values.lineDash && values.lineDash.trim() !== "") {
             const dashArray = values.lineDash.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
-            map.setPaintProperty(id, 'line-dasharray', dashArray);
+            map.setPaintProperty(refid, 'line-dasharray', dashArray);
         } else {
-            map.setPaintProperty(id, 'line-dasharray', null);
+            map.setPaintProperty(refid, 'line-dasharray', null);
         }
     } else if (type === 'Polygon') {
-        map.setPaintProperty(id, 'fill-color', values.fillColor);
-        map.setPaintProperty(id, 'fill-opacity', parseFloat(values.fillOpacity));
-        map.setPaintProperty(`${id}_border`, 'line-color', values.polygonBorderColor);
-        map.setPaintProperty(`${id}_border`, 'line-width', parseFloat(values.polygonBorderWidth));
+        map.setPaintProperty(refid, 'fill-color', values.fillColor);
+        map.setPaintProperty(refid, 'fill-opacity', parseFloat(values.fillOpacity));
+        map.setPaintProperty(`${refid}_border`, 'line-color', values.polygonBorderColor);
+        map.setPaintProperty(`${refid}_border`, 'line-width', parseFloat(values.polygonBorderWidth));
         if (values.polygonBorderDash && values.polygonBorderDash.trim() !== "") {
             const dashArray = values.polygonBorderDash.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
-            map.setPaintProperty(`${id}_border`, 'line-dasharray', dashArray);
+            map.setPaintProperty(`${refid}_border`, 'line-dasharray', dashArray);
         } else {
-            map.setPaintProperty(`${id}_border`, 'line-dasharray', []);
+            map.setPaintProperty(`${refid}_border`, 'line-dasharray', []);
         }
     }
 };
-
-function createMarkerElement(styleValue) {
-    const el = document.createElement('div');
-    el.className = 'custom-marker';
-    el.style.width = '38px';
-    el.style.height = '55px';
-    el.style.backgroundSize = 'contain';
-    el.style.cursor = 'pointer';
-
-    switch (styleValue) {
-        case 'train':
-            el.style.backgroundImage =
-                "url(https://api.geoapify.com/v1/icon/?type=material&color=%2323246e&icon=cloud&iconType=awesome&scaleFactor=2&apiKey=" + geoapifyKey + ")";
-            break;
-        case 'bus':
-            el.style.backgroundImage =
-                "url(https://api.geoapify.com/v1/icon/?type=awesome&color=yellow&size=large&icon=bus&iconSize=large&scaleFactor=2&apiKey=" + geoapifyKey + ")";
-            break;
-        case 'default':
-        default:
-            el.style.backgroundImage =
-                "url(https://api.geoapify.com/v1/icon/?type=awesome&color=red&size=small&icon=cloud&iconSize=small&scaleFactor=2&apiKey=" + geoapifyKey + ")";
-            break;
-    }
-    return el;
-}
 
 const getFeatures = async (formid) => {
     window.currentFormId = formid;
@@ -218,20 +249,25 @@ const getFeatures = async (formid) => {
         }
         const features = await response.json();
         for (const { geojson, refid, style } of features) {
-            console.log('Feature:', style);
+            // console.log('Feature:', refid, style);
 
             const defaultStyle = {
-                lineColor: '#ff0000',
-                lineDash: "1,0",        // This is already an array
-                lineWidth: 1,
-                polygonBorderColor: '#000000',
-                polygonBorderWidth: 0,
-                fillColor: '#00ff00',
-                fillOpacity: 0.8
+                "markerType": "simple",
+                "markerColor": "#007cbf",
+                "markerSymbol": "user-circle",
+                "markerSize": "12",
+                "lineColor": "#ff0000",
+                "lineWidth": "3",
+                "lineDash": "1,0",
+                "fillColor": "#00ff00",
+                "fillOpacity": "0.5",
+                "polygonBorderColor": "#000000",
+                "polygonBorderDash": "",
+                "polygonBorderWidth": "2"
             };
 
             let appliedStyle = defaultStyle;
-            if (style && typeof style === 'object') {
+            if (style) {
                 const parsedStyle = JSON.parse(style);
                 console.log('Parsed style:', parsedStyle);
 
@@ -240,7 +276,6 @@ const getFeatures = async (formid) => {
                 }
             }
 
-            // Parse the GeoJSON geometry.
             let geometry;
             try {
                 geometry = JSON.parse(geojson);
@@ -249,34 +284,76 @@ const getFeatures = async (formid) => {
                 continue;
             }
             if (!geometry || !geometry.type) {
-                // console.error(`Empty or invalid geometry for feature: ${refid}`);
                 continue;
             }
             const { type } = geometry;
             extractCoordinates(geometry);
 
             if (type === 'Point') {
-                // Create a custom marker using the applied style.
-                const customIcon = createMarkerElement(appliedStyle);
-                const marker = new maplibregl.Marker({ element: customIcon })
-                    .setLngLat(geometry.coordinates)
-                    .addTo(map);
+                // Ensure featuresMeta[refid] exists before updating it.
+                if (!featuresMeta[refid]) {
+                    featuresMeta[refid] = {};
+                }
 
-                featuresMeta[refid] = { type, marker };
-                marker.setPopup(
-                    new maplibregl.Popup({ offset: 25 }).setHTML(
-                        `<b>Feature ID:</b> ${refid}<br>
-                        <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
-                    )
-                );
+                if (appliedStyle.markerType === "simple") {
+                    featuresMeta[refid].markerType = "simple";
+                    let color = appliedStyle.markerColor;
+                    if (color.startsWith('#')) {
+                        color = color.substring(1);
+                    }
+                    const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${appliedStyle.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
+                    console.log('Marker URL:', appliedStyle.markerSymbol);
+
+                    const newMarkerEl = document.createElement('div');
+                    newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:38px; height:55px; display:block;">`;
+                    newMarkerEl.style.border = `${appliedStyle.markerBorderWidth}px solid ${appliedStyle.markerBorderColor}`;
+                    newMarkerEl.style.fontSize = "";
+                    newMarkerEl.style.lineHeight = "";
+                    newMarkerEl.style.backgroundColor = "";
+                    newMarkerEl.style.cursor = 'pointer';
+
+                    // Use the existing marker's location to position the new marker.
+                    const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+                        .setLngLat(geometry.coordinates)
+                        .addTo(map);
+
+                    newMarker.setPopup(
+                        new maplibregl.Popup({ offset: 25 }).setHTML(
+                            `<b>Feature ID:</b> ${refid}<br>
+                            <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                        )
+                    );
+
+                    featuresMeta[refid].marker = newMarker;
+                } else {
+                    featuresMeta[refid].markerType = "emoji";
+                    const newMarkerEl = document.createElement('div');
+                    newMarkerEl.innerHTML = appliedStyle.markerSymbol;
+                    newMarkerEl.style.fontSize = appliedStyle.markerSize + 'px';
+                    newMarkerEl.style.lineHeight = appliedStyle.markerSize + 'px';
+                    newMarkerEl.style.backgroundColor = "transparent";
+                    newMarkerEl.style.border = "none";
+                    newMarkerEl.style.cursor = 'pointer';
+
+                    const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+                        .setLngLat(geometry.coordinates)
+                        .addTo(map);
+
+                    newMarker.setPopup(
+                        new maplibregl.Popup({ offset: 25 }).setHTML(
+                            `<b>Feature ID:</b> ${refid}<br>
+                            <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                        )
+                    );
+
+                    featuresMeta[refid].marker = newMarker;
+                }
             } else {
-                // For non‑point geometries, add a GeoJSON source and corresponding layer.
                 const sourceData = { type: 'Feature', geometry };
                 if (!map.getSource(refid)) {
                     map.addSource(refid, { type: 'geojson', data: sourceData });
                 }
 
-                // Define layer configuration based on geometry type and applied style.
                 let layerConfig;
                 if (type === 'LineString') {
                     layerConfig = {
@@ -303,7 +380,6 @@ const getFeatures = async (formid) => {
                     };
                 }
 
-                // Add the layer to the map if it doesn't already exist.
                 if (!map.getLayer(refid)) {
                     map.addLayer(layerConfig);
                     bindFeatureEvents(refid);
@@ -343,9 +419,9 @@ const getFeatures = async (formid) => {
 
 const updateFeatureSymbol = (refid, type, values) => {
     if (values.applyToAll) {
-        Object.keys(featuresMeta).forEach(id => {
-            if (featuresMeta[id].type === type) {
-                applyStyleToFeature(id, type, values);
+        Object.keys(featuresMeta).forEach(refid => {
+            if (featuresMeta[refid].type === type) {
+                applyStyleToFeature(refid, type, values);
             }
         });
     } else {
@@ -353,18 +429,8 @@ const updateFeatureSymbol = (refid, type, values) => {
     }
 };
 
-const updateFeatureStyle = async (refid, type, values) => {
-    let style;
-    if (type === 'Point') {
-        if (values.markerType === 'simple') {
-            // Build a style string for simple markers.
-            style = `simple|${values.markerColor}|${values.markerBorderColor}|${values.markerBorderWidth}`;
-        } else if (values.markerType === 'emoji') {
-            style = `emoji|${values.markerSymbol}|${values.markerEmojiSize}`;
-        }
-    } else {
-        style = values;
-    }
+const updateFeatureStyleToTable = async (refid, type, values) => {
+    let style = values;
     const formid = window.currentFormId; // Set when getFeatures() was called.
     try {
         if (values.applyToAll) {
@@ -397,14 +463,12 @@ const updateFeatureStyle = async (refid, type, values) => {
         }
         // Parse the response as text
         const data = await response.text();
-        console.log('Feature style updated:', data);
     } catch (error) {
         console.error('Failed to update feature style:', error);
     }
 };
 
 const initMap = () => {
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.on('load', async () => {
         Object.entries(BASE_MAPS).forEach(([id, url]) => addRasterLayer(id, url));
         map.addSource('maptiler', {
@@ -444,6 +508,27 @@ const updateMarkerPreview = () => {
 
 const getRandomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min)) + min;
+}
+
+const closeSidebar = () => {
+    const sidebar = document.getElementById('describe');
+    const map = document.getElementById('map');
+    sidebar.classList.add('collapsed');
+    map.classList.add('expanded');
+}
+
+const openSidebar = () => {
+    const sidebar = document.getElementById('describe');
+    const map = document.getElementById('map');
+    sidebar.classList.remove('collapsed');
+    map.classList.remove('expanded');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('describe');
+    const map = document.getElementById('map');
+    sidebar.classList.toggle('collapsed');
+    map.classList.toggle('expanded');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -516,14 +601,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('emojiSelection').addEventListener('click', (e) => {
         if (e.target.classList.contains('emoji-choice')) {
             const chosenEmoji = e.target.textContent;
-            const fontSize = document.getElementById('emojiSize').value;
+            const fontSize = document.getElementById('markerSize').value;
             document.getElementById('markerSymbol').value = chosenEmoji;
             document.getElementById('markerPreview').innerHTML = chosenEmoji;
             document.getElementById('markerPreview').style.fontSize = `${fontSize}px`;
         }
     });
 
-    document.getElementById('emojiSize').addEventListener('input', (e) => {
+    document.getElementById('markerSize').addEventListener('input', (e) => {
         const fontSize = e.target.value;
         document.getElementById('markerPreview').style.fontSize = `${fontSize}px`;
     });
@@ -538,6 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const iconClass = classes.find(c => c.startsWith('fa-') && c !== 'fa');
             if (iconClass) {
                 currentAwesomeIcon = iconClass.substring(3);
+                document.getElementById('markerSymbol').value = `${currentAwesomeIcon}`;
                 updateMarkerPreview();
             }
         }
@@ -551,19 +637,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('editForm').addEventListener('submit', (e) => {
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const refid = document.getElementById('featureId').value;
         const type = document.getElementById('featureType').value;
         const formData = new FormData(e.target);
         const values = Object.fromEntries(formData.entries());
-        updateFeatureSymbol(refid, type, values);
         const modalEl = document.getElementById('editModal');
         const editModal = bootstrap.Modal.getInstance(modalEl);
         if (editModal) {
             editModal.hide();
         }
-        updateFeatureStyle(refid, type, values);
+        updateFeatureSymbol(refid, type, values);
+        updateFeatureStyleToTable(refid, type, values);
     });
 
     document.addEventListener('hide.bs.modal', function (event) {
@@ -574,8 +660,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initMap();
     $('#markersTable').DataTable();
+    closeSidebar();
 });
-
-
-
 
