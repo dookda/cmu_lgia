@@ -472,6 +472,52 @@ const deleteFeature = async (formid, refid) => {
     }
 };
 
+const thaiMonths = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
+function isISODate(str) {
+    // Regular expression for ISO 8601 format
+    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+
+    if (!isoDatePattern.test(str)) return false;
+
+    // Additional validation by trying to parse the date
+    const date = new Date(str);
+    return date instanceof Date && !isNaN(date);
+}
+
+// Function to format date to Thai format
+function formatThaiDate(dateString) {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+
+    const day = date.getDate();
+    const month = thaiMonths[date.getMonth()];
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era (BE)
+
+    return `${day} ${month} ${year}`;
+}
+
+// Function to format date and time to Thai format
+function formatThaiDateTime(dateString) {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+
+    const day = date.getDate();
+    const month = thaiMonths[date.getMonth()];
+    const year = date.getFullYear() + 543;
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${day} ${month} ${year} ${hours}:${minutes} น.`;
+}
+
 const getTableData = async (formid) => {
     try {
         // Fetch column descriptions
@@ -511,10 +557,10 @@ const getTableData = async (formid) => {
                 data: null,
                 orderable: false,
                 searchable: false,
-                // width: '80px',
                 render: function (data, type, row) {
                     let _type = row.geojson ? JSON.parse(row.geojson).type : '';
                     let geojson = row.geojson ? JSON.parse(row.geojson) : '';
+
                     if (geojson && geojson.type && geojson.coordinates) {
                         var _geojson = JSON.stringify(geojson);
                     } else {
@@ -522,17 +568,16 @@ const getTableData = async (formid) => {
                         geojson = { type: 'Point', coordinates: [0, 0] };
                     }
 
-                    return `
-                <div class="btn-group">
-                    <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-                        <i class="fas fa-magnifying-glass"></i>
-                    </button>
-                    <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                        <i class="fas fa-brush"></i>
-                    </button>
-                    <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    return `<div class="btn-group">
+                  <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                    <i class="fas fa-magnifying-glass"></i>
+                  </button>
+                  <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
+                    <i class="fas fa-brush"></i>
+                  </button>
+                  <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>`;
                 }
             },
@@ -546,6 +591,13 @@ const getTableData = async (formid) => {
                         className: nonEditableColumns.includes(key) ? '' : 'editable',
                         visible: !isHidden,
                         render: function (data, type, row) {
+                            if (isISODate(data)) {
+                                if (type === 'display') {
+                                    return formatThaiDate(data);
+                                }
+                                return data;
+                            }
+
                             if (type === 'display' && !nonEditableColumns.includes(key)) {
                                 return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
                             }
@@ -565,7 +617,8 @@ const getTableData = async (formid) => {
             if (col.data === null) return;
             const match = columnsData.find(i => col.data === i.col_id);
             if (match) {
-                return col.title = match.col_name;
+                col.title = match.col_name;
+                col.type = match.col_type;
             }
         });
 
@@ -623,8 +676,23 @@ const getTableData = async (formid) => {
 
             if (cell.hasClass('editing')) return;
 
-            const input = $('<input type="text" class="form-control input-sm cell-editor" />');
-            input.val(cellData !== null && cellData !== undefined ? cellData : '');
+            const columnType = columns[colIndex].type;
+
+            const input = columnType === 'date'
+                ? $('<input type="date" class="form-control input-sm cell-editor" />')
+                : columnType === 'numeric'
+                    ? $('<input type="number" class="form-control input-sm cell-editor" />')
+                    : $('<input type="text" class="form-control input-sm cell-editor" />');
+
+            if (columnType === 'date') {
+                const formatDateForInput = (dateString) => {
+                    const date = new Date(dateString);
+                    return date.toISOString().split('T')[0];
+                };
+                input.val(cellData !== null && cellData !== undefined ? formatDateForInput(cellData) : '');
+            } else {
+                input.val(cellData !== null && cellData !== undefined ? cellData : '');
+            }
 
             cell.addClass('editing');
             cell.html(input);
@@ -633,14 +701,23 @@ const getTableData = async (formid) => {
             input.on('blur', async function () {
                 const newValue = input.val();
                 table.cell(cell).data(newValue).draw(false);
+
                 if (!modifiedRows[rowIndex]) {
                     modifiedRows[rowIndex] = { refid: rowData.refid, changes: {} };
                 }
                 modifiedRows[rowIndex].changes[colName] = newValue;
                 $(row.node()).addClass('modified-row');
+
                 const changes = [modifiedRows[rowIndex]];
                 await saveChanges(formid, changes);
                 delete modifiedRows[rowIndex];
+
+                if (columnType === 'date') {
+                    const formattedDate = formatThaiDate(newValue);
+                    cell.html(formattedDate);
+                } else {
+                    cell.html(newValue);
+                }
 
                 cell.removeClass('editing');
             });
