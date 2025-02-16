@@ -158,25 +158,52 @@ const loadColumnList = async (formid) => {
             document.getElementById('table').innerHTML = '';
         }
 
-        const columnsResponse = await axios.post('/api/load_column_description', { formid });
-        const tb = columnsResponse.data.map(i => `<th>${i.col_name}</th>`).join('');
-        // const col = columnsResponse.data.map(i => ({ 'data': i.col_id, "className": "text-center" }));
+        // Fetch column descriptions using fetch
+        const columnsResponse = await fetch('/api/load_column_description', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ formid }),
+        });
+
+        if (!columnsResponse.ok) {
+            throw new Error(`HTTP error! status: ${columnsResponse.status}`);
+        }
+
+        const columnsData = await columnsResponse.json();
+        const tb = columnsData.map(i => `<th>${i.col_name}</th>`).join('');
+
+        // Define table columns
         const col = [{
             "data": "refid",
             "render": function (data, type, row) {
                 return `<button class="btn btn-sm btn-primary zoom-btn" data-refid="${data}">Zoom</button>`;
             },
             "className": "text-center"
-        }].concat(columnsResponse.data.map(i => ({ 'data': i.col_id, "className": "text-center" })));
+        }].concat(columnsData.map(i => ({ 'data': i.col_id, "className": "text-center" })));
 
-
-
+        // Update the table HTML
         document.getElementById('table').innerHTML = `<thead><tr>${tb}</tr></thead><tbody></tbody>`;
 
-        const r = await axios.post('/api/load_layer', { formid });
+        // Fetch layer data using fetch
+        const layerResponse = await fetch('/api/load_layer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ formid }),
+        });
 
+        if (!layerResponse.ok) {
+            throw new Error(`HTTP error! status: ${layerResponse.status}`);
+        }
+
+        const layerData = await layerResponse.json();
+
+        // Initialize DataTable
         const table = $('#table').DataTable({
-            data: r.data,
+            data: layerData,
             columns: col,
             scrollX: true,
             autoWidth: true,
@@ -199,7 +226,7 @@ const loadColumnList = async (formid) => {
 
             if (markersMap[formid]) {
                 markersMap[formid].forEach((marker, index) => {
-                    const refid = r.data[index].refid;
+                    const refid = layerData[index].refid;
                     if (filteredRefIds.includes(refid)) {
                         marker.getElement().style.display = 'block';
                     } else {
@@ -209,9 +236,10 @@ const loadColumnList = async (formid) => {
             }
         });
 
+        // Add click event listener for zoom buttons
         $('#table tbody').on('click', '.zoom-btn', function () {
             const refid = $(this).data('refid');
-            zoomToFeature(refid, formid, r.data);
+            zoomToFeature(refid, formid, layerData);
         });
 
         currentFormId = formid; // Track the currently selected layer

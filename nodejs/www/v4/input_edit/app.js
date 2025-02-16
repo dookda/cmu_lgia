@@ -43,14 +43,26 @@ const switchBaseMap = (selectedLayer) => {
 
 const bindFeatureEvents = (refid) => {
     map.on('click', refid, (e) => {
+        filterDataTableByRefId(refid);
+
         const coordinates = e.lngLat;
-        new maplibregl.Popup()
+        const selectedFeature = new maplibregl.Popup()
             .setLngLat(coordinates)
             .setHTML(
                 `<b>Feature ID:</b> ${refid}<br>
-         <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="${featuresMeta[refid].type}">Edit Symbol</button>`
+             <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="${featuresMeta[refid].type}">Edit Symbol</button>`
             )
             .addTo(map);
+
+        selectedFeature.on('close', () => {
+            const table = $('#dataTable').DataTable();
+            table.search('').columns().search('').draw();
+        });
+        selectedFeature.on('open', () => {
+            const table = $('#dataTable').DataTable();
+            const refidColumnIndex = table.column(':contains("refid")').index();
+            table.column(refidColumnIndex).search(refid).draw();
+        });
     });
     map.on('mouseenter', refid, () => {
         map.getCanvas().style.cursor = 'pointer';
@@ -61,6 +73,8 @@ const bindFeatureEvents = (refid) => {
 };
 
 const openEditModal = (refid, type) => {
+    console.log('Edit feature:', refid, type);
+
     const featureIdInput = document.getElementById('featureId');
     const featureTypeInput = document.getElementById('featureType');
 
@@ -114,6 +128,11 @@ const rgbToHex = (rgb) => {
         : rgb;
 };
 
+function filterDataTableByRefId(refid) {
+    const table = $('#dataTable').DataTable();
+    table.search(refid).draw();
+}
+
 const applyStyleToFeature = (refid, type, values) => {
     console.log('Applying style to feature:', refid, type, values);
 
@@ -140,15 +159,22 @@ const applyStyleToFeature = (refid, type, values) => {
             newMarkerEl.style.cursor = 'pointer';
 
             const newMarker = new maplibregl.Marker({ element: newMarkerEl })
-                .setLngLat(featuresMeta[refid].marker.getLngLat())
+                .setLngLat(geometry.coordinates)
                 .addTo(map);
 
             newMarker.setPopup(
                 new maplibregl.Popup({ offset: 25 }).setHTML(
                     `<b>Feature ID:</b> ${refid}<br>
-                        <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                                <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
                 )
             );
+            newMarker.getElement().addEventListener('click', () => {
+                filterDataTableByRefId(refid);
+            });
+            newMarker.getPopup().on('close', () => {
+                const table = $('#dataTable').DataTable();
+                table.search('').columns().search('').draw();
+            });
 
             featuresMeta[refid].marker = newMarker;
         } else {
@@ -162,15 +188,22 @@ const applyStyleToFeature = (refid, type, values) => {
             newMarkerEl.style.cursor = 'pointer';
 
             const newMarker = new maplibregl.Marker({ element: newMarkerEl })
-                .setLngLat(featuresMeta[refid].marker.getLngLat())
+                .setLngLat(geometry.coordinates)
                 .addTo(map);
 
             newMarker.setPopup(
                 new maplibregl.Popup({ offset: 25 }).setHTML(
                     `<b>Feature ID:</b> ${refid}<br>
-                        <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                                <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
                 )
             );
+            newMarker.getElement().addEventListener('click', () => {
+                filterDataTableByRefId(refid);
+            });
+            newMarker.getPopup().on('close', () => {
+                const table = $('#dataTable').DataTable();
+                table.search('').columns().search('').draw();
+            });
 
             featuresMeta[refid].marker = newMarker;
         }
@@ -294,9 +327,16 @@ const getFeatures = async (formid) => {
                     newMarker.setPopup(
                         new maplibregl.Popup({ offset: 25 }).setHTML(
                             `<b>Feature ID:</b> ${refid}<br>
-                            <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                                <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
                         )
                     );
+                    newMarker.getElement().addEventListener('click', () => {
+                        filterDataTableByRefId(refid);
+                    });
+                    newMarker.getPopup().on('close', () => {
+                        const table = $('#dataTable').DataTable();
+                        table.search('').columns().search('').draw();
+                    });
 
                     featuresMeta[refid].marker = newMarker;
                 } else {
@@ -316,9 +356,16 @@ const getFeatures = async (formid) => {
                     newMarker.setPopup(
                         new maplibregl.Popup({ offset: 25 }).setHTML(
                             `<b>Feature ID:</b> ${refid}<br>
-                            <button id="edit-symbol" class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
+                                <button class="edit-feature btn btn-sm btn-outline-primary" data-refid="${refid}" data-type="Point">Edit Symbol</button>`
                         )
                     );
+                    newMarker.getElement().addEventListener('click', () => {
+                        filterDataTableByRefId(refid);
+                    });
+                    newMarker.getPopup().on('close', () => {
+                        const table = $('#dataTable').DataTable();
+                        table.search('').columns().search('').draw();
+                    });
 
                     featuresMeta[refid].marker = newMarker;
                 }
@@ -341,8 +388,6 @@ const getFeatures = async (formid) => {
                         }
                     };
                 } else if (type === 'Polygon') {
-                    console.log(appliedStyle.fillColor);
-
                     layerConfig = {
                         id: refid,
                         type: 'fill',
@@ -408,8 +453,40 @@ const saveChanges = async (formid, changes) => {
     }
 };
 
+const deleteFeature = async (formid, refid) => {
+    try {
+        const response = await fetch('/api/v2/delete_feature', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ formid, refid })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Feature deleted:', result);
+    } catch (error) {
+        console.error('Failed to delete feature:', error);
+    }
+};
+
 const getTableData = async (formid) => {
     try {
+        // Fetch column descriptions
+        const columnsResponse = await fetch('/api/load_column_description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ formid }),
+        });
+
+        if (!columnsResponse.ok) {
+            throw new Error(`HTTP error! status: ${columnsResponse.status}`);
+        }
+
+        const columnsData = await columnsResponse.json();
+
         const response = await fetch('/api/v2/load_layer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -426,7 +503,7 @@ const getTableData = async (formid) => {
             throw new Error('No data received or invalid data format');
         }
 
-        const nonEditableColumns = ['refid', 'id', 'geojson', 'style', 'type'];
+        const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
 
         const columns = [
             {
@@ -434,14 +511,26 @@ const getTableData = async (formid) => {
                 data: null,
                 orderable: false,
                 searchable: false,
-                width: '80px',
+                // width: '80px',
                 render: function (data, type, row) {
+                    let _type = row.geojson ? JSON.parse(row.geojson).type : '';
+                    let geojson = row.geojson ? JSON.parse(row.geojson) : '';
+                    if (geojson && geojson.type && geojson.coordinates) {
+                        var _geojson = JSON.stringify(geojson);
+                    } else {
+                        console.error('Invalid GeoJSON:', geojson);
+                        geojson = { type: 'Point', coordinates: [0, 0] };
+                    }
+
                     return `
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-info edit-btn" data-refid="${row.refid}" data-type="${row.type || ''}">
-                        <i class="fas fa-edit"></i>
+                    <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                        <i class="fas fa-magnifying-glass"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-refid="${row.refid}">
+                    <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
+                        <i class="fas fa-brush"></i>
+                    </button>
+                    <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>`;
@@ -450,7 +539,6 @@ const getTableData = async (formid) => {
             ...Object.keys(data[0])
                 .filter(key => !['geojson', 'style'].includes(key))
                 .map(key => {
-                    // Set visible to false for "refid" and "ts"
                     const isHidden = key === 'refid' || key === 'ts';
                     return {
                         title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
@@ -473,6 +561,17 @@ const getTableData = async (formid) => {
 
         $('#dataTable').empty();
 
+        columns.forEach(col => {
+            if (col.data === null) return;
+            const match = columnsData.find(i => col.data === i.col_id);
+            if (match) {
+                return col.title = match.col_name;
+            }
+        });
+
+        const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
+        $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
+
         const table = $('#dataTable').DataTable({
             data,
             columns,
@@ -491,13 +590,6 @@ const getTableData = async (formid) => {
                     extend: 'collection',
                     text: '<i class="fas fa-download"></i> Export',
                     buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-                },
-                {
-                    text: '<i class="fas fa-save"></i> Save All Changes',
-                    className: 'btn-success save-changes-btn',
-                    action: function (e, dt, node, config) {
-                        saveAllChanges();
-                    }
                 }
             ],
             language: {
@@ -529,50 +621,49 @@ const getTableData = async (formid) => {
             const colIndex = table.cell(this).index().column;
             const colName = columns[colIndex].data;
 
-            // Skip if already in edit mode
             if (cell.hasClass('editing')) return;
 
-            // Create input element
             const input = $('<input type="text" class="form-control input-sm cell-editor" />');
             input.val(cellData !== null && cellData !== undefined ? cellData : '');
 
-            // Replace cell content with input
             cell.addClass('editing');
             cell.html(input);
             input.focus();
 
-            // Handle input blur - save the value
             input.on('blur', async function () {
                 const newValue = input.val();
-
-                // Update the cell and DataTable data
                 table.cell(cell).data(newValue).draw(false);
-
-                // Track modified rows
                 if (!modifiedRows[rowIndex]) {
                     modifiedRows[rowIndex] = { refid: rowData.refid, changes: {} };
                 }
                 modifiedRows[rowIndex].changes[colName] = newValue;
-
-                // Highlight the row as modified
                 $(row.node()).addClass('modified-row');
-
-                // Auto-save changes
                 const changes = [modifiedRows[rowIndex]];
                 await saveChanges(formid, changes);
-
-                // Remove the row from modifiedRows after saving
                 delete modifiedRows[rowIndex];
 
                 cell.removeClass('editing');
             });
 
-            // Handle enter key
             input.on('keypress', function (e) {
                 if (e.which === 13) {
                     input.blur();
                 }
             });
+        });
+
+        $('#dataTable').on('click', '.map-btn', function (e) {
+            e.stopPropagation();
+            try {
+                const geojson = $(this).data('geojson');
+                const bbox = turf.bbox(geojson);
+                map.fitBounds(bbox, {
+                    padding: 20,
+                    duration: 1000
+                });
+            } catch (error) {
+                console.error('Failed to parse GeoJSON:', error);
+            }
         });
 
         $('#dataTable').on('click', '.edit-btn', function (e) {
@@ -585,51 +676,12 @@ const getTableData = async (formid) => {
         $('#dataTable').on('click', '.delete-btn', function (e) {
             e.stopPropagation();
             const refid = $(this).data('refid');
-            if (confirm('Are you sure you want to delete this item?')) {
+            if (confirm('ยืนยันการลบ  ?')) {
                 console.log('Delete item:', refid);
+                deleteFeature(formid, refid);
+                table.row($(this).closest('tr')).remove().draw(false);
             }
         });
-
-        // Function to save all changes
-        const saveAllChanges = async () => {
-            if (Object.keys(modifiedRows).length === 0) {
-                alert('No changes to save');
-                return;
-            }
-
-            // Convert modifiedRows object to array of changes
-            const changes = Object.values(modifiedRows);
-
-            try {
-                // Show loading state
-                $('.save-changes-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-
-                // Send changes to server
-                const response = await fetch('/api/v2/update_layer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ formid, changes })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                // Clear modified rows and remove highlights
-                modifiedRows = {};
-                $('.modified-row').removeClass('modified-row');
-
-                alert(`Successfully saved ${changes.length} row(s)`);
-            } catch (error) {
-                console.error('Failed to save changes:', error);
-                alert(`Error saving changes: ${error.message}`);
-            } finally {
-                // Restore button state
-                $('.save-changes-btn').prop('disabled', false).html('<i class="fas fa-save"></i> Save All Changes');
-            }
-        };
 
     } catch (error) {
         console.error('Failed to get table data:', error);
@@ -713,8 +765,8 @@ const initMap = () => {
         switchBaseMap('osm');
         const urlParams = new URLSearchParams(window.location.search);
         const formid = urlParams.get('formid');
-        await getFeatures(formid);
         await getTableData(formid);
+        await getFeatures(formid);
     });
 };
 

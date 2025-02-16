@@ -129,11 +129,17 @@ td.editing {
 /* Action buttons in first column */
 .btn-group {
     display: flex;
-    gap: 3px;
+    gap: 2px;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .btn-group .btn {
-    padding: 2px 6px;
+    padding: 2px 2px;
 }
 
 .custom-select {

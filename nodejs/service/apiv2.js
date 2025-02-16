@@ -10,6 +10,7 @@ const SECRET_KEY = "your_secret_key";
 
 const fs = require('fs');
 const csvParser = require('csv-parser');
+const { log } = require('console');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -427,4 +428,21 @@ app.post('/api/v2/update_layer', async (req, res) => {
         res.status(500).json({ error: 'Failed to update layers', details: error.message });
     }
 });
+
+// delete layer by formid and refid
+app.delete('/api/v2/delete_feature', async (req, res) => {
+    try {
+        const { formid, refid } = req.body;
+        console.log('Deleting feature:', formid, refid);
+
+        const sql = `DELETE FROM ${formid} WHERE refid = $1`;
+        console.log(sql, refid);
+        await pool.query(sql, [refid]);
+        res.status(200).json({ message: 'Feature deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while deleting the layer.');
+    }
+});
+
 module.exports = app;
