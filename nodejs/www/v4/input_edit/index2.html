@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MapLibre GL JS with Mapbox GL Draw</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css'
+        type='text/css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        // Define your Maptiler API key
+        const MAPTILER_KEY = 'QcH5sAeCUv5rMXKrnJms'; // Replace with your actual Maptiler key
+
+        // Base maps (not used in this example, but defined for reference)
+        const BASE_MAPS = {
+            osm: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            grod: 'https://mt0.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
+            ghyb: 'https://mt0.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
+            gsat: 'https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+        };
+
+        // Initialize the map
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}`,
+            center: [99.0173, 18.5762], // Chiang Mai, Thailand
+            zoom: 15.5,
+            pitch: 0,
+            antialias: true,
+        });
+
+        // Add navigation controls
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+        // Override MapboxDraw constants for MapLibre GL JS compatibility
+        MapboxDraw.constants.classes.CANVAS = 'maplibregl-canvas';
+        MapboxDraw.constants.classes.CONTROL_BASE = 'maplibregl-ctrl';
+        MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+        MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+        MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
+
+        // Initialize MapboxDraw
+        const draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {
+                point: true,
+                line_string: true,
+                polygon: true,
+                trash: true
+            }
+        });
+
+        // Add MapboxDraw control to the map
+        map.addControl(draw);
+
+        // Event listeners for drawing actions
+        map.on('draw.create', (e) => {
+            console.log('Feature created:', e.features);
+        });
+
+        map.on('draw.update', (e) => {
+            console.log('Feature updated:', e.features);
+        });
+
+        map.on('draw.delete', (e) => {
+            console.log('Feature deleted:', e.features);
+        });
+
+        // Example function to handle area updates
+        function updateArea(e) {
+            console.log('Update Area Event:', e);
+            if (e.features && e.features.length > 0) {
+                console.log('Features:', e.features);
+            } else {
+                console.log('No features found in the event.');
+            }
+        }
+
+        // Attach the updateArea function to draw events (optional)
+        map.on('draw.create', updateArea);
+        map.on('draw.update', updateArea);
+    </script>
+</body>
+
+</html>

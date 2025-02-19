@@ -15,6 +15,8 @@ const { log } = require('console');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+const picture = multer({ dest: 'picture/' });
+
 app.use(cors());
 app.use(express.json());
 
@@ -25,6 +27,21 @@ const pool = new Pool({
     password: process.env.PG_PASSWORD,
     database: process.env.PG_NAME,
     port: process.env.PG_PORT
+});
+
+function isValidTableName(tableName) {
+    return /^[a-zA-Z0-9_]+$/.test(tableName);
+}
+
+app.post('/api/v2/uploadpicture', picture.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No file uploaded.' });
+    }
+
+    // Construct the file URL
+    const fileUrl = `/picture/${req.file.filename}`;
+
+    res.json({ success: true, fileUrl });
 });
 
 app.post("/api/v2/login", async (req, res) => {
@@ -430,7 +447,7 @@ app.post('/api/v2/update_layer', async (req, res) => {
 });
 
 // delete layer by formid and refid
-app.delete('/api/v2/delete_feature', async (req, res) => {
+app.delete('/api/v2/delete_row', async (req, res) => {
     try {
         const { formid, refid } = req.body;
         console.log('Deleting feature:', formid, refid);
@@ -442,6 +459,116 @@ app.delete('/api/v2/delete_feature', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while deleting the layer.');
+    }
+});
+
+app.put('/api/v2/update_feature', async (req, res) => {
+    const { formid, refid, geojson, style } = req.body;
+
+    if (!formid || !refid || !geojson) {
+        return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
+    }
+
+    if (!isValidTableName(formid)) {
+        return res.status(400).json({ error: 'Invalid formid (table name)' });
+    }
+
+    try {
+        // Update the feature. The geojson string is converted into a PostGIS geometry.
+        const query = `
+      UPDATE ${formid}
+      SET geom = ST_SetSRID(ST_GeomFromGeoJSON($1), 4326),
+          style = $2
+      WHERE refid = $3
+      RETURNING *
+    `;
+        const values = [geojson, style, refid];
+
+        const result = await pool.query(query, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Feature not found' });
+        }
+
+        res.json({
+            message: 'Feature updated successfully',
+            feature: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error updating feature:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/api/v2/delete_feature', async (req, res) => {
+    const { formid, refid } = req.body;
+
+    if (!formid || !refid) {
+        return res.status(400).json({ error: 'Missing required fields: formid or refid' });
+    }
+
+    if (!isValidTableName(formid)) {
+        return res.status(400).json({ error: 'Invalid formid (table name)' });
+    }
+
+    try {
+        const query = `
+        DELETE FROM ${formid}
+        WHERE refid = $1
+        RETURNING *
+      `;
+        const values = [refid];
+
+        const result = await pool.query(query, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Feature not found' });
+        }
+
+        res.json({
+            message: 'Feature deleted successfully',
+            feature: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error deleting feature:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// create new feature
+app.post('/api/v2/create_feature', async (req, res) => {
+    const { formid, geojson, style } = req.body;
+    const refid = `ref${Date.now()}${Math.random()}`;
+
+    if (!formid || !refid || !geojson) {
+        return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
+    }
+
+    if (!isValidTableName(formid)) {
+        return res.status(400).json({ error: 'Invalid formid (table name)' });
+    }
+
+    try {
+        const query = `
+      INSERT INTO ${formid} (refid, geom, style)
+      VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), $3)
+      RETURNING *
+    `;
+        const values = [refid, geojson, style];
+
+        const result = await pool.query(query, values);
+
+        if (result.rowCount === 0) {
+            return res.status(500).json({ error: 'Failed to insert feature' });
+        }
+
+        res.json({
+            message: 'Feature inserted successfully',
+            feature: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error inserting feature:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

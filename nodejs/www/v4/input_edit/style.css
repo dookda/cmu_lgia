@@ -6,6 +6,24 @@ body {
     font-variation-settings: "wdth" 100;
 }
 
+#menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+#menu button {
+    display: block;
+    margin: 5px 0;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
 .header {
     background-color: #ff7f00;
     color: #fff;

@@ -21,13 +21,12 @@
 
     <link rel="stylesheet" href="./../assets/css/dashlitee1e3.css?ver=3.2.4">
     <link rel="stylesheet" href="./../assets/css/themee1e3.css?ver=3.2.4" id="skin-default">
-    <link rel="stylesheet" href="https://www.unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css" />
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css' />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css'
+        type='text/css' />
     <link rel="stylesheet" href="./style.css">
 </head>
 
@@ -58,7 +57,9 @@
 
         <div class="container mt-2">
             <div class="flex-container">
+
                 <div class="card" id="map"></div>
+
             </div>
             <div class="row mt-2">
                 <div class="col-6">
@@ -73,7 +74,6 @@
                 </div>
             </div>
 
-
             <div class="container mt-3">
                 <div class="card">
                     <div class="card-body">
@@ -86,7 +86,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -243,14 +242,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
 <!-- map -->
-<script src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'></script>
-<script src="https://unpkg.com/turf@3.0.14/turf.min.js"></script>
-<script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
-<script src="https://unpkg.com/mapbox-gl-draw-snap-mode"></script>
+<!-- <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script> -->
 
-<!-- axios -->
-<script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
-
-<script src="./app.js"></script>
+<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+<script type="module" src="./app.js"></script>
 
 </html>

@@ -16,8 +16,7 @@ const map = new maplibregl.Map({
     antialias: true,
 });
 
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
-
+// Add base maps
 const featuresMeta = {};
 
 const addRasterLayer = (id, url) => {
@@ -260,7 +259,22 @@ const getFeatures = async (formid) => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const features = await response.json();
+
+        // Initialize Mapbox GL Draw
+        const draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {
+                point: true,
+                line_string: true,
+                polygon: true,
+                trash: true
+            }
+        });
+
+        map.addControl(draw);
+
         for (const { geojson, refid, style } of features) {
             const defaultStyle = {
                 "markerType": "simple",
@@ -418,7 +432,124 @@ const getFeatures = async (formid) => {
                 }
                 featuresMeta[refid] = { type };
             }
+
+            // Add feature to Mapbox GL Draw for editing
+            draw.add({
+                type: 'Feature',
+                geometry: geometry,
+                properties: { refid, style: appliedStyle }
+            });
         }
+
+        // Handle new feature creation
+        map.on('draw.create', (e) => {
+            const newFeatures = e.features;
+            newFeatures.forEach((feature) => {
+                const geometry = feature.geometry;
+                const refid = `new_${Date.now()}`; // Generate a unique ID for the new feature
+                const style = {
+                    "markerType": "simple",
+                    "markerColor": "#007cbf",
+                    "markerSymbol": "user-circle",
+                    "markerSize": "12",
+                    "lineColor": "#ff0000",
+                    "lineWidth": "3",
+                    "lineDash": "1,0",
+                    "fillColor": "#00ff00",
+                    "fillOpacity": "0.5",
+                    "polygonBorderColor": "#000000",
+                    "polygonBorderDash": "",
+                    "polygonBorderWidth": "2"
+                };
+
+                // Add the new feature to the map
+                if (geometry.type === 'Point') {
+                    // Add point marker
+                } else if (geometry.type === 'LineString') {
+                    // Add line
+                } else if (geometry.type === 'Polygon') {
+                    // Add polygon
+                }
+
+                // Optionally, send the new feature to your backend API
+                fetch('/api/v2/create_feature', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refid, geometry, style })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('New feature created:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error creating feature:', error);
+                    });
+            });
+        });
+
+        // Handle feature edits
+        map.on('draw.update', (e) => {
+            const updatedFeatures = e.features;
+            updatedFeatures.forEach((feature) => {
+                const refid = feature.properties.refid;
+                const style = feature.properties.style;
+
+                // Update the feature on the map
+                if (map.getSource(refid)) {
+                    map.getSource(refid).setData({
+                        type: 'Feature',
+                        geometry: feature.geometry
+                    });
+                }
+
+                // Optionally, send the updated feature back to your API
+                fetch('/api/v2/update_feature', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ formid, refid, geojson: feature.geometry, style })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Feature updated:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error updating feature:', error);
+                    });
+            });
+        });
+
+        // Handle feature deletions
+        map.on('draw.delete', (e) => {
+            const deletedFeatures = e.features;
+            deletedFeatures.forEach((feature) => {
+                const refid = feature.properties.refid;
+
+                // Remove the feature from the map
+                if (map.getLayer(refid)) {
+                    map.removeLayer(refid);
+                }
+                if (map.getSource(refid)) {
+                    map.removeSource(refid);
+                }
+
+                // Optionally, send a request to delete the feature from your API
+                fetch('/api/v2/delete_feature', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ formid, refid })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Feature deleted:', data);
+                        // distroy and reinitialize the datatable
+                        $('#dataTable').DataTable().destroy();
+                        getTableData(formid);
+                    })
+                    .catch(error => {
+                        console.error('Error deleting feature:', error);
+                    });
+            });
+        });
 
         if (allCoords.length > 0) {
             const lons = allCoords.map(coord => coord[0]);
@@ -453,9 +584,9 @@ const saveChanges = async (formid, changes) => {
     }
 };
 
-const deleteFeature = async (formid, refid) => {
+const deleteRow = async (formid, refid) => {
     try {
-        const response = await fetch('/api/v2/delete_feature', {
+        const response = await fetch('/api/v2/delete_row', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ formid, refid })
@@ -678,11 +809,18 @@ const getTableData = async (formid) => {
 
             const columnType = columns[colIndex].type;
 
-            const input = columnType === 'date'
-                ? $('<input type="date" class="form-control input-sm cell-editor" />')
-                : columnType === 'numeric'
-                    ? $('<input type="number" class="form-control input-sm cell-editor" />')
-                    : $('<input type="text" class="form-control input-sm cell-editor" />');
+            const input = (() => {
+                switch (columnType) {
+                    case 'date':
+                        return $('<input type="date" class="form-control input-sm cell-editor" />');
+                    case 'numeric':
+                        return $('<input type="number" class="form-control input-sm cell-editor" />');
+                    case 'file':
+                        return $('<input type="file" class="form-control input-sm cell-editor" />');
+                    default:
+                        return $('<input type="text" class="form-control input-sm cell-editor" />');
+                }
+            })();
 
             if (columnType === 'date') {
                 const formatDateForInput = (dateString) => {
@@ -698,7 +836,54 @@ const getTableData = async (formid) => {
             cell.html(input);
             input.focus();
 
+            // Handle file upload when a file is selected
+            if (columnType === 'file') {
+                input.on('change', async function (e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    try {
+                        // Upload the file to the server
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        const response = await fetch('/api/v2/uploadpicture', {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('File upload failed');
+                        }
+
+                        const result = await response.json();
+                        const fileUrl = result.fileUrl; // Assuming the server returns the file URL
+
+                        // Update the cell with the file name or URL
+                        table.cell(cell).data(fileUrl).draw(false);
+
+                        if (!modifiedRows[rowIndex]) {
+                            modifiedRows[rowIndex] = { refid: rowData.refid, changes: {} };
+                        }
+                        modifiedRows[rowIndex].changes[colName] = fileUrl;
+                        $(row.node()).addClass('modified-row');
+
+                        const changes = [modifiedRows[rowIndex]];
+                        await saveChanges(formid, changes);
+                        delete modifiedRows[rowIndex];
+
+                        cell.html(`<a href="${fileUrl}" target="_blank">${file.name}</a>`);
+                        cell.removeClass('editing');
+                    } catch (error) {
+                        console.error('Error uploading file:', error);
+                        alert('File upload failed. Please try again.');
+                    }
+                });
+            }
+
             input.on('blur', async function () {
+                if (columnType === 'file') return; // Skip blur handling for file inputs
+
                 const newValue = input.val();
                 table.cell(cell).data(newValue).draw(false);
 
@@ -755,7 +940,7 @@ const getTableData = async (formid) => {
             const refid = $(this).data('refid');
             if (confirm('ยืนยันการลบ  ?')) {
                 console.log('Delete item:', refid);
-                deleteFeature(formid, refid);
+                deleteRow(formid, refid);
                 table.row($(this).closest('tr')).remove().draw(false);
             }
         });
@@ -817,6 +1002,7 @@ const updateFeatureStyleToTable = async (refid, type, values) => {
     }
 };
 
+
 const initMap = () => {
     map.on('load', async () => {
         Object.entries(BASE_MAPS).forEach(([id, url]) => addRasterLayer(id, url));
@@ -845,6 +1031,15 @@ const initMap = () => {
         await getTableData(formid);
         await getFeatures(formid);
     });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    MapboxDraw.constants.classes.CANVAS = 'maplibregl-canvas';
+    MapboxDraw.constants.classes.CONTROL_BASE = 'maplibregl-ctrl';
+    MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+    MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
+
 };
 
 const updateMarkerPreview = () => {
