@@ -206,15 +206,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-container" id="formContainer">
-                        <!-- Dynamic form fields will be inserted here -->
-                    </div>
-                    <input type="hidden" id="_formid">
+                    <div class="form-container" id="formContainer"></div>
+                    <input type="hidden" id="refid">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="btn_add_data"><i
-                            class="bi bi-arrow-right-circle"></i>
-                        ไปยังหน้าเพิ่มข้อมูล</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        id="submitButton">ตกลง</button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="btn_reload"><i
                             class="bi bi-x-circle"></i> ปิด</button>
                 </div>

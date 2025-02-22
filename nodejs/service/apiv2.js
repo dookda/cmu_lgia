@@ -400,7 +400,6 @@ app.post('/api/v2/update_feature_style', async (req, res) => {
 
 app.post('/api/v2/update_layer', async (req, res) => {
     const { formid, changes } = req.body;
-
     if (!formid || !changes || !Array.isArray(changes)) {
         return res.status(400).json({ error: 'Invalid request body' });
     }
@@ -450,10 +449,7 @@ app.post('/api/v2/update_layer', async (req, res) => {
 app.delete('/api/v2/delete_row', async (req, res) => {
     try {
         const { formid, refid } = req.body;
-        console.log('Deleting feature:', formid, refid);
-
         const sql = `DELETE FROM ${formid} WHERE refid = $1`;
-        console.log(sql, refid);
         await pool.query(sql, [refid]);
         res.status(200).json({ message: 'Feature deleted successfully' });
     } catch (error) {

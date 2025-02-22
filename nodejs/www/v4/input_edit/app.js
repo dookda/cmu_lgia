@@ -71,11 +71,8 @@ const bindFeatureEvents = (refid) => {
 };
 
 const openEditModal = (refid, type) => {
-    const featureIdInput = document.getElementById('featureId');
-    const featureTypeInput = document.getElementById('featureType');
-
-    featureIdInput.value = refid;
-    featureTypeInput.value = type;
+    document.getElementById('featureId').value = refid;
+    document.getElementById('featureType').value = type;
 
     document.getElementById('pointFields').style.display = (type === 'Point') ? 'block' : 'none';
     document.getElementById('lineFields').style.display = (type === 'LineString') ? 'block' : 'none';
@@ -113,12 +110,8 @@ const openEditModal = (refid, type) => {
     // openSidebar();
 };
 
-const openAttrModal = (refid, type) => {
-    const featureIdInput = document.getElementById('featureId');
-    const featureTypeInput = document.getElementById('featureType');
-
-    featureIdInput.value = refid;
-    featureTypeInput.value = type;
+const openAttrModal = (refid) => {
+    document.getElementById('refid').value = refid;
 
     const modalEl = document.getElementById('attrModal');
     const attrModal = new bootstrap.Modal(modalEl);
@@ -173,11 +166,11 @@ const applyStyleToFeature = (refid, type, values) => {
             const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${values.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
 
             const newMarkerEl = document.createElement('div');
-            newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:38px; height:55px; display:block;">`;
+            newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:35px; height:50px; display:block;">`;
             newMarkerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
             newMarkerEl.style.cursor = 'pointer';
 
-            const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -20] })
+            const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -16] })
                 .setLngLat(geometry.coordinates)
                 .addTo(map);
 
@@ -342,14 +335,14 @@ const getFeatures = async (formid) => {
                     // console.log('Marker URL:', appliedStyle.markerSymbol);
 
                     const newMarkerEl = document.createElement('div');
-                    newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:38px; height:55px; display:block;">`;
+                    newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:33px; height:50px; display:block;">`;
                     newMarkerEl.style.border = `${appliedStyle.markerBorderWidth}px solid ${appliedStyle.markerBorderColor}`;
                     newMarkerEl.style.fontSize = "";
                     newMarkerEl.style.lineHeight = "";
                     newMarkerEl.style.backgroundColor = "";
                     newMarkerEl.style.cursor = 'pointer';
 
-                    const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -20] })
+                    const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -16] })
                         .setLngLat(geometry.coordinates)
                         .addTo(map);
 
@@ -631,24 +624,24 @@ const getFeatures = async (formid) => {
     }
 };
 
-const saveChanges = async (formid, changes) => {
-    try {
-        const response = await fetch('/api/v2/update_layer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ formid, changes }),
-        });
+// const saveChanges = async (formid, changes) => {
+//     try {
+//         const response = await fetch('/api/v2/update_layer', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ formid, changes }),
+//         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
 
-        const result = await response.json();
-        console.log('Changes saved successfully:', result);
-    } catch (error) {
-        console.error('Failed to save changes:', error);
-    }
-};
+//         const result = await response.json();
+//         console.log('Changes saved successfully:', result);
+//     } catch (error) {
+//         console.error('Failed to save changes:', error);
+//     }
+// };
 
 const deleteRow = async (formid, refid) => {
     try {
@@ -715,60 +708,9 @@ function formatThaiDateTime(dateString) {
     return `${day} ${month} ${year} ${hours}:${minutes} น.`;
 }
 
-function generateFormFields(columns) {
-    const formContainer = document.getElementById('formContainer');
-    formContainer.innerHTML = ''; // Clear existing content
-
-    columns.forEach(column => {
-        const formGroup = document.createElement('div');
-        formGroup.className = 'form-group';
-
-        // Create label
-        const label = document.createElement('label');
-        label.textContent = column.col_name;
-        label.setAttribute('for', column.col_id);
-
-        // Create input field based on col_type
-        let input;
-        switch (column.col_type) {
-            case 'text':
-                input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'form-control';
-                break;
-            case 'numeric':
-                input = document.createElement('input');
-                input.type = 'number';
-                input.className = 'form-control';
-                break;
-            case 'date':
-                input = document.createElement('input');
-                input.type = 'date';
-                input.className = 'form-control';
-                break;
-            default:
-                input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'form-control';
-        }
-
-        // Set input attributes
-        input.id = column.col_id;
-        input.name = column.col_id;
-        input.placeholder = column.col_desc;
-
-        // Append label and input to the form group
-        formGroup.appendChild(label);
-        formGroup.appendChild(input);
-
-        // Append form group to the form container
-        formContainer.appendChild(formGroup);
-    });
-}
 
 const getTableData = async (formid) => {
     try {
-        // Fetch column descriptions
         const columnsResponse = await fetch('/api/load_column_description', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -781,7 +723,102 @@ const getTableData = async (formid) => {
 
         const columnsData = await columnsResponse.json();
 
-        // Fetch data from the API
+        function generateFormFields(rowData) {
+            const formContainer = document.getElementById('formContainer');
+            formContainer.innerHTML = '';
+
+            columnsData.forEach(column => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.textContent = column.col_name;
+                label.setAttribute('for', column.col_id);
+
+                let input;
+                switch (column.col_type) {
+                    case 'text':
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        break;
+                    case 'numeric':
+                        input = document.createElement('input');
+                        input.type = 'number';
+                        input.className = 'form-control';
+                        break;
+                    case 'date':
+                        input = document.createElement('input');
+                        input.type = 'date';
+                        input.className = 'form-control';
+                        break;
+                    default:
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        break;
+                }
+
+                input.id = column.col_id;
+                input.name = column.col_id;
+                input.placeholder = column.col_desc;
+
+                // Populate the input field with existing data
+                if (rowData && rowData[column.col_id] !== undefined) {
+                    input.value = rowData[column.col_id];
+                }
+
+                formGroup.appendChild(label);
+                formGroup.appendChild(input);
+
+                formContainer.appendChild(formGroup);
+            });
+        }
+
+        async function submitForm() {
+            const formData = {};
+            const changes = [];
+            columnsData.forEach(column => {
+                const input = document.getElementById(column.col_id);
+                if (input) {
+                    let value = input.value;
+                    if (column.col_type === 'numeric' && value.trim() === '') {
+                        value = null;
+                    }
+                    formData[column.col_id] = value;
+                }
+            });
+
+            const refid = document.getElementById('refid').value;
+            changes.push({
+                refid: refid,
+                changes: formData
+            });
+
+            try {
+                const response = await fetch('/api/v2/update_layer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ formid, changes })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                alert('Data submitted successfully!');
+
+                // Reload the table data after a successful update
+                await getTableData(formid);
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Failed to submit data. Please try again.');
+            }
+        }
+
         const response = await fetch('/api/v2/load_layer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -800,7 +837,6 @@ const getTableData = async (formid) => {
 
         const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
 
-        // Define columns for the DataTable
         const columns = [
             {
                 title: 'Actions',
@@ -860,15 +896,12 @@ const getTableData = async (formid) => {
                 })
         ];
 
-        // Destroy existing DataTable instance if it exists
         if ($.fn.DataTable.isDataTable('#dataTable')) {
             $('#dataTable').DataTable().destroy();
         }
 
-        // Clear the table HTML
         $('#dataTable').empty();
 
-        // Update column titles based on column descriptions
         columns.forEach(col => {
             if (col.data === null) return;
             const match = columnsData.find(i => col.data === i.col_id);
@@ -878,11 +911,9 @@ const getTableData = async (formid) => {
             }
         });
 
-        // Rebuild the table header
         const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
         $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
 
-        // Initialize a new DataTable instance
         const table = $('#dataTable').DataTable({
             data,
             columns,
@@ -944,13 +975,22 @@ const getTableData = async (formid) => {
         $('#dataTable').on('click', '.attr-btn', function (e) {
             e.stopPropagation();
             const refid = $(this).data('refid');
-            const type = $(this).data('type');
-            console.log($(this).data());
-            console.log(columnsData);
 
-            generateFormFields(columnsData);
-            openAttrModal(refid, type);
+            // Find the row data for the clicked button
+            const row = table.row($(this).closest('tr')).data();
+            if (row) {
+                // Generate the form fields and populate them with row data
+                generateFormFields(row);
+
+                // Open the attribute modal
+                openAttrModal(refid);
+            } else {
+                console.error('Row data not found for refid:', refid);
+            }
         });
+
+        // Attach the submitForm function to the submit button
+        document.getElementById('submitButton').addEventListener('click', submitForm);
 
         $('#dataTable').on('click', '.delete-btn', function (e) {
             e.stopPropagation();
@@ -961,6 +1001,7 @@ const getTableData = async (formid) => {
                 table.row($(this).closest('tr')).remove().draw(false);
             }
         });
+
 
     } catch (error) {
         console.error('Failed to get table data:', error);
@@ -1201,6 +1242,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.activeElement.blur();
         }
     });
+
+
 
     initMap();
 });
