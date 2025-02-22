@@ -177,7 +177,7 @@ const applyStyleToFeature = (refid, type, values) => {
             newMarkerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
             newMarkerEl.style.cursor = 'pointer';
 
-            const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+            const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -20] })
                 .setLngLat(geometry.coordinates)
                 .addTo(map);
 
@@ -349,7 +349,7 @@ const getFeatures = async (formid) => {
                     newMarkerEl.style.backgroundColor = "";
                     newMarkerEl.style.cursor = 'pointer';
 
-                    const newMarker = new maplibregl.Marker({ element: newMarkerEl })
+                    const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -20] })
                         .setLngLat(geometry.coordinates)
                         .addTo(map);
 
