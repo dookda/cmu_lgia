@@ -190,23 +190,25 @@
                         <input type="hidden" id="featureType" name="featureType">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Apply Changes</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">ตกลง</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="update_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="attrModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel"></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>สร้างชั้นข้อมูลสำเร็จ</p>
+                    <div class="form-container" id="formContainer">
+                        <!-- Dynamic form fields will be inserted here -->
+                    </div>
                     <input type="hidden" id="_formid">
                 </div>
                 <div class="modal-footer">

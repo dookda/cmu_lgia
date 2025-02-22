@@ -71,8 +71,6 @@ const bindFeatureEvents = (refid) => {
 };
 
 const openEditModal = (refid, type) => {
-    console.log('Edit feature:', refid, type);
-
     const featureIdInput = document.getElementById('featureId');
     const featureTypeInput = document.getElementById('featureType');
 
@@ -112,6 +110,19 @@ const openEditModal = (refid, type) => {
     const modalEl = document.getElementById('editModal');
     const editModal = new bootstrap.Modal(modalEl);
     editModal.show();
+    // openSidebar();
+};
+
+const openAttrModal = (refid, type) => {
+    const featureIdInput = document.getElementById('featureId');
+    const featureTypeInput = document.getElementById('featureType');
+
+    featureIdInput.value = refid;
+    featureTypeInput.value = type;
+
+    const modalEl = document.getElementById('attrModal');
+    const attrModal = new bootstrap.Modal(modalEl);
+    attrModal.show();
     // openSidebar();
 };
 
@@ -328,7 +339,7 @@ const getFeatures = async (formid) => {
                         color = color.substring(1);
                     }
                     const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${appliedStyle.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
-                    console.log('Marker URL:', appliedStyle.markerSymbol);
+                    // console.log('Marker URL:', appliedStyle.markerSymbol);
 
                     const newMarkerEl = document.createElement('div');
                     newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:38px; height:55px; display:block;">`;
@@ -704,6 +715,57 @@ function formatThaiDateTime(dateString) {
     return `${day} ${month} ${year} ${hours}:${minutes} น.`;
 }
 
+function generateFormFields(columns) {
+    const formContainer = document.getElementById('formContainer');
+    formContainer.innerHTML = ''; // Clear existing content
+
+    columns.forEach(column => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+
+        // Create label
+        const label = document.createElement('label');
+        label.textContent = column.col_name;
+        label.setAttribute('for', column.col_id);
+
+        // Create input field based on col_type
+        let input;
+        switch (column.col_type) {
+            case 'text':
+                input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-control';
+                break;
+            case 'numeric':
+                input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'form-control';
+                break;
+            case 'date':
+                input = document.createElement('input');
+                input.type = 'date';
+                input.className = 'form-control';
+                break;
+            default:
+                input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-control';
+        }
+
+        // Set input attributes
+        input.id = column.col_id;
+        input.name = column.col_id;
+        input.placeholder = column.col_desc;
+
+        // Append label and input to the form group
+        formGroup.appendChild(label);
+        formGroup.appendChild(input);
+
+        // Append form group to the form container
+        formContainer.appendChild(formGroup);
+    });
+}
+
 const getTableData = async (formid) => {
     try {
         // Fetch column descriptions
@@ -763,7 +825,7 @@ const getTableData = async (formid) => {
                         <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
                             <i class="fas fa-paint-roller"></i>
                         </button>
-                        <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
+                        <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${_type || ''}">
                             <i class="fas fa-table-list"></i>
                         </button>
                         <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
@@ -877,6 +939,17 @@ const getTableData = async (formid) => {
             const refid = $(this).data('refid');
             const type = $(this).data('type');
             openEditModal(refid, type);
+        });
+
+        $('#dataTable').on('click', '.attr-btn', function (e) {
+            e.stopPropagation();
+            const refid = $(this).data('refid');
+            const type = $(this).data('type');
+            console.log($(this).data());
+            console.log(columnsData);
+
+            generateFormFields(columnsData);
+            openAttrModal(refid, type);
         });
 
         $('#dataTable').on('click', '.delete-btn', function (e) {
@@ -1130,6 +1203,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initMap();
-    // $('#markersTable').DataTable();
 });
 
