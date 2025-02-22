@@ -174,3 +174,7 @@ td.editing {
 .dataTables_wrapper {
     overflow-x: auto;
 }
+
+.buttons-excel:before {
+    content: "" !important;
+}
