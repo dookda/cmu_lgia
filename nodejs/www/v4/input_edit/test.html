@@ -1,97 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Collapsible Sidebar on the Right</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="utf-8" />
+    <title>MapLibre GL JS with Mapbox Draw</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css" type="text/css" />
     <style>
-        /* Reset margins and ensure full-height */
-        html,
         body {
             margin: 0;
             padding: 0;
-            height: 100%;
         }
 
-        /* Flex container to hold map and sidebar */
-        .flex-container {
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Map styles */
         #map {
-            height: 100%;
-            width: 75%;
-            /* Default width when sidebar is visible */
-            background-color: #e9ecef;
-            transition: width 0.5s;
-            position: relative;
-            overflow: auto;
-        }
-
-        /* When sidebar is collapsed, the map expands */
-        #map.expanded {
-            width: 100%;
-        }
-
-        /* Sidebar styles (placed on the right) */
-        #describe {
-            height: 100%;
-            width: 25%;
-            /* Default width for sidebar */
-            background-color: #f8f9fa;
-            border-left: 1px solid #ddd;
-            /* Border on left side */
-            transition: width 0.5s;
-            overflow: auto;
-        }
-
-        /* Collapse the sidebar by setting its width to 0 */
-        #describe.collapsed {
-            width: 0;
-            border-left: none;
-        }
-
-        /* Position the toggle button so that it's always visible on the map */
-        .toggle-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
+            top: 0;
+            bottom: 0;
+            width: 100%;
         }
     </style>
 </head>
 
 <body>
-    <div class="flex-container">
-        <!-- Map (left side) -->
-        <div id="map">
-            <p class="p-3">Map Content</p>
-            <!-- Toggle button placed in the map so it remains visible -->
-            <button class="btn btn-primary toggle-btn" onclick="toggleSidebar()">☰ Toggle Sidebar</button>
-        </div>
-        <!-- Sidebar (right side) -->
-        <div id="describe">
-            <p class="p-3">Sidebar Content</p>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <div id="map"></div>
     <script>
-        // Toggle function to collapse/expand the sidebar
-        function toggleSidebar() {
-            const sidebar = document.getElementById('describe');
-            const map = document.getElementById('map');
-            sidebar.classList.toggle('collapsed');
-            map.classList.toggle('expanded');
-        }
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://demotiles.maplibre.org/style.json',
+            center: [0, 0],
+            zoom: 1
+        });
+
+        const draw = new MapboxDraw({
+            displayControlsDefault: true,
+            controls: {
+                point: true,
+                line_string: true,
+                polygon: true,
+                trash: true
+            }
+        });
+
+        map.addControl(draw);
+
+        map.on('draw.create', function (e) {
+            console.log('A feature was created', e.features);
+        });
+
+        map.on('draw.delete', function (e) {
+            console.log('A feature was deleted', e.features);
+        });
+
+        map.on('draw.update', function (e) {
+            console.log('A feature was updated', e.features);
+        });
     </script>
 </body>
 

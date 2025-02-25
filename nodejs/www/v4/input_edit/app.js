@@ -233,397 +233,6 @@ const setMarkerPopup = (marker, refid) => {
     });
 };
 
-// const getFeatures = async (formid) => {
-//     window.currentFormId = formid;
-//     const allCoords = [];
-
-//     const extractCoordinates = (geometry) => {
-//         const { type, coordinates } = geometry;
-//         if (type === 'Point') {
-//             allCoords.push(coordinates);
-//         } else if (type === 'LineString') {
-//             for (const coord of coordinates) {
-//                 allCoords.push(coord);
-//             }
-//         } else if (type === 'Polygon') {
-//             for (const ring of coordinates) {
-//                 for (const coord of ring) {
-//                     allCoords.push(coord);
-//                 }
-//             }
-//         }
-//     };
-
-//     try {
-//         const response = await fetch('/api/v2/load_layer', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ formid })
-//         });
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         const features = await response.json();
-//         const firstFeatureType = JSON.parse(features[0].geojson).type;
-
-//         // Configure controls based on the first feature's type
-//         const controls = {
-//             point: firstFeatureType === 'Point',
-//             line_string: firstFeatureType === 'LineString',
-//             polygon: firstFeatureType === 'Polygon',
-//             trash: true // Enable trash control for all cases
-//         };
-
-//         // Initialize Mapbox GL Draw with the configured controls
-//         const draw = new MapboxDraw({
-//             displayControlsDefault: false,
-//             controls: controls
-//         });
-
-//         map.addControl(draw);
-
-//         for (const { geojson, refid, style } of features) {
-//             const defaultStyle = {
-//                 "markerType": "simple",
-//                 "markerColor": "#007cbf",
-//                 "markerSymbol": "user-circle",
-//                 "markerSize": "12",
-//                 "lineColor": "#ff0000",
-//                 "lineWidth": "3",
-//                 "lineDash": "1,0",
-//                 "fillColor": "#00ff00",
-//                 "fillOpacity": "0.5",
-//                 "polygonBorderColor": "#000000",
-//                 "polygonBorderDash": "",
-//                 "polygonBorderWidth": "2"
-//             };
-
-//             let appliedStyle = defaultStyle;
-//             if (style) {
-//                 const parsedStyle = JSON.parse(style);
-//                 if (Object.keys(parsedStyle).length > 0) {
-//                     appliedStyle = parsedStyle;
-//                 }
-//             }
-
-//             let geometry;
-//             try {
-//                 geometry = JSON.parse(geojson);
-//             } catch (error) {
-//                 console.error(`Invalid GeoJSON for refid ${refid}:`, error);
-//                 continue;
-//             }
-//             if (!geometry || !geometry.type) {
-//                 continue;
-//             }
-//             const { type } = geometry;
-//             extractCoordinates(geometry);
-
-//             if (type === 'Point') {
-//                 if (!featuresMeta[refid]) {
-//                     featuresMeta[refid] = {};
-//                 }
-
-//                 if (appliedStyle.markerType === "simple") {
-//                     featuresMeta[refid].markerType = "simple";
-//                     let color = appliedStyle.markerColor;
-//                     if (color.startsWith('#')) {
-//                         color = color.substring(1);
-//                     }
-//                     const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${appliedStyle.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
-//                     // console.log('Marker URL:', appliedStyle.markerSymbol);
-
-//                     const newMarkerEl = document.createElement('div');
-//                     newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:33px; height:50px; display:block;">`;
-//                     newMarkerEl.style.border = `${appliedStyle.markerBorderWidth}px solid ${appliedStyle.markerBorderColor}`;
-//                     newMarkerEl.style.fontSize = "";
-//                     newMarkerEl.style.lineHeight = "";
-//                     newMarkerEl.style.backgroundColor = "";
-//                     newMarkerEl.style.cursor = 'pointer';
-
-//                     const newMarker = new maplibregl.Marker({ element: newMarkerEl, offset: [0, -16] })
-//                         .setLngLat(geometry.coordinates)
-//                         .addTo(map);
-
-//                     newMarker.setPopup(
-//                         new maplibregl.Popup({ offset: 25 }).setHTML(
-//                             `<b>Feature ID:</b> ${refid}<br>`
-//                         )
-//                     );
-//                     newMarker.getElement().addEventListener('click', () => {
-//                         filterDataTableByRefId(refid);
-//                     });
-//                     newMarker.getPopup().on('close', () => {
-//                         const table = $('#dataTable').DataTable();
-//                         table.search('').columns().search('').draw();
-//                     });
-
-//                     featuresMeta[refid].marker = newMarker;
-//                 } else {
-//                     featuresMeta[refid].markerType = "emoji";
-//                     const newMarkerEl = document.createElement('div');
-//                     newMarkerEl.innerHTML = appliedStyle.markerSymbol;
-//                     newMarkerEl.style.fontSize = appliedStyle.markerSize + 'px';
-//                     newMarkerEl.style.lineHeight = appliedStyle.markerSize + 'px';
-//                     newMarkerEl.style.backgroundColor = "transparent";
-//                     newMarkerEl.style.border = "none";
-//                     newMarkerEl.style.cursor = 'pointer';
-
-//                     const newMarker = new maplibregl.Marker({ element: newMarkerEl })
-//                         .setLngLat(geometry.coordinates)
-//                         .addTo(map);
-
-//                     newMarker.setPopup(
-//                         new maplibregl.Popup({ offset: 25 }).setHTML(
-//                             `<b>Feature ID:</b> ${refid}<br>`
-//                         )
-//                     );
-//                     newMarker.getElement().addEventListener('click', () => {
-//                         filterDataTableByRefId(refid);
-//                     });
-//                     newMarker.getPopup().on('close', () => {
-//                         const table = $('#dataTable').DataTable();
-//                         table.search('').columns().search('').draw();
-//                     });
-
-//                     featuresMeta[refid].marker = newMarker;
-//                 }
-//             } else {
-//                 const sourceData = { type: 'Feature', geometry };
-//                 if (!map.getSource(refid)) {
-//                     map.addSource(refid, { type: 'geojson', data: sourceData });
-//                 }
-
-//                 let layerConfig;
-//                 if (type === 'LineString') {
-//                     layerConfig = {
-//                         id: refid,
-//                         type: 'line',
-//                         source: refid,
-//                         paint: {
-//                             'line-color': appliedStyle.lineColor || '#ff0000',
-//                             'line-width': Number(appliedStyle.lineWidth) || 3,
-//                             'line-dasharray': appliedStyle.lineDash != null ? (appliedStyle.lineDash).split(',').map(Number) : [0]
-//                         }
-//                     };
-//                 } else if (type === 'Polygon') {
-//                     layerConfig = {
-//                         id: refid,
-//                         type: 'fill',
-//                         source: refid,
-//                         paint: {
-//                             'fill-color': appliedStyle.fillColor || '#00ff00',
-//                             'fill-opacity': Number(appliedStyle.fillOpacity) || 0.5
-//                         }
-//                     };
-//                 }
-
-//                 if (!map.getLayer(refid)) {
-//                     map.addLayer(layerConfig);
-//                     bindFeatureEvents(refid);
-//                 }
-
-//                 if (type === 'Polygon' && !map.getLayer(`${refid}_border`)) {
-//                     map.addLayer({
-//                         id: `${refid}_border`,
-//                         type: 'line',
-//                         source: refid,
-//                         paint: {
-//                             'line-color': appliedStyle.polygonBorderColor || '#000000',
-//                             'line-width': Number(appliedStyle.polygonBorderWidth) || 2,
-//                             'line-dasharray': appliedStyle.polygonBorderDash != null ? (appliedStyle.polygonBorderDash).split(',').map(Number) : [0]
-//                         }
-//                     });
-//                 }
-//                 featuresMeta[refid] = { type };
-//             }
-
-//             // Add feature to Mapbox GL Draw for editing
-//             draw.add({
-//                 type: 'Feature',
-//                 geometry: geometry,
-//                 properties: { refid, style: appliedStyle }
-//             });
-//         }
-
-//         // Handle new feature creation
-//         map.on('draw.create', (e) => {
-//             const newFeatures = e.features;
-//             newFeatures.forEach((feature) => {
-//                 const geometry = feature.geometry;
-//                 const style = {
-//                     "markerType": "simple",
-//                     "markerColor": "#007cbf",
-//                     "markerSymbol": "user-circle",
-//                     "markerSize": "12",
-//                     "lineColor": "#ff0000",
-//                     "lineWidth": "3",
-//                     "lineDash": "1,0",
-//                     "fillColor": "#00ff00",
-//                     "fillOpacity": "0.5",
-//                     "polygonBorderColor": "#000000",
-//                     "polygonBorderDash": "",
-//                     "polygonBorderWidth": "2"
-//                 };
-
-//                 if (geometry.type === 'Point') {
-//                     const newMarkerEl = document.createElement('div');
-//                     newMarkerEl.innerHTML = `<img src="https://api.geoapify.com/v1/icon/?type=awesome&color=%23${style.markerColor.substring(1)}&icon=${style.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b" alt="Marker" style="width:38px; height:55px; display:block;">`;
-//                     newMarkerEl.style.border = `${style.markerBorderWidth}px solid ${style.markerBorderColor}`;
-//                     newMarkerEl.style.cursor = 'pointer';
-
-//                     const newMarker = new maplibregl.Marker({ element: newMarkerEl })
-//                         .setLngLat(geometry.coordinates)
-//                         .addTo(map);
-
-//                     newMarker.setPopup(
-//                         new maplibregl.Popup({ offset: 25 }).setHTML(
-//                             `<b>Feature ID:</b> ${feature.id}<br>`
-//                         )
-//                     );
-
-//                     featuresMeta[feature.id] = { marker: newMarker, markerType: "simple" };
-//                 } else if (geometry.type === 'LineString') {
-//                     // Add line
-//                     map.addSource(feature.id, { type: 'geojson', data: { type: 'Feature', geometry } });
-//                     map.addLayer({
-//                         id: feature.id,
-//                         type: 'line',
-//                         source: feature.id,
-//                         paint: {
-//                             'line-color': style.lineColor,
-//                             'line-width': Number(style.lineWidth),
-//                             'line-dasharray': style.lineDash.split(',').map(Number)
-//                         }
-//                     });
-//                 } else if (geometry.type === 'Polygon') {
-//                     // Add polygon
-//                     map.addSource(feature.id, { type: 'geojson', data: { type: 'Feature', geometry } });
-//                     map.addLayer({
-//                         id: feature.id,
-//                         type: 'fill',
-//                         source: feature.id,
-//                         paint: {
-//                             'fill-color': style.fillColor,
-//                             'fill-opacity': Number(style.fillOpacity)
-//                         }
-//                     });
-//                     map.addLayer({
-//                         id: `${feature.id}_border`,
-//                         type: 'line',
-//                         source: feature.id,
-//                         paint: {
-//                             'line-color': style.polygonBorderColor,
-//                             'line-width': Number(style.polygonBorderWidth),
-//                             'line-dasharray': style.polygonBorderDash.split(',').map(Number)
-//                         }
-//                     });
-//                 }
-
-//                 fetch('/api/v2/create_feature', {
-//                     method: 'POST',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify({ formid, geojson: geometry, style })
-//                 })
-//                     .then(response => response.json())
-//                     .then(data => {
-//                         if ($.fn.DataTable.isDataTable('#dataTable')) {
-//                             $('#dataTable').DataTable().destroy();
-//                         }
-//                         $('#dataTable').empty();
-//                         getTableData(formid);
-
-//                         draw.add({
-//                             type: 'Feature',
-//                             geometry,
-//                             properties: { refid: data.refid, style }
-//                         });
-
-//                         bindFeatureEvents(data.refid);
-//                     })
-//                     .catch(error => {
-//                         console.error('Error creating feature:', error);
-//                     });
-//             });
-//         });
-
-//         // Handle feature edits
-//         map.on('draw.update', (e) => {
-//             const updatedFeatures = e.features;
-//             updatedFeatures.forEach((feature) => {
-//                 const refid = feature.properties.refid;
-//                 const style = feature.properties.style;
-
-//                 // Update the feature on the map
-//                 if (map.getSource(refid)) {
-//                     map.getSource(refid).setData({
-//                         type: 'Feature',
-//                         geometry: feature.geometry
-//                     });
-//                 }
-
-//                 // Optionally, send the updated feature back to your API
-//                 fetch('/api/v2/update_feature', {
-//                     method: 'PUT',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify({ formid, refid, geojson: feature.geometry, style })
-//                 })
-//                     .then(response => response.json())
-//                     .then(data => {
-//                         console.log('Feature updated:', data);
-//                     })
-//                     .catch(error => {
-//                         console.error('Error updating feature:', error);
-//                     });
-//             });
-//         });
-
-//         // Handle feature deletions
-//         map.on('draw.delete', (e) => {
-//             const deletedFeatures = e.features;
-//             deletedFeatures.forEach((feature) => {
-//                 const refid = feature.properties.refid;
-
-//                 // Remove the feature from the map
-//                 if (map.getLayer(refid)) {
-//                     map.removeLayer(refid);
-//                 }
-//                 if (map.getSource(refid)) {
-//                     map.removeSource(refid);
-//                 }
-
-//                 fetch('/api/v2/delete_feature', {
-//                     method: 'DELETE',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify({ formid, refid })
-//                 })
-//                     .then(response => response.json())
-//                     .then(data => {
-//                         console.log('Feature deleted:', data);
-//                         $('#dataTable').DataTable().destroy();
-//                         getTableData(formid);
-//                     })
-//                     .catch(error => {
-//                         console.error('Error deleting feature:', error);
-//                     });
-//             });
-//         });
-
-//         if (allCoords.length > 0) {
-//             const lons = allCoords.map(coord => coord[0]);
-//             const lats = allCoords.map(coord => coord[1]);
-//             const minLng = Math.min(...lons);
-//             const minLat = Math.min(...lats);
-//             const maxLng = Math.max(...lons);
-//             const maxLat = Math.max(...lats);
-//             map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, duration: 1000 });
-//         }
-//     } catch (error) {
-//         console.error('Failed to get features:', error);
-//     }
-// };
-
 const extractCoordinates = (geometry, allCoords) => {
     if (!geometry || !geometry.type) {
         console.error('Invalid geometry:', geometry);
@@ -644,18 +253,6 @@ const extractCoordinates = (geometry, allCoords) => {
             }
         }
     }
-};
-
-const fetchFeatures = async (formid) => {
-    const response = await fetch('/api/v2/load_layer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formid })
-    });
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
 };
 
 const configureDrawControls = (firstFeatureType) => {
@@ -836,6 +433,62 @@ const addLineOrPolygonFeature = (refid, geometry, appliedStyle, map, featuresMet
     featuresMeta[refid] = { type: geometry.type };
 };
 
+const fetchFeatures = async (formid) => {
+    const response = await fetch('/api/v2/load_layer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formid })
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+};
+
+const reloadFeatures = async (formid, map, draw, featuresMeta) => {
+    try {
+        // Remove existing features from the map
+        Object.keys(featuresMeta).forEach(refid => {
+            if (featuresMeta[refid].marker) {
+                featuresMeta[refid].marker.remove(); // Remove marker if it exists
+            }
+            if (map.getLayer(refid)) {
+                map.removeLayer(refid); // Remove layer if it exists
+            }
+            if (map.getSource(refid)) {
+                map.removeSource(refid); // Remove source if it exists
+            }
+            delete featuresMeta[refid]; // Delete the feature from featuresMeta
+        });
+
+        // Fetch new features from the database
+        const features = await fetchFeatures(formid);
+        if (features.length === 0) {
+            console.warn('No features found in the database.');
+            return;
+        }
+
+        // Add new features to the map
+        const allCoords = [];
+        features.forEach(feature => {
+            addFeatureToMap(feature, map, draw, featuresMeta, allCoords);
+        });
+
+        // Fit map to bounds if there are coordinates
+        if (allCoords.length > 0) {
+            const lons = allCoords.map(coord => coord[0]);
+            const lats = allCoords.map(coord => coord[1]);
+            const minLng = Math.min(...lons);
+            const minLat = Math.min(...lats);
+            const maxLng = Math.max(...lons);
+            const maxLat = Math.max(...lats);
+            map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 20, duration: 1000 });
+        }
+    } catch (error) {
+        console.error('Failed to reload features:', error);
+    }
+};
+
 const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
     const newFeatures = e.features;
     newFeatures.forEach((feature) => {
@@ -855,6 +508,7 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
             "polygonBorderWidth": "2"
         };
 
+        // Add the feature to the map temporarily
         if (geometry.type === 'Point') {
             addPointFeature(feature.id, geometry, style, map, featuresMeta);
         } else if (geometry.type === 'LineString') {
@@ -863,6 +517,7 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
             addLineOrPolygonFeature(feature.id, geometry, style, map, featuresMeta);
         }
 
+        // Save the feature to the database
         fetch('/api/v2/create_feature', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -870,19 +525,17 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
         })
             .then(response => response.json())
             .then(data => {
+                console.log('Feature created:', data);
+
+                // Reload features from the database
+                reloadFeatures(formid, map, draw, featuresMeta);
+
+                // Update the DataTable
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     $('#dataTable').DataTable().destroy();
                 }
                 $('#dataTable').empty();
                 getTableData(formid);
-
-                draw.add({
-                    type: 'Feature',
-                    geometry,
-                    properties: { refid: data.refid, style }
-                });
-
-                bindFeatureEvents(data.refid);
             })
             .catch(error => {
                 console.error('Error creating feature:', error);
@@ -946,12 +599,31 @@ const handleFeatureDeletion = (e, map, formid) => {
             });
     });
 };
+
 const getFeatures = async (formid) => {
     window.currentFormId = formid;
-    const allCoords = []; // Define allCoords here
+    const allCoords = [];
 
     try {
+        Object.keys(featuresMeta).forEach(refid => {
+            if (featuresMeta[refid].marker) {
+                featuresMeta[refid].marker.remove(); // Remove marker if it exists
+            }
+            if (map.getLayer(refid)) {
+                map.removeLayer(refid); // Remove layer if it exists
+            }
+            if (map.getSource(refid)) {
+                map.removeSource(refid); // Remove source if it exists
+            }
+            delete featuresMeta[refid];
+        });
+
         const features = await fetchFeatures(formid);
+        if (features.length === 0) {
+            console.warn('No features found in the database.');
+            return;
+        }
+
         const firstFeatureType = JSON.parse(features[0].geojson).type;
 
         const draw = new MapboxDraw({
@@ -961,15 +633,39 @@ const getFeatures = async (formid) => {
 
         map.addControl(draw);
 
-        // Pass allCoords to addFeatureToMap
         features.forEach(feature => {
             addFeatureToMap(feature, map, draw, featuresMeta, allCoords);
         });
 
-        // Handle draw events
         map.on('draw.create', (e) => handleFeatureCreation(e, map, draw, formid, featuresMeta));
         map.on('draw.update', (e) => handleFeatureUpdate(e, map, formid));
         map.on('draw.delete', (e) => handleFeatureDeletion(e, map, formid));
+
+        map.on('draw.modechange', (e) => {
+            const mode = e.mode;
+            if (mode === 'draw_polygon' || mode === 'direct_select' || mode === 'draw_line_string') {
+                console.log('Drawing mode:', mode);
+
+                // Enable custom styling layer
+                if (!map.getLayer('custom-draw-style')) {
+                    map.addLayer({
+                        id: 'custom-draw-style',
+                        type: 'line', // change type based on your feature (line, fill, circle, etc.)
+                        source: 'draw', // assuming your draw features are in this source
+                        filter: ['all', ['==', '$type', 'LineString'], ['==', 'active', true]],
+                        paint: {
+                            'line-color': '#ff0000',
+                            'line-width': 3
+                        }
+                    });
+                }
+            } else {
+                // Remove or hide the custom styling when not drawing/editing
+                if (map.getLayer('custom-draw-style')) {
+                    map.removeLayer('custom-draw-style');
+                }
+            }
+        });
 
         // Fit map to bounds if there are coordinates
         if (allCoords.length > 0) {
@@ -1035,7 +731,6 @@ function formatThaiDate(dateString) {
     return `${day} ${month} ${year}`;
 }
 
-// Function to format date and time to Thai format
 function formatThaiDateTime(dateString) {
     if (!dateString) return '';
 
@@ -1307,7 +1002,7 @@ const getTableData = async (formid) => {
 
         const table = initializeDataTable(data, columnsData);
 
-        // Event listeners for buttons and editable cells
+        // Add event listeners for buttons and editable cells
         $('#dataTable').on('click', '.map-btn', function (e) {
             e.stopPropagation();
             try {
@@ -1359,302 +1054,6 @@ const getTableData = async (formid) => {
         $('#tableError').text('Failed to load data: ' + error.message).show();
     }
 };
-
-// const getTableData = async (formid) => {
-//     try {
-//         const columnsResponse = await fetch('/api/load_column_description', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ formid }),
-//         });
-
-//         if (!columnsResponse.ok) {
-//             throw new Error(`HTTP error! status: ${columnsResponse.status}`);
-//         }
-
-//         const columnsData = await columnsResponse.json();
-
-//         function generateFormFields(rowData) {
-//             const formContainer = document.getElementById('formContainer');
-//             formContainer.innerHTML = '';
-
-//             columnsData.forEach(column => {
-//                 const formGroup = document.createElement('div');
-//                 formGroup.className = 'form-group';
-
-//                 const label = document.createElement('label');
-//                 label.textContent = column.col_name;
-//                 label.setAttribute('for', column.col_id);
-
-//                 let input;
-//                 switch (column.col_type) {
-//                     case 'text':
-//                         input = document.createElement('input');
-//                         input.type = 'text';
-//                         input.className = 'form-control';
-//                         break;
-//                     case 'numeric':
-//                         input = document.createElement('input');
-//                         input.type = 'number';
-//                         input.className = 'form-control';
-//                         break;
-//                     case 'date':
-//                         input = document.createElement('input');
-//                         input.type = 'date';
-//                         input.className = 'form-control';
-//                         break;
-//                     default:
-//                         input = document.createElement('input');
-//                         input.type = 'text';
-//                         input.className = 'form-control';
-//                         break;
-//                 }
-
-//                 input.id = column.col_id;
-//                 input.name = column.col_id;
-//                 input.placeholder = column.col_desc;
-
-//                 // Populate the input field with existing data
-//                 if (rowData && rowData[column.col_id] !== undefined) {
-//                     input.value = rowData[column.col_id];
-//                 }
-
-//                 formGroup.appendChild(label);
-//                 formGroup.appendChild(input);
-
-//                 formContainer.appendChild(formGroup);
-//             });
-//         }
-
-//         async function submitForm() {
-//             const formData = {};
-//             const changes = [];
-//             columnsData.forEach(column => {
-//                 const input = document.getElementById(column.col_id);
-//                 if (input) {
-//                     let value = input.value;
-//                     if (column.col_type === 'numeric' && value.trim() === '') {
-//                         value = null;
-//                     }
-//                     formData[column.col_id] = value;
-//                 }
-//             });
-
-//             const refid = document.getElementById('refid').value;
-//             changes.push({
-//                 refid: refid,
-//                 changes: formData
-//             });
-
-//             try {
-//                 const response = await fetch('/api/v2/update_layer', {
-//                     method: 'POST',
-//                     headers: {
-//                         'Content-Type': 'application/json'
-//                     },
-//                     body: JSON.stringify({ formid, changes })
-//                 });
-
-//                 if (!response.ok) {
-//                     throw new Error(`HTTP error! status: ${response.status}`);
-//                 }
-
-//                 const result = await response.json();
-//                 alert('Data submitted successfully!');
-
-//                 // Reload the table data after a successful update
-//                 await getTableData(formid);
-//             } catch (error) {
-//                 console.error('Error submitting form:', error);
-//                 alert('Failed to submit data. Please try again.');
-//             }
-//         }
-
-//         const response = await fetch('/api/v2/load_layer', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ formid })
-//         });
-
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         const data = await response.json();
-
-//         if (!Array.isArray(data) || data.length === 0) {
-//             throw new Error('No data received or invalid data format');
-//         }
-
-//         const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
-
-//         const columns = [
-//             {
-//                 title: 'Actions',
-//                 data: null,
-//                 orderable: false,
-//                 searchable: false,
-//                 render: function (data, type, row) {
-//                     let _type = row.geojson ? JSON.parse(row.geojson).type : '';
-//                     let geojson = row.geojson ? JSON.parse(row.geojson) : '';
-
-//                     if (geojson && geojson.type && geojson.coordinates) {
-//                         var _geojson = JSON.stringify(geojson);
-//                     } else {
-//                         console.error('Invalid GeoJSON:', geojson);
-//                         geojson = { type: 'Point', coordinates: [0, 0] };
-//                     }
-
-//                     return `<div class="btn-group">
-//                         <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-//                             <i class="fas fa-magnifying-glass"></i>
-//                         </button>
-//                         <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-//                             <i class="fas fa-paint-roller"></i>
-//                         </button>
-//                         <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-//                             <i class="fas fa-table-list"></i>
-//                         </button>
-//                         <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
-//                             <i class="fas fa-trash"></i>
-//                         </button>
-//                     </div>`;
-//                 }
-//             },
-//             ...Object.keys(data[0])
-//                 .filter(key => !['geojson', 'style'].includes(key))
-//                 .map(key => {
-//                     const isHidden = key === 'refid' || key === 'ts';
-//                     return {
-//                         title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-//                         data: key,
-//                         className: nonEditableColumns.includes(key) ? '' : 'editable',
-//                         visible: !isHidden,
-//                         render: function (data, type, row) {
-//                             if (isISODate(data)) {
-//                                 if (type === 'display') {
-//                                     return formatThaiDate(data);
-//                                 }
-//                                 return data;
-//                             }
-
-//                             if (type === 'display' && !nonEditableColumns.includes(key)) {
-//                                 return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
-//                             }
-//                             return data;
-//                         }
-//                     };
-//                 })
-//         ];
-
-//         if ($.fn.DataTable.isDataTable('#dataTable')) {
-//             $('#dataTable').DataTable().destroy();
-//         }
-
-//         $('#dataTable').empty();
-
-//         columns.forEach(col => {
-//             if (col.data === null) return;
-//             const match = columnsData.find(i => col.data === i.col_id);
-//             if (match) {
-//                 col.title = match.col_name;
-//                 col.type = match.col_type;
-//             }
-//         });
-
-//         const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
-//         $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
-
-//         const table = $('#dataTable').DataTable({
-//             data,
-//             columns,
-//             autoWidth: true,
-//             scrollX: true,
-//             dom: '<"top"Bf>rt<"bottom"lip><"clear">', // Position buttons at the top
-//             buttons: [
-//                 {
-//                     extend: 'excel', // Show only the Excel export button
-//                     text: '<i class="fas fa-download"></i> Export to Excel', // Custom text and icon
-//                     className: 'btn-primary', // Add a class for styling
-//                     title: 'Data Export', // Optional: Set a title for the exported file
-//                     exportOptions: {
-//                         modifier: {
-//                             page: 'all' // Export all data (not just the current page)
-//                         }
-//                     }
-//                 }
-//             ],
-//             language: {
-//                 search: "_INPUT_",
-//                 searchPlaceholder: "Search records...",
-//                 lengthMenu: "Show _MENU_ entries",
-//                 info: "Showing _START_ to _END_ of _TOTAL_ entries",
-//                 infoEmpty: "Showing 0 to 0 of 0 entries",
-//                 infoFiltered: "(filtered from _MAX_ total entries)"
-//             },
-//             initComplete: function () {
-//                 $('.dataTables_filter input')
-//                     .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
-//                     .css('text-indent', '20px');
-//                 $('.dataTables_length select').addClass('custom-select custom-select-sm');
-//             },
-//             responsive: false
-//         });
-
-//         // Event listeners for buttons and editable cells
-//         $('#dataTable').on('click', '.map-btn', function (e) {
-//             e.stopPropagation();
-//             try {
-//                 const geojson = $(this).data('geojson');
-//                 const bbox = turf.bbox(geojson);
-//                 map.fitBounds(bbox, {
-//                     padding: 20,
-//                     duration: 1000
-//                 });
-//             } catch (error) {
-//                 console.error('Failed to parse GeoJSON:', error);
-//             }
-//         });
-
-//         $('#dataTable').on('click', '.edit-btn', function (e) {
-//             e.stopPropagation();
-//             const refid = $(this).data('refid');
-//             const type = $(this).data('type');
-//             openEditModal(refid, type);
-//         });
-
-//         $('#dataTable').on('click', '.attr-btn', function (e) {
-//             e.stopPropagation();
-//             const refid = $(this).data('refid');
-//             const row = table.row($(this).closest('tr')).data();
-//             if (row) {
-//                 generateFormFields(row);
-//                 openAttrModal(refid);
-//                 // load
-//             } else {
-//                 console.error('Row data not found for refid:', refid);
-//             }
-//         });
-
-//         // Attach the submitForm function to the submit button
-//         document.getElementById('submitButton').addEventListener('click', submitForm);
-
-//         $('#dataTable').on('click', '.delete-btn', function (e) {
-//             e.stopPropagation();
-//             const refid = $(this).data('refid');
-//             if (confirm('ยืนยันการลบ  ?')) {
-//                 console.log('Delete item:', refid);
-//                 deleteRow(formid, refid);
-//                 table.row($(this).closest('tr')).remove().draw(false);
-//             }
-//         });
-
-
-//     } catch (error) {
-//         console.error('Failed to get table data:', error);
-//         $('#tableError').text('Failed to load data: ' + error.message).show();
-//     }
-// };
 
 const updateFeatureSymbol = (refid, type, values) => {
     console.log(values);
@@ -1708,7 +1107,6 @@ const updateFeatureStyleToTable = async (refid, type, values) => {
         console.error('Failed to update feature style:', error);
     }
 };
-
 
 const initMap = () => {
     map.on('load', async () => {
@@ -1890,8 +1288,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    let marker = null; // Declare a variable to store the marker
 
+    document.getElementById('searchLatLng').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent the form from submitting
+
+        // Get latitude and longitude from the form
+        const latitude = parseFloat(document.getElementById('latitude').value);
+        const longitude = parseFloat(document.getElementById('longitude').value);
+
+        // Validate the inputs
+        if (isNaN(latitude) || isNaN(longitude)) {
+            alert('Please enter valid latitude and longitude values.');
+            return;
+        }
+
+        // Check if the coordinates are within valid ranges
+        if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            alert('Invalid latitude or longitude values. Latitude must be between -90 and 90, and longitude must be between -180 and 180.');
+            return;
+        }
+
+        // Fly to the entered coordinates
+        map.flyTo({
+            center: [longitude, latitude],
+            zoom: 15,
+            essential: true
+        });
+
+        // Remove the existing marker if it exists
+        if (marker) {
+            marker.remove();
+        }
+
+        // Add a new marker at the entered coordinates
+        marker = new maplibregl.Marker()
+            .setLngLat([longitude, latitude])
+            .addTo(map); // Set the marker's position
+    });
+
+    // Add event listener to the "Clear" button
+    document.querySelector('.btn-primary.m[type="button"]').addEventListener('click', function () {
+        // Remove the marker if it exists
+        if (marker) {
+            marker.remove();
+            marker = null; // Reset the marker variable
+        }
+
+        // Reset the form fields
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+    });
 
     initMap();
 });
-

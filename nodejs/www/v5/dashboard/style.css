@@ -1,0 +1,50 @@
+body {
+    font-family: "Noto Sans Thai", serif !important;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+#dataTable {
+    width: 100% !important;
+}
+
+.dataTables_wrapper {
+    overflow-x: auto;
+}
+
+#table {
+    width: 100%;
+    table-layout: auto;
+}
+
+/* Allow long header text to wrap onto multiple lines if needed */
+#table thead th {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.buttons-excel:before {
+    content: "" !important;
+}
+
+.nk-menu-text {
+    font-family: "Noto Sans Thai", serif !important;
+}
+
+.m {
+    margin: 1px;
+}
+
+.data-query {
+    margin-top: 15px;
+}
+
+.side-panel {
+    /* background-color: #f8f9fa; */
+    height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #dee2e6;
+}
