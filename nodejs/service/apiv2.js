@@ -246,7 +246,7 @@ app.get('/api/v2/layer_names', async (req, res) => {
 // Get all divisions
 app.get("/api/v2/divisions", async (req, res) => {
     try {
-        const result = await pool.query("SELECT id, division_name, created_at FROM divisions ORDER BY id ASC");
+        const result = await pool.query("SELECT id, division_name, created_at FROM layer_division ORDER BY id ASC");
         res.json(result.rows);
     } catch (error) {
         console.error(error);
@@ -264,7 +264,7 @@ app.post("/api/v2/divisions", async (req, res) => {
 
     try {
         const result = await pool.query(
-            "INSERT INTO divisions (division_name) VALUES ($1) RETURNING *",
+            "INSERT INTO layer_division (division_name) VALUES ($1) RETURNING *",
             [division_name]
         );
         res.status(201).json(result.rows[0]);
@@ -279,7 +279,7 @@ app.delete("/api/v2/divisions/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await pool.query("DELETE FROM divisions WHERE id = $1 RETURNING *", [id]);
+        const result = await pool.query("DELETE FROM layer_division WHERE id = $1 RETURNING *", [id]);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Division not found" });

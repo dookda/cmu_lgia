@@ -13,9 +13,26 @@
     <title>Local Geo-Info Application</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css"> -->
+
+    <!-- StyleSheets  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css'
+        type='text/css' />
+
     <link rel="stylesheet" href="./../assets/css/dashlite.css?ver=3.2.4">
     <link id="skin-default" rel="stylesheet" href="./../assets/css/theme.css?ver=3.2.4">
     <link rel="stylesheet" href="./style.css">
@@ -56,14 +73,13 @@
                                             aria-label="scrollable content" style="height: 100%; overflow: hidden;">
                                             <div class="simplebar-content" style="padding: 16px 0px 40px;">
                                                 <ul class="nk-menu">
-
                                                     <li class="nk-menu-item">
                                                         <a href="./../dashboard/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-presentation"></em></span>
                                                             <span class="nk-menu-text">รายงาน</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
                                                         <a href="./../input_form/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
@@ -72,7 +88,7 @@
                                                         </a>
                                                     </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="./index.html" class="nk-menu-link">
+                                                        <a href="./../input_csv/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-cc-alt2"></em></span>
                                                             <span class="nk-menu-text">นำเข้าข้อมูล csv</span>
@@ -84,10 +100,9 @@
                                                                     class="icon ni ni-coins"></em></span>
                                                             <span class="nk-menu-text">จัดการข้อมูล</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
-
+                                                    </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="./../input_division/index.html" class="nk-menu-link">
+                                                        <a href="./index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-bitcoin-cash"></em></span>
                                                             <span class="nk-menu-text">หน่วยงาน</span>
@@ -99,7 +114,7 @@
                                                                     class="icon ni ni-bitcoin-cash"></em></span>
                                                             <span class="nk-menu-text">ผู้ใช้งาน</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
                                                         <a href="./../input_edit/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
@@ -107,7 +122,6 @@
                                                             <span class="nk-menu-text">คู่มือการใช้งาน</span>
                                                         </a>
                                                     </li>
-
                                                 </ul>
                                             </div>
                                         </div>
@@ -250,7 +264,7 @@
                                                     <li><a href="./../html/user-profile-regular.html"><em
                                                                 class="icon ni ni-user-alt"></em><span>View
                                                                 Profile</span></a></li>
-                                                    <li><a href="./../html/user-profile-setting.html"><em
+                                                    <li><a href="./../user-profile-setting.html"><em
                                                                 class="icon ni ni-setting-alt"></em><span>Account
                                                                 Setting</span></a></li>
                                                     <li><a class="dark-switch" href="#"><em
@@ -271,112 +285,64 @@
                         </div><!-- .nk-header-wrap -->
                     </div><!-- .container-fliud -->
                 </div>
-                <!-- main header @e -->
-                <!-- content @s -->
                 <div class="nk-content nk-content-fluid">
                     <div class="container-xl wide-xl">
                         <div class="nk-content-body">
                             <div class="nk-block">
                                 <div class="row g-gs">
-                                    <div class="col-xxl-8 col-lg-12">
+                                    <div class="col-xxl-8 col-lg-7">
                                         <div class="card card-full">
                                             <div class="card-inner">
-
-                                                <form class="g-3 needs-validation" id="uploadForm">
-                                                    <div class="row mt-2">
-                                                        <h3>สร้างชั้นข้อมูล</h3>
-                                                        <div class="col-md-4">
-                                                            <label for="validationCustom01"
+                                                <form class="row g-3 needs-validation" id="addDivisionName">
+                                                    <div class="mt-2">
+                                                        <h3>สร้างชื่อหน่วยงาน</h3>
+                                                        <div class="col-md">
+                                                            <label for="division"
                                                                 class="form-label">ชื่อหน่วยงาน</label>
-                                                            <select class="form-select" id="division" name="division"
+                                                            <input type="text" class="form-control" id="division"
                                                                 required>
-                                                                <option selected disabled value="">เลือก...
-                                                                </option>
-                                                                <option value="สำนักปลัดฝ่ายอำนวยการ">สำนักปลัด:
-                                                                    ฝ่ายอำนวยการ</option>
-                                                                <option value="สำนักปลัดฝ่ายปกครอง งานนิติการ">
-                                                                    สำนักปลัด: ฝ่ายปกครอง
-                                                                    งานนิติการ</option>
-                                                                <option
-                                                                    value="สำนักปลัดฝ่ายปกครอง งานป้องกันบรรเทาสาธารณภัย">
-                                                                    สำนักปลัด:
-                                                                    ฝ่ายปกครอง งานป้องกันบรรเทาสาธารณภัย
-                                                                </option>
-                                                                <option value="สำนักปลัดฝ่ายปกครองงานทะเบียนราษฎร">
-                                                                    สำนักปลัด:
-                                                                    สำนักปลัดฝ่ายปกครองงานทะเบียนราษฎร</option>
-                                                                <option value="สำนักปลัดฝ่ายพัฒนาชุมชน">
-                                                                    สำนักปลัด: ฝ่ายพัฒนาชุมชน
-                                                                </option>
-                                                                <option value="กองคลัง">กองคลัง</option>
-                                                                <option value="กองช่าง">กองช่าง</option>
-                                                                <option value="กองสาธารณสุขและสิ่งแวดล้อม">
-                                                                    กองสาธารณสุขและสิ่งแวดล้อม
-                                                                </option>
-                                                                <option value="กองการศึกษา">กองการศึกษา</option>
-                                                                <option
-                                                                    value="สำนักปลัดฝ่ายอำนวยการงานวิเคราะห์นโยบายและแผน">
-                                                                    สำนักปลัด:
-                                                                    งานวิเคราะห์นโยบายและแผน</option>
-                                                                <option
-                                                                    value="สำนักปลัดฝ่ายอำนวยการงานส่งเสริมการท่องเที่ยวและประชาสัมพันธ์">
-                                                                    สำนักปลัด:
-                                                                    งานส่งเสริมการท่องเที่ยวและประชาสัมพันธ์
-                                                                </option>
-                                                            </select>
-                                                            <div class="invalid-feedback">
-                                                                ต้องเลือกหน่วยงานเจ้าของข้อมูล
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="validationCustom02"
-                                                                class="form-label">ชื่อชั้นข้อมูล</label>
-                                                            <input type="text" class="form-control" id="layername"
-                                                                name="layername" required placeholder="ระบุ..">
-                                                            <div class="valid-feedback">
-                                                                มีชื่อชั้นข้อมูลแผนที่
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="validationDataType"
-                                                                class="form-label">ประเภทของชั้นข้อมูล</label>
-                                                            <select class="form-select" id="layertype" name="layertype"
-                                                                required>
-                                                                <option value="point" selected>จุด (point)
-                                                                </option>
-                                                            </select>
-                                                            <div class="invalid-feedback">
-                                                                ต้องเลือกประเภทข้อมูลแผนที่
-                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <hr>
-                                                    <h5>Upload CSV File</h5>
-                                                    <input type="file" id="file" name="file" accept=".csv" required>
                                                     <div class="mt-3">
-                                                        <button class="btn btn-success" type="submit">Upload</button>
-
+                                                        <button class="btn btn-success" type="submit">เพิ่ม</button>
                                                     </div>
                                                 </form>
                                             </div>
 
                                         </div><!-- .card -->
                                     </div><!-- .col -->
-
-                                    <div class="col-xxl-8">
+                                    <div class="col-xxl-4 col-lg-5">
                                         <div class="card card-full">
                                             <div class="card-inner">
                                                 <div class="card-title-group">
                                                     <div class="card-title">
-                                                        <h6 class="title">Active Campaign</h6>
+                                                        <h6 class="title">Top Channels</h6>
                                                     </div>
                                                     <div class="card-tools">
                                                         <a href="#" class="link">View All</a>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="card-inner py-0 mt-n2">
-                                                <!-- .nk-tb-list -->
+
+                                        </div><!-- .card -->
+                                    </div><!-- .col -->
+                                    <div class="col-xxl-8">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <table id="divisionTable" class="display responsive nowrap"
+                                                    data-export-title="Export">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>จัดการ</th>
+                                                            <th>ลำดับ</th>
+                                                            <th>ชื่อหน่วยงาน</th>
+                                                            <th>วันที่</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Data will be populated here -->
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div><!-- .card -->
                                     </div>
@@ -401,14 +367,37 @@
         </div>
         <!-- main @e -->
     </div>
-    <!-- app-root @e -->
-    <!-- select region modal -->
-    <!-- JavaScript -->
-    <!-- <script src="./assets/js/bundle.js?ver=3.2.4"></script>
-    <script src="./assets/js/scripts.js?ver=3.2.4"></script>
-    <script src="./assets/js/charts/gd-campaign.js?ver=3.2.4"></script> -->
-    <script src="./app.js"></script>
+    <!-- boostrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
 
+    <!-- datatable -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <!-- <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script> -->
+
+    <!-- map -->
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+    <!-- JavaScript -->
+    <!-- <script src="./assets/js/bundle.js?ver=3.2.4"></script> -->
+    <!-- <script src="./assets/js/scripts.js?ver=3.2.4"></script> -->
+    <!-- <script src="./assets/js/charts/gd-campaign.js?ver=3.2.4"></script> -->
+    <!-- <script type="module" src="./app.js"></script> -->
+    <script src="./app.js"></script>
 </body>
 
 </html>

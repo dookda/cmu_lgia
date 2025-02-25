@@ -40,9 +40,7 @@
 
 <body class="nk-body ui-rounder has-sidebar no-touch nk-nio-theme">
     <div class="nk-app-root">
-        <!-- main @s -->
         <div class="nk-main ">
-            <!-- sidebar @s -->
             <div class="nk-sidebar is-light nk-sidebar-fixed is-light" data-content="sidebarMenu">
                 <div class="nk-sidebar-element nk-sidebar-head">
                     <div class="nk-sidebar-brand">
@@ -59,7 +57,7 @@
                         <a href="#" class="nk-nav-toggle nk-quick-nav-icon d-xl-none" data-target="sidebarMenu"><em
                                 class="icon ni ni-arrow-left"></em></a>
                     </div>
-                </div><!-- .nk-sidebar-element -->
+                </div>
                 <div class="nk-sidebar-element">
                     <div class="nk-sidebar-content">
                         <div class="nk-sidebar-menu" data-simplebar="init">
@@ -73,46 +71,49 @@
                                             aria-label="scrollable content" style="height: 100%; overflow: hidden;">
                                             <div class="simplebar-content" style="padding: 16px 0px 40px;">
                                                 <ul class="nk-menu">
-                                                    <!-- .nk-menu-item -->
-                                                    <!-- .nk-menu-item -->
-
                                                     <li class="nk-menu-item">
-                                                        <a href="/v5/dashboard/index.html" class="nk-menu-link">
+                                                        <a href="./index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-presentation"></em></span>
                                                             <span class="nk-menu-text">รายงาน</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="./input_edit/index.html" class="nk-menu-link">
+                                                        <a href="./../input_form/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-cc-alt2"></em></span>
                                                             <span class="nk-menu-text">สร้างชั้นข้อมูล</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="/v5/input_edit/index.html" class="nk-menu-link">
+                                                        <a href="./../input_edit/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-coins"></em></span>
                                                             <span class="nk-menu-text">จัดการข้อมูล</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="/v5/input_edit/index.html" class="nk-menu-link">
+                                                        <a href="./../input_division/index.html" class="nk-menu-link">
+                                                            <span class="nk-menu-icon"><em
+                                                                    class="icon ni ni-bitcoin-cash"></em></span>
+                                                            <span class="nk-menu-text">หน่วยงาน</span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="nk-menu-item">
+                                                        <a href="./../users/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-bitcoin-cash"></em></span>
                                                             <span class="nk-menu-text">ผู้ใช้งาน</span>
                                                         </a>
-                                                    </li><!-- .nk-menu-item -->
+                                                    </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="/v5/input_edit/index.html" class="nk-menu-link">
+                                                        <a href="./../input_edit/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-growth"></em></span>
                                                             <span class="nk-menu-text">คู่มือการใช้งาน</span>
                                                         </a>
                                                     </li>
-
-                                                </ul><!-- .nk-menu -->
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
@@ -126,12 +127,10 @@
                                 <div class="simplebar-scrollbar simplebar-visible"
                                     style="height: 0px; transform: translate3d(0px, 21px, 0px); display: none;"></div>
                             </div>
-                        </div><!-- .nk-sidebar-menu -->
-                    </div><!-- .nk-sidebar-content -->
-                </div><!-- .nk-sidebar-element -->
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- sidebar @e -->
-            <!-- wrap @s -->
             <div class="nk-wrap ">
                 <!-- main header @s -->
                 <div class="nk-header is-light nk-header-fixed">
@@ -280,9 +279,6 @@
                 <div class="nk-content nk-content-fluid">
                     <div class="container-xl wide-xl">
                         <div class="nk-content-body">
-                            <div class="nk-block-head nk-block-head-sm">
-                                <!-- .nk-block-between -->
-                            </div><!-- .nk-block-head -->
                             <div class="nk-block">
                                 <div class="row g-gs">
                                     <div class="col-xxl-8 col-lg-8">
@@ -319,7 +315,7 @@
                                                 <hr>
                                                 <div>
                                                     <h6>หน่วยงาน: สำนักงานพัฒนาชุมชน</h6>
-                                                    <div class="side-panel p-2">
+                                                    <div class="side-panel">
                                                         <ul class="list-group" id="layerList" role="tablist"></ul>
                                                     </div>
                                                 </div>
@@ -362,27 +358,24 @@
                                     <div class="col-xxl-8">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <!-- <table id="table" class="display responsive nowrap">
-
-                                                </table> -->
-                                                <div class="data-table mt-2">
-                                                    <table id="table" class="table table-striped nowarp"></table>
+                                                <table id="table" class="display responsive nowrap">
+                                                    <thead></thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                                <div id="tableError" class="alert alert-danger" style="display: none;">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div><!-- .row -->
-                            </div><!-- .nk-block -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- content @e -->
-                <!-- footer @s -->
                 <div class="nk-footer">
                     <div class="container-xl wide-xl">
                         <div class="nk-footer-wrap">
-                            <div class="nk-footer-copyright"> © 2024 DashLite. Template by <a href="https://softnio.com"
-                                    target="_blank">Softnio</a>
+                            <div class="nk-footer-copyright"> © 2025 lgia
                             </div>
                         </div>
                     </div>
@@ -391,7 +384,6 @@
             </div>
             <!-- wrap @e -->
         </div>
-        <!-- main @e -->
     </div>
     <!-- boostrap -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"

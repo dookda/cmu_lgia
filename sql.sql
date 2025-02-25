@@ -21,13 +21,13 @@ CREATE TABLE layer_columns (
     column_description TEXT
 );
 
-CREATE TABLE devision (
+CREATE TABLE layer_division (
     id SERIAL PRIMARY KEY,
     division_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS divisions (
+CREATE TABLE IF NOT EXISTS layer_division (
     id SERIAL PRIMARY KEY,
     division_name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
