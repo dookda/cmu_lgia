@@ -20,15 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
             {
                 data: "ts",
                 render: function (data) {
-                    return new Intl.DateTimeFormat("th-TH", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                        hour12: false,
-                    }).format(new Date(data));
+                    const date = new Date(data);
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return date.toLocaleDateString('th-TH', options);
                 },
             },
             { data: "auth" },
@@ -37,46 +31,47 @@ document.addEventListener("DOMContentLoaded", function () {
         scrollX: true,
     });
 
-    // Handle delete button click
-    document.querySelector("#userTable tbody").addEventListener("click", async function (event) {
-        if (event.target.classList.contains("delete-btn")) {
-            const userId = event.target.dataset.id;
-            if (!confirm("คุณต้องการลบข้อมูลนี้ใช่หรือไม่?")) return;
-
-            try {
-                const response = await fetch(`http://localhost:3000/api/v2/users/${userId}`, {
-                    method: "DELETE",
+    $('#userTable').on('click', '.delete-btn', function () {
+        const id = $(this).data('id');
+        if (confirm('ยืนยันการลบรายการนี้?')) {
+            fetch(`/api/v2/users/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete entry with id ${id}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    table
+                        .row($(this).closest('tr'))
+                        .remove()
+                        .draw();
+                    console.log(`Entry with id ${id} deleted successfully.`);
+                })
+                .catch(error => {
+                    console.error('Error deleting data:', error);
                 });
-
-                if (response.ok) {
-                    table.ajax.reload();
-                } else {
-                    alert("Error deleting user.");
-                }
-            } catch (error) {
-                console.error(error);
-            }
         }
     });
 
-    document.querySelector("#userTable tbody").addEventListener("click", function (event) {
-        if (event.target.classList.contains("edit-btn")) {
-            const row = table.row(event.target.closest("tr")).data();
-            document.getElementById("editUserId").value = row.id;
-            document.getElementById("editUsername").value = row.username;
-            document.getElementById("editEmail").value = row.email;
-            document.getElementById("editAuth").value = row.auth;
-            document.getElementById("editDivision").value = row.division;
+    $('#userTable').on('click', '.edit-btn', function (event) {
+        const row = table.row(event.target.closest("tr")).data();
+        document.getElementById("editUserId").value = row.id;
+        document.getElementById("editUsername").value = row.username;
+        document.getElementById("editEmail").value = row.email;
+        document.getElementById("editAuth").value = row.auth;
+        document.getElementById("editDivision").value = row.division;
 
-            const editModal = new bootstrap.Modal(document.getElementById("editModal"));
-            editModal.show();
+        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+        editModal.show();
 
-            document.addEventListener('hide.bs.modal', function (event) {
-                if (document.activeElement) {
-                    document.activeElement.blur();
-                }
-            });
-        }
+        document.addEventListener('hide.bs.modal', function (event) {
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        });
     });
 
     window.saveEdit = async function () {
@@ -88,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             division: document.getElementById("editDivision").value,
         };
 
-        await fetch(`http://localhost:3000/api/v2/users/${userId}`, {
+        await fetch(`/api/v2/users/${userId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData),

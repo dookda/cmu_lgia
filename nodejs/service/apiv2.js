@@ -243,6 +243,26 @@ app.get('/api/v2/layer_names', async (req, res) => {
     }
 });
 
+app.delete('/api/v2/layer_names/:gid', async (req, res) => {
+    try {
+        const gid = parseInt(req.params.gid, 10);
+        const { rowCount } = await pool.query(
+            'DELETE FROM layer_name WHERE gid = $1',
+            [gid]
+        );
+
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 // Get all divisions
 app.get("/api/v2/divisions", async (req, res) => {
     try {
@@ -271,6 +291,28 @@ app.post("/api/v2/divisions", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });
+    }
+});
+
+// update division
+app.put('/api/v2/divisions/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        const { division_name } = req.body;
+        if (!division_name) {
+            return res.status(400).json({ error: 'Division name is required' });
+        }
+        const { rowCount } = await pool.query(
+            'UPDATE layer_division SET division_name = $1 WHERE id = $2',
+            [division_name, id]
+        );
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Division not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 

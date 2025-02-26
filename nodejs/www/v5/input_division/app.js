@@ -9,7 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
             {
                 data: 'id',
                 render: function (data) {
-                    return `<button class="btn btn-danger btn-sm delete-btn" data-id="${data}">ลบ</button>`;
+                    // console.log(data);
+
+                    return `<button class="btn btn-warning edit-btn" data-id="${data}">แก้ไข</button>
+                            <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>`;
                 },
             },
             { data: 'id' },
@@ -17,15 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
             {
                 data: "created_at",
                 render: function (data) {
-                    return new Intl.DateTimeFormat("th-TH", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                        hour12: false, // Ensures 24-hour format
-                    }).format(new Date(data));
+                    const date = new Date(data);
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return date.toLocaleDateString('th-TH', options);
                 },
             },
         ],
@@ -64,6 +61,39 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Handle edit button click
+    $('#divisionTable').on('click', '.edit-btn', function (event) {
+        const row = table.row(event.target.closest("tr")).data();
+        document.getElementById("division_id").value = row.id;
+        document.getElementById("division_name").value = row.division_name;
+
+        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+        editModal.show();
+
+        document.addEventListener('hide.bs.modal', function (event) {
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        });
+    });
+
+    window.saveEdit = async function () {
+        const id = document.getElementById("division_id").value;
+        const updatedData = {
+            division_name: document.getElementById("division_name").value,
+        };
+
+        await fetch(`/api/v2/divisions/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData),
+        });
+
+        table.ajax.reload();
+        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    };
+
+    // Handle delete button click
     document.querySelector("#divisionTable tbody").addEventListener("click", async function (event) {
         if (event.target.classList.contains("delete-btn")) {
             const divisionId = event.target.dataset.id;
