@@ -603,26 +603,40 @@ const handleFeatureDeletion = (e, map, formid) => {
 const getFeatures = async (formid) => {
     window.currentFormId = formid;
     const allCoords = [];
+    // const featuresMeta = {};
 
     try {
+        if (!map) {
+            throw new Error('Map is not initialized');
+        }
+
         Object.keys(featuresMeta).forEach(refid => {
             if (featuresMeta[refid].marker) {
-                featuresMeta[refid].marker.remove(); // Remove marker if it exists
+                featuresMeta[refid].marker.remove();
             }
             if (map.getLayer(refid)) {
-                map.removeLayer(refid); // Remove layer if it exists
+                map.removeLayer(refid);
             }
             if (map.getSource(refid)) {
-                map.removeSource(refid); // Remove source if it exists
+                map.removeSource(refid);
             }
             delete featuresMeta[refid];
         });
 
-        const features = await fetchFeatures(formid);
-        if (features.length === 0) {
-            console.warn('No features found in the database.');
-            return;
-        }
+        const allFeatures = await fetchFeatures(formid);
+
+        // filter out features not null
+        const features = await allFeatures.filter(feature => feature.geojson !== null);
+
+        // if (!features || features.length === 0) {
+        //     console.warn('No features found in the database.');
+        //     return;
+        // }
+
+        // if (!features[0].geojson) {
+        //     console.warn('Invalid geojson in features.');
+        //     return;
+        // }
 
         const firstFeatureType = JSON.parse(features[0].geojson).type;
 
@@ -645,13 +659,11 @@ const getFeatures = async (formid) => {
             const mode = e.mode;
             if (mode === 'draw_polygon' || mode === 'direct_select' || mode === 'draw_line_string') {
                 console.log('Drawing mode:', mode);
-
-                // Enable custom styling layer
                 if (!map.getLayer('custom-draw-style')) {
                     map.addLayer({
                         id: 'custom-draw-style',
-                        type: 'line', // change type based on your feature (line, fill, circle, etc.)
-                        source: 'draw', // assuming your draw features are in this source
+                        type: 'line',
+                        source: 'draw',
                         filter: ['all', ['==', '$type', 'LineString'], ['==', 'active', true]],
                         paint: {
                             'line-color': '#ff0000',
@@ -660,14 +672,12 @@ const getFeatures = async (formid) => {
                     });
                 }
             } else {
-                // Remove or hide the custom styling when not drawing/editing
                 if (map.getLayer('custom-draw-style')) {
                     map.removeLayer('custom-draw-style');
                 }
             }
         });
 
-        // Fit map to bounds if there are coordinates
         if (allCoords.length > 0) {
             const lons = allCoords.map(coord => coord[0]);
             const lats = allCoords.map(coord => coord[1]);
@@ -892,7 +902,7 @@ const initializeDataTable = (data, columnsData) => {
                 if (geojson && geojson.type && geojson.coordinates) {
                     var _geojson = JSON.stringify(geojson);
                 } else {
-                    console.error('Invalid GeoJSON:', geojson);
+                    // console.error('Invalid GeoJSON:', geojson);
                     geojson = { type: 'Point', coordinates: [0, 0] };
                 }
 

@@ -14,49 +14,22 @@ h5 {
     font-family: "Noto Sans Thai", serif !important;
 }
 
-.header {
-    background-color: #ff7f00;
-    color: #fff;
-    padding: 10px;
-    text-align: center;
+#dataTable {
+    width: 100% !important;
 }
 
-.border-no-radius {
-    border: 1px solid #dee2e6 !important;
-    border-radius: 0 !important;
+.dataTables_wrapper {
+    overflow-x: auto;
 }
 
-.side-panel {
-    background-color: #f8f9fa;
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
+.buttons-excel:before {
+    content: "" !important;
 }
 
-.side-panel-light {
-    /* background-color: #f8f9fa; */
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
+.nk-menu-text {
+    font-family: "Noto Sans Thai", serif !important;
 }
 
-.side-panel-basemap {
-    background-color: #f8f9fa;
-    height: 100px;
-    /* overflow-y: auto; */
-    border: 1px solid #dee2e6;
-}
-
-.content {
-    height: 400px;
-    border: 1px solid #dee2e6;
-}
-
-.data-query {
-    margin-top: 15px;
-}
-
-.data-table {
-    height: 200px;
-    overflow-y: auto;
+.m {
+    margin: 1px;
 }

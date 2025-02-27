@@ -10,7 +10,7 @@ const SECRET_KEY = "your_secret_key";
 
 const fs = require('fs');
 const csvParser = require('csv-parser');
-const { log } = require('console');
+const xlsx = require('xlsx');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -76,17 +76,28 @@ app.post("/api/v2/login", async (req, res) => {
     }
 });
 
-const queryAsync = (text, params) => {
-    return pool.query(text, params);
-};
+const queryAsync = (text, params) => pool.query(text, params);
 
 app.post('/api/v2/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).send('No file uploaded.');
         }
+
         const { division, layername, layertype } = req.body;
-        await parseAndInsertData(req.file.path, division, layername, layertype);
+        const filePath = req.file.path;
+        const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
+
+        let data;
+        if (fileExtension === 'csv') {
+            data = await parseCSV(filePath);
+        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+            data = await parseExcel(filePath);
+        } else {
+            return res.status(400).send('Unsupported file type. Only CSV and Excel files are allowed.');
+        }
+
+        await insertDataIntoDB(data, division, layername, layertype);
 
         res.send('File is being processed.');
     } catch (error) {
@@ -95,17 +106,22 @@ app.post('/api/v2/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-const parseAndInsertData = async (filePath, division, layername, layertype) => {
-    const results = [];
+const parseCSV = (filePath) => {
     return new Promise((resolve, reject) => {
+        const results = [];
         fs.createReadStream(filePath)
             .pipe(csvParser())
             .on('data', (data) => results.push(data))
             .on('end', () => resolve(results))
             .on('error', (error) => reject(error));
-    })
-        .then(results => insertDataIntoDB(results, division, layername, layertype))
-        .catch(error => { throw error; });
+    });
+};
+
+const parseExcel = (filePath) => {
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0]; // Assuming the first sheet is the one to be processed
+    const sheet = workbook.Sheets[sheetName];
+    return xlsx.utils.sheet_to_json(sheet);
 };
 
 const checkColumnsExist = async (tableName, columns) => {
@@ -122,8 +138,8 @@ const insertDataIntoDB = async (data, division, layername, layertype) => {
 
     const keys = Object.keys(data[0]);
     const columns = keys.map((columnName, index) => {
-        const isLatitude = ['ละติจูด', 'lattitude', 'lat'].includes(columnName);
-        const isLongitude = ['ลองจิจูด', 'longitude', 'long'].includes(columnName);
+        const isLatitude = ['lat', 'ละติจูด', 'lattitude', 'lat'].includes(columnName.toLowerCase());
+        const isLongitude = ['lng', 'ลองจิจูด', 'longitude', 'long'].includes(columnName.toLowerCase());
         const columnType = isLatitude || isLongitude ? 'numeric' : 'text';
         const columnId = isLatitude ? 'lat' : isLongitude ? 'lng' : `${formid}_${index}`;
 
@@ -155,10 +171,19 @@ const insertDataIntoDB = async (data, division, layername, layertype) => {
         const valuesToInsert = data.map((row, rowIndex) => {
             const values = columnIds.map(cId => {
                 const key = Object.keys(row).find(key => columns.find(c => c.column_name === key && c.column_id === cId));
-                const value = row[key];
+                let value = row[key];
+
+                // Handle latitude and longitude
+                if (cId === 'lat' || cId === 'lng') {
+                    value = parseFloat(value);
+                    if (isNaN(value) || value === 0) {
+                        value = null; // Set to NULL if invalid or 0
+                    }
+                }
+
                 return columns.find(c => c.column_id === cId).column_type === 'numeric' && (value === '' || value == null) ? 0 : value;
             });
-            return `('${refids[rowIndex]}', ${values.map(v => `'${v}'`).join(', ')})`;
+            return `('${refids[rowIndex]}', ${values.map(v => v === null ? 'NULL' : `'${v}'`).join(', ')})`;
         });
 
         await queryAsync(
@@ -167,9 +192,9 @@ const insertDataIntoDB = async (data, division, layername, layertype) => {
 
         const doColumnsExist = await checkColumnsExist(formid, ['lat', 'lng']);
         if (doColumnsExist) {
-            const { rows } = await queryAsync(`SELECT * FROM ${formid} WHERE lat > 0 AND lng > 0`);
+            const { rows } = await queryAsync(`SELECT * FROM ${formid} WHERE lat IS NOT NULL AND lng IS NOT NULL AND lat != 0 AND lng != 0`);
             if (rows.length > 0) {
-                await queryAsync(`UPDATE ${formid} SET geom = ST_SetSRID(ST_MakePoint(lng, lat), 4326) WHERE lat > 0 AND lng > 0`);
+                await queryAsync(`UPDATE ${formid} SET geom = ST_SetSRID(ST_MakePoint(lng, lat), 4326) WHERE lat IS NOT NULL AND lng IS NOT NULL AND lat != 0 AND lng != 0`);
             }
         }
     } catch (err) {

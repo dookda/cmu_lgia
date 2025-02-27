@@ -7,6 +7,11 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     const fileInput = document.getElementById('file');
     const file = fileInput.files[0];
 
+    if (!file) {
+        alert('Please select a file to upload.');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('division', division);
     formData.append('layername', layername);
@@ -27,8 +32,8 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             messageDiv.textContent = 'File uploaded and is being processed.';
             messageDiv.classList.add('success');
         } else {
-            const errorData = await response.text();
-            messageDiv.textContent = `Error: ${errorData}`;
+            const errorData = await response.json(); // Assuming the server returns JSON error messages
+            messageDiv.textContent = `Error: ${errorData.message || 'An error occurred during upload.'}`;
             messageDiv.classList.add('error');
         }
     } catch (error) {
