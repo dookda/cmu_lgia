@@ -438,19 +438,73 @@ app.post("/api/v2/users", async (req, res) => {
 app.post('/api/v2/load_layer', async (req, res) => {
     try {
         const { formid } = req.body;
-        const sql = `SELECT *, ST_AsGeoJSON(geom) as geojson FROM ${formid} ORDER BY ts DESC`;
+        if (!formid || typeof formid !== 'string') {
+            return res.status(400).send('Invalid formid.');
+        }
+
+        const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = $1 AND column_name != 'geom'
+        `;
+        const columnsRes = await pool.query(columnsQuery, [formid]);
+        const columns = columnsRes.rows.map(row => row.column_name).join(', ');
+
+        const sql = `
+            SELECT ${columns}, ST_AsGeoJSON(geom) as geojson 
+            FROM ${formid} 
+            ORDER BY ts DESC
+        `;
+
         const { rows } = await pool.query(sql);
-        // Remove the 'geom' column from each row
-        const filteredRows = rows.map(row => {
-            const { geom, ...rest } = row;
-            return rest;
-        });
-        res.status(200).json(filteredRows);
+
+        res.status(200).json(rows);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while getting the selected layer.');
     }
-})
+});
+
+app.get('/api/v2/load_layer/:formid/:refid', async (req, res) => {
+    try {
+        const { formid, refid } = req.params;
+        const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = $1 AND column_name != 'geom'
+        `;
+        const columnsRes = await pool.query(columnsQuery, [formid]);
+        const columns = columnsRes.rows.map(row => row.column_name).join(', ');
+
+        const sql = `
+            SELECT ${columns}, ST_AsGeoJSON(geom) as geojson 
+            FROM ${formid} 
+            WHERE refid = $1 
+            ORDER BY ts DESC
+        `;
+
+        const { rows } = await pool.query(sql, [refid]);
+
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while getting the selected layer.');
+    }
+});
+
+app.get('/api/v2/load_layer_description/:formid', async (req, res) => {
+    try {
+        const { formid } = req.params;
+        console.log('formid:', formid);
+
+        const sql = `SELECT * FROM layer_column WHERE formid = $1`;
+        const { rows } = await pool.query(sql, [formid]);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 app.post('/api/v2/update_feature_style', async (req, res) => {
     try {

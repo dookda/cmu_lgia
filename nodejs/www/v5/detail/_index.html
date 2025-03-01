@@ -8,7 +8,7 @@
     <meta name="description"
         content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
     <!-- Fav Icon  -->
-    <link rel="shortcut icon" href="./images/favicon.png">
+    <link rel="shortcut icon" href="./../images/favicon.png">
     <!-- Page Title  -->
     <title>Local Geo-Info Application</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,23 +18,15 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
-
-    <!-- StyleSheets  -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css'
         type='text/css' />
 
+    <!-- StyleSheets  -->
     <link rel="stylesheet" href="./../assets/css/dashlite.css?ver=3.2.4">
     <link rel="stylesheet" href="./../assets/css/theme.css?ver=3.2.4" id="skin-default">
-
     <link rel="stylesheet" href="./style.css">
 </head>
 
@@ -59,7 +51,7 @@
                         <a href="#" class="nk-nav-toggle nk-quick-nav-icon d-xl-none" data-target="sidebarMenu"><em
                                 class="icon ni ni-arrow-left"></em></a>
                     </div>
-                </div>
+                </div><!-- .nk-sidebar-element -->
                 <div class="nk-sidebar-element">
                     <div class="nk-sidebar-content">
                         <div class="nk-sidebar-menu" data-simplebar="init">
@@ -95,12 +87,13 @@
                                                         </a>
                                                     </li>
                                                     <li class="nk-menu-item">
-                                                        <a href="./../layers/index.html" class="nk-menu-link">
+                                                        <a href="./index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-layers"></em></span>
                                                             <span class="nk-menu-text">จัดการข้อมูล</span>
                                                         </a>
                                                     </li>
+
                                                     <li class="nk-menu-item">
                                                         <a href="./../input_division/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
@@ -194,7 +187,46 @@
                                                             <div class="nk-notification-time">Just now</div>
                                                         </div>
                                                     </div>
+                                                    <div class="nk-notification-item dropdown-inner">
+                                                        <div class="nk-notification-icon">
+                                                            <em class="icon icon-circle bg-info-dim ni ni-edit"></em>
+                                                        </div>
+                                                        <div class="nk-notification-content">
+                                                            <div class="nk-notification-text">Iliash
+                                                                <span>invited</span> you to edit <span>DashLite</span>
+                                                                folder
+                                                            </div>
+                                                            <div class="nk-notification-time">2 hrs ago</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="nk-notification-item dropdown-inner">
+                                                        <div class="nk-notification-icon">
+                                                            <em
+                                                                class="icon icon-circle bg-primary-dim ni ni-share"></em>
+                                                        </div>
+                                                        <div class="nk-notification-content">
+                                                            <div class="nk-notification-text">You have shared
+                                                                <span>project v2</span> with Parvez.
+                                                            </div>
+                                                            <div class="nk-notification-time">7 days ago</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="nk-notification-item dropdown-inner">
+                                                        <div class="nk-notification-icon">
+                                                            <em
+                                                                class="icon icon-circle bg-success-dim ni ni-spark"></em>
+                                                        </div>
+                                                        <div class="nk-notification-content">
+                                                            <div class="nk-notification-text">Your
+                                                                <span>Subscription</span> renew successfully.
+                                                            </div>
+                                                            <div class="nk-notification-time">2 month ago</div>
+                                                        </div>
+                                                    </div>
                                                 </div><!-- .nk-notification -->
+                                            </div><!-- .nk-dropdown-body -->
+                                            <div class="dropdown-foot center">
+                                                <a href="#">View All</a>
                                             </div>
                                         </div>
                                     </li>
@@ -225,6 +257,12 @@
                                                     <li><a href="html/user-profile-regular.html"><em
                                                                 class="icon ni ni-user-alt"></em><span>View
                                                                 Profile</span></a></li>
+                                                    <li><a href="html/user-profile-setting.html"><em
+                                                                class="icon ni ni-setting-alt"></em><span>Account
+                                                                Setting</span></a></li>
+                                                    <li><a class="dark-switch" href="#"><em
+                                                                class="icon ni ni-moon"></em><span>Dark Mode</span></a>
+                                                    </li>
                                                 </ul>
                                             </div>
                                             <div class="dropdown-inner">
@@ -240,6 +278,8 @@
                         </div>
                     </div>
                 </div>
+                <!-- main header @e -->
+                <!-- content @s -->
                 <div class="nk-content nk-content-fluid">
                     <div class="container-xl wide-xl">
                         <div class="nk-content-body">
@@ -301,15 +341,157 @@
 
                                         </div><!-- .card -->
                                     </div><!-- .col -->
-                                    <div class="col-xxl-8">
+
+                                    <div class="col-xxl-6 col-lg-6">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <table id="dataTable" class="display responsive nowrap">
-                                                    <thead></thead>
-                                                    <tbody></tbody>
-                                                </table>
-                                                <div id="tableError" class="alert alert-danger" style="display: none;">
+                                                <div class="card-title-group">
+                                                    <div class="card-title">
+                                                        <h6 class="title">Top Channels</h6>
+                                                    </div>
+                                                    <div class="card-tools">
+                                                        <a href="#" class="link">View All</a>
+                                                    </div>
                                                 </div>
+                                            </div>
+
+                                        </div><!-- .card -->
+                                    </div>
+
+                                    <div class="col-xxl-6 col-lg-6">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <form id="editForm">
+                                                    <div class="modal-body">
+                                                        <div id="pointFields" class="mb-3">
+                                                            <label class="form-label">Marker Type:</label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio"
+                                                                    name="markerType" id="markerTypeSimple"
+                                                                    value="simple" checked>
+                                                                <label class="form-check-label"
+                                                                    for="markerTypeSimple">Simple Marker</label>
+                                                            </div>
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio"
+                                                                    name="markerType" id="markerTypeEmoji"
+                                                                    value="emoji">
+                                                                <label class="form-check-label"
+                                                                    for="markerTypeEmoji">Emoji Marker</label>
+                                                            </div>
+
+                                                            <div id="simpleMarkerFields">
+                                                                <label for="markerColor" class="form-label">Marker
+                                                                    Color:</label>
+                                                                <input type="color" class="form-control"
+                                                                    id="markerColor" name="markerColor" value="#007cbf">
+
+                                                                <div id="awesomePanel" class="mt-2">
+                                                                    <label class="form-label mb-1">Choose Icon:</label>
+                                                                    <div id="awesomeIconSelection" class="markerList">
+                                                                        <!-- Icon choices will be inserted here -->
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Emoji Marker Fields -->
+                                                            <div id="emojiMarkerFields" style="display: none;">
+                                                                <label for="markerSymbol" class="form-label">Marker
+                                                                    Emoji:</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="markerSymbol" name="markerSymbol" hidden>
+                                                                <label for="markerSize" class="form-label">Emoji Size
+                                                                    (px):</label>
+                                                                <input type="number" class="form-control"
+                                                                    id="markerSize" name="markerSize">
+
+                                                                <!-- Emoji Panel -->
+                                                                <div id="emojiPanel" class="mt-2">
+                                                                    <label class="form-label mb-1">Choose an
+                                                                        Emoji:</label>
+                                                                    <div id="emojiSelection" class="markerList">
+                                                                        <!-- Emoji choices will be inserted here -->
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Custom Marker Preview -->
+                                                            <div id="markerPreviewContainer" class="mt-3">
+                                                                <label class="form-label">Marker Preview:</label>
+                                                                <div id="markerPreview"></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Fields for a Polyline (LineString) -->
+                                                        <div id="lineFields" class="mb-3" style="display: none;">
+                                                            <label for="lineColor" class="form-label">Line
+                                                                Color:</label>
+                                                            <input type="color" class="form-control" id="lineColor"
+                                                                name="lineColor" value="#ff0000">
+
+                                                            <label for="lineWidth" class="form-label">Line
+                                                                Width:</label>
+                                                            <input type="number" class="form-control" id="lineWidth"
+                                                                name="lineWidth" min="1" max="20" value="3">
+
+                                                            <label for="lineDash" class="form-label">Line Dash
+                                                                (comma‑separated numbers):</label>
+                                                            <input type="text" class="form-control" id="lineDash"
+                                                                name="lineDash" placeholder="e.g., 5,2">
+                                                        </div>
+
+                                                        <!-- Fields for a Polygon -->
+                                                        <div id="polygonFields" class="mb-3" style="display: none;">
+                                                            <label for="fillColor" class="form-label">Fill
+                                                                Color:</label>
+                                                            <input type="color" class="form-control" id="fillColor"
+                                                                name="fillColor" value="#00ff00">
+
+                                                            <label for="fillOpacity" class="form-label">Fill
+                                                                Opacity:</label>
+                                                            <input type="number" class="form-control" id="fillOpacity"
+                                                                name="fillOpacity" min="0" max="1" step="0.1"
+                                                                value="0.5">
+
+                                                            <label for="polygonBorderColor" class="form-label">Border
+                                                                Color:</label>
+                                                            <input type="color" class="form-control"
+                                                                id="polygonBorderColor" name="polygonBorderColor"
+                                                                value="#000000">
+
+                                                            <label for="polygonBorderDash" class="form-label">Border
+                                                                Dash (comma‑separated
+                                                                numbers):</label>
+                                                            <input type="text" class="form-control"
+                                                                id="polygonBorderDash" name="polygonBorderDash"
+                                                                placeholder="e.g., 5,2">
+
+                                                            <label for="polygonBorderWidth" class="form-label">Border
+                                                                Width:</label>
+                                                            <input type="number" class="form-control"
+                                                                id="polygonBorderWidth" name="polygonBorderWidth"
+                                                                min="1" max="10" value="2">
+                                                        </div>
+
+                                                        <!-- Checkbox to apply style to all features of this type -->
+                                                        <div class="form-check mb-3">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="applyToAll" name="applyToAll">
+                                                            <label class="form-check-label" for="applyToAll">
+                                                                Apply style to all features of this type
+                                                            </label>
+                                                        </div>
+
+                                                        <!-- Hidden fields to store feature id and type -->
+                                                        <input type="hidden" id="featureId" name="featureId">
+                                                        <input type="hidden" id="featureType" name="featureType">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="submit" class="btn btn-primary">ตกลง</button>
+                                                        <!-- <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">ยกเลิก</button> -->
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
@@ -318,6 +500,8 @@
                         </div>
                     </div>
                 </div>
+                <!-- content @e -->
+                <!-- footer @s -->
                 <div class="nk-footer">
                     <div class="container-xl wide-xl">
                         <div class="nk-footer-wrap">
@@ -326,117 +510,16 @@
                         </div>
                     </div>
                 </div>
+                <!-- footer @e -->
             </div>
+            <!-- wrap @e -->
         </div>
+        <!-- main @e -->
     </div>
-
-
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form id="editForm">
-                    <div class="modal-body">
-                        <div id="pointFields" class="mb-3">
-                            <label class="form-label">Marker Type:</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="markerType" id="markerTypeSimple"
-                                    value="simple" checked>
-                                <label class="form-check-label" for="markerTypeSimple">Simple Marker</label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="markerType" id="markerTypeEmoji"
-                                    value="emoji">
-                                <label class="form-check-label" for="markerTypeEmoji">Emoji Marker</label>
-                            </div>
 
-                            <div id="simpleMarkerFields">
-                                <label for="markerColor" class="form-label">Marker Color:</label>
-                                <input type="color" class="form-control" id="markerColor" name="markerColor"
-                                    value="#007cbf">
-
-                                <div id="awesomePanel" class="mt-2">
-                                    <label class="form-label mb-1">Choose Icon:</label>
-                                    <div id="awesomeIconSelection" class="markerList">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Emoji Marker Fields -->
-                            <div id="emojiMarkerFields" style="display: none;">
-                                <label for="markerSymbol" class="form-label">Marker Emoji:</label>
-                                <input type="text" class="form-control" id="markerSymbol" name="markerSymbol" hidden>
-                                <label for="markerSize" class="form-label">Emoji Size (px):</label>
-                                <input type="number" class="form-control" id="markerSize" name="markerSize">
-
-                                <!-- Emoji Panel -->
-                                <div id="emojiPanel" class="mt-2">
-                                    <label class="form-label mb-1">Choose an Emoji:</label>
-                                    <div id="emojiSelection" class="markerList">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Custom Marker Preview -->
-                            <div id="markerPreviewContainer" class="mt-3">
-                                <label class="form-label">Marker Preview:</label>
-                                <div id="markerPreview"></div>
-                            </div>
-                        </div>
-
-                        <!-- Fields for a Polyline (LineString) -->
-                        <div id="lineFields" class="mb-3" style="display: none;">
-                            <label for="lineColor" class="form-label">Line Color:</label>
-                            <input type="color" class="form-control" id="lineColor" name="lineColor" value="#ff0000">
-
-                            <label for="lineWidth" class="form-label">Line Width:</label>
-                            <input type="number" class="form-control" id="lineWidth" name="lineWidth" min="1" max="20"
-                                value="3">
-
-                            <label for="lineDash" class="form-label">Line Dash (comma‑separated numbers):</label>
-                            <input type="text" class="form-control" id="lineDash" name="lineDash"
-                                placeholder="e.g., 5,2">
-                        </div>
-
-                        <!-- Fields for a Polygon -->
-                        <div id="polygonFields" class="mb-3" style="display: none;">
-                            <label for="fillColor" class="form-label">Fill Color:</label>
-                            <input type="color" class="form-control" id="fillColor" name="fillColor" value="#00ff00">
-
-                            <label for="fillOpacity" class="form-label">Fill Opacity:</label>
-                            <input type="number" class="form-control" id="fillOpacity" name="fillOpacity" min="0"
-                                max="1" step="0.1" value="0.5">
-
-                            <label for="polygonBorderColor" class="form-label">Border Color:</label>
-                            <input type="color" class="form-control" id="polygonBorderColor" name="polygonBorderColor"
-                                value="#000000">
-
-                            <label for="polygonBorderDash" class="form-label">Border Dash (comma‑separated
-                                numbers):</label>
-                            <input type="text" class="form-control" id="polygonBorderDash" name="polygonBorderDash"
-                                placeholder="e.g., 5,2">
-
-                            <label for="polygonBorderWidth" class="form-label">Border Width:</label>
-                            <input type="number" class="form-control" id="polygonBorderWidth" name="polygonBorderWidth"
-                                min="1" max="10" value="2">
-                        </div>
-
-                        <!-- Checkbox to apply style to all features of this type -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="applyToAll" name="applyToAll">
-                            <label class="form-check-label" for="applyToAll">
-                                Apply style to all features of this type
-                            </label>
-                        </div>
-
-                        <!-- Hidden fields to store feature id and type -->
-                        <input type="hidden" id="featureId" name="featureId">
-                        <input type="hidden" id="featureType" name="featureType">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">ตกลง</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -461,37 +544,15 @@
             </div>
         </div>
     </div>
-
-    <!-- boostrap -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script>
-
-    <!-- datatable -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-
+    <!-- JavaScript -->
     <!-- map -->
     <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
-    <!-- JavaScript -->
-    <!-- <script src="./assets/js/bundle.js?ver=3.2.4"></script> -->
-    <!-- <script src="./assets/js/scripts.js?ver=3.2.4"></script> -->
-    <!-- <script src="./assets/js/charts/gd-campaign.js?ver=3.2.4"></script> -->
-    <!-- <script type="module" src="./app.js"></script> -->
+
+    <script src="./../assets/js/bundle.js?ver=3.2.4"></script>
+    <script src="./../assets/js/scripts.js?ver=3.2.4"></script>
+    <script src="./../assets/js/charts/gd-campaign.js?ver=3.2.4"></script>
     <script src="./app.js"></script>
 </body>
 

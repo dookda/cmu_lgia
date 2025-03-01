@@ -104,10 +104,6 @@ const openEditModal = (refid, type) => {
         document.getElementById('polygonBorderWidth').value = borderWidth;
     }
 
-    const modalEl = document.getElementById('editModal');
-    const editModal = new bootstrap.Modal(modalEl);
-    editModal.show();
-    // openSidebar();
 };
 
 const openAttrModal = (refid) => {
@@ -137,15 +133,10 @@ function filterDataTableByRefId(refid) {
 
 const applyStyleToFeature = (refid, type, values) => {
     console.log('Applying style to feature:', refid, type, values);
-    console.log(featuresMeta[refid]);
 
     if (type === 'Point' && featuresMeta[refid]?.marker) {
-        // Remove the existing marker
         featuresMeta[refid].marker.remove();
-
         const coordinates = [featuresMeta[refid].marker._lngLat.lng, featuresMeta[refid].marker._lngLat.lat];
-
-        // Construct a GeoJSON geometry object
         const geometry = {
             type: "Point",
             coordinates: coordinates
@@ -156,7 +147,6 @@ const applyStyleToFeature = (refid, type, values) => {
             return;
         }
 
-        // Create a new marker based on the marker type
         if (values.markerType === "simple") {
             featuresMeta[refid].markerType = "simple";
             let color = values.markerColor;
@@ -194,7 +184,6 @@ const applyStyleToFeature = (refid, type, values) => {
             featuresMeta[refid].marker = newMarker;
         }
     } else if (type === 'LineString') {
-        // Update line string style
         map.setPaintProperty(refid, 'line-color', values.lineColor);
         map.setPaintProperty(refid, 'line-width', parseFloat(values.lineWidth));
         if (values.lineDash && values.lineDash.trim() !== "") {
@@ -204,7 +193,6 @@ const applyStyleToFeature = (refid, type, values) => {
             map.setPaintProperty(refid, 'line-dasharray', null);
         }
     } else if (type === 'Polygon') {
-        // Update polygon style
         map.setPaintProperty(refid, 'fill-color', values.fillColor);
         map.setPaintProperty(refid, 'fill-opacity', parseFloat(values.fillOpacity));
         map.setPaintProperty(`${refid}_border`, 'line-color', values.polygonBorderColor);
@@ -263,6 +251,7 @@ const configureDrawControls = (firstFeatureType) => {
         trash: false
     };
 };
+
 const addFeatureToMap = (feature, map, draw, featuresMeta, allCoords) => {
     const { geojson, refid, style } = feature;
     const defaultStyle = {
@@ -286,6 +275,42 @@ const addFeatureToMap = (feature, map, draw, featuresMeta, allCoords) => {
         if (Object.keys(parsedStyle).length > 0) {
             appliedStyle = parsedStyle;
         }
+
+        console.log(appliedStyle)
+
+        if (appliedStyle.markerType === "simple") {
+            document.getElementById('markerColor').value = appliedStyle.markerColor;
+            document.getElementById('markerSymbol').value = appliedStyle.markerSymbol;
+            document.getElementById('markerSize').value = appliedStyle.markerSize;
+        }
+        if (appliedStyle.markerType === "emoji") {
+            document.getElementById('markerSymbol').value = appliedStyle.markerSymbol;
+            document.getElementById('markerSize').value = appliedStyle.markerSize;
+        }
+        if (appliedStyle.lineColor) {
+            document.getElementById('lineColor').value = appliedStyle.lineColor;
+        }
+        if (appliedStyle.lineWidth) {
+            document.getElementById('lineWidth').value = appliedStyle.lineWidth;
+        }
+        if (appliedStyle.lineDash) {
+            document.getElementById('lineDash').value = appliedStyle.lineDash;
+        }
+        if (appliedStyle.fillColor) {
+            document.getElementById('fillColor').value = appliedStyle.fillColor;
+        }
+        if (appliedStyle.fillOpacity) {
+            document.getElementById('fillOpacity').value = appliedStyle.fillOpacity;
+        }
+        if (appliedStyle.polygonBorderColor) {
+            document.getElementById('polygonBorderColor').value = appliedStyle.polygonBorderColor;
+        }
+        if (appliedStyle.polygonBorderDash) {
+            document.getElementById('polygonBorderDash').value = appliedStyle.polygonBorderDash;
+        }
+        if (appliedStyle.polygonBorderWidth) {
+            document.getElementById('polygonBorderWidth').value = appliedStyle.polygonBorderWidth;
+        }
     }
 
     let geometry;
@@ -296,13 +321,11 @@ const addFeatureToMap = (feature, map, draw, featuresMeta, allCoords) => {
         return;
     }
 
-    // Validate geometry
     if (!geometry || !geometry.type) {
         console.error(`Invalid geometry for refid ${refid}:`, geometry);
         return;
     }
 
-    // Extract coordinates
     extractCoordinates(geometry, allCoords);
 
     if (geometry.type === 'Point') {
@@ -329,6 +352,11 @@ const addPointFeature = (refid, geometry, appliedStyle, map, featuresMeta) => {
         if (color.startsWith('#')) {
             color = color.substring(1);
         }
+
+        console.log(appliedStyle.markerSymbol);
+
+        currentAwesomeIcon = appliedStyle.markerSymbol;
+
         const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${appliedStyle.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
 
         const newMarkerEl = document.createElement('div');
@@ -433,48 +461,58 @@ const addLineOrPolygonFeature = (refid, geometry, appliedStyle, map, featuresMet
     featuresMeta[refid] = { type: geometry.type };
 };
 
-const fetchFeatures = async (formid) => {
-    const response = await fetch('/api/v2/load_layer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formid })
-    });
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+const fetchFeatures = async (formid, refid) => {
+    try {
+        const response = await fetch(`/api/v2/load_layer/${formid}/${refid}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching features:', error);
+        throw error;
     }
-    return await response.json();
+};
+
+const fetchLayerName = async (formid) => {
+    try {
+        const response = await fetch(`/api/v2/load_layer_description/${formid}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching layer name:', error);
+        throw error;
+    }
 };
 
 const reloadFeatures = async (formid, map, draw, featuresMeta) => {
     try {
-        // Remove existing features from the map
-        Object.keys(featuresMeta).forEach(refid => {
-            if (featuresMeta[refid].marker) {
-                featuresMeta[refid].marker.remove(); // Remove marker if it exists
-            }
-            if (map.getLayer(refid)) {
-                map.removeLayer(refid); // Remove layer if it exists
-            }
-            if (map.getSource(refid)) {
-                map.removeSource(refid); // Remove source if it exists
-            }
-            delete featuresMeta[refid]; // Delete the feature from featuresMeta
-        });
+        // Object.keys(featuresMeta).forEach(refid => {
+        //     if (featuresMeta[refid].marker) {
+        //         featuresMeta[refid].marker.remove();
+        //     }
+        //     if (map.getLayer(refid)) {
+        //         map.removeLayer(refid);
+        //     }
+        //     if (map.getSource(refid)) {
+        //         map.removeSource(refid);
+        //     }
+        //     delete featuresMeta[refid];
+        // });
 
-        // Fetch new features from the database
         const features = await fetchFeatures(formid);
         if (features.length === 0) {
             console.warn('No features found in the database.');
             return;
         }
 
-        // Add new features to the map
         const allCoords = [];
         features.forEach(feature => {
             addFeatureToMap(feature, map, draw, featuresMeta, allCoords);
         });
 
-        // Fit map to bounds if there are coordinates
         if (allCoords.length > 0) {
             const lons = allCoords.map(coord => coord[0]);
             const lats = allCoords.map(coord => coord[1]);
@@ -508,7 +546,6 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
             "polygonBorderWidth": "2"
         };
 
-        // Add the feature to the map temporarily
         if (geometry.type === 'Point') {
             addPointFeature(feature.id, geometry, style, map, featuresMeta);
         } else if (geometry.type === 'LineString') {
@@ -517,7 +554,6 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
             addLineOrPolygonFeature(feature.id, geometry, style, map, featuresMeta);
         }
 
-        // Save the feature to the database
         fetch('/api/v2/create_feature', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -526,16 +562,8 @@ const handleFeatureCreation = (e, map, draw, formid, featuresMeta) => {
             .then(response => response.json())
             .then(data => {
                 console.log('Feature created:', data);
-
-                // Reload features from the database
                 reloadFeatures(formid, map, draw, featuresMeta);
 
-                // Update the DataTable
-                if ($.fn.DataTable.isDataTable('#dataTable')) {
-                    $('#dataTable').DataTable().destroy();
-                }
-                $('#dataTable').empty();
-                getTableData(formid);
             })
             .catch(error => {
                 console.error('Error creating feature:', error);
@@ -591,8 +619,8 @@ const handleFeatureDeletion = (e, map, formid) => {
             .then(response => response.json())
             .then(data => {
                 console.log('Feature deleted:', data);
-                $('#dataTable').DataTable().destroy();
-                getTableData(formid);
+                // $('#dataTable').DataTable().destroy();
+                // getTableData(formid);
             })
             .catch(error => {
                 console.error('Error deleting feature:', error);
@@ -600,82 +628,47 @@ const handleFeatureDeletion = (e, map, formid) => {
     });
 };
 
-const getFeatures = async (formid) => {
+let drawControl;
+
+const getFeatures = async (formid, refid) => {
     window.currentFormId = formid;
     const allCoords = [];
-    // const featuresMeta = {};
 
     try {
         if (!map) {
             throw new Error('Map is not initialized');
         }
 
-        Object.keys(featuresMeta).forEach(refid => {
-            if (featuresMeta[refid].marker) {
-                featuresMeta[refid].marker.remove();
+        Object.keys(featuresMeta).forEach(ref => {
+            if (featuresMeta[ref].marker) {
+                featuresMeta[ref].marker.remove();
             }
-            if (map.getLayer(refid)) {
-                map.removeLayer(refid);
+            if (map.getLayer(ref)) {
+                map.removeLayer(ref);
             }
-            if (map.getSource(refid)) {
-                map.removeSource(refid);
+            if (map.getSource(ref)) {
+                map.removeSource(ref);
             }
-            delete featuresMeta[refid];
+            delete featuresMeta[ref];
         });
 
-        const allFeatures = await fetchFeatures(formid);
+        const columnsData = await fetchLayerName(formid);
+        const featuresData = await fetchFeatures(formid, refid);
+        const rowData = featuresData[0];
 
-        // filter out features not null
-        const features = await allFeatures.filter(feature => feature.geojson !== null);
+        generateFormFields(columnsData, rowData)
 
-        // if (!features || features.length === 0) {
-        //     console.warn('No features found in the database.');
-        //     return;
-        // }
-
-        // if (!features[0].geojson) {
-        //     console.warn('Invalid geojson in features.');
-        //     return;
-        // }
-
+        const features = featuresData.filter(feature => feature.geojson !== null);
         const firstFeatureType = JSON.parse(features[0].geojson).type;
 
-        const draw = new MapboxDraw({
+        drawControl = new MapboxDraw({
             displayControlsDefault: false,
             controls: configureDrawControls(firstFeatureType)
         });
-
-        map.addControl(draw);
+        map.addControl(drawControl);
 
         features.forEach(feature => {
-            addFeatureToMap(feature, map, draw, featuresMeta, allCoords);
-        });
-
-        map.on('draw.create', (e) => handleFeatureCreation(e, map, draw, formid, featuresMeta));
-        map.on('draw.update', (e) => handleFeatureUpdate(e, map, formid));
-        map.on('draw.delete', (e) => handleFeatureDeletion(e, map, formid));
-
-        map.on('draw.modechange', (e) => {
-            const mode = e.mode;
-            if (mode === 'draw_polygon' || mode === 'direct_select' || mode === 'draw_line_string') {
-                console.log('Drawing mode:', mode);
-                if (!map.getLayer('custom-draw-style')) {
-                    map.addLayer({
-                        id: 'custom-draw-style',
-                        type: 'line',
-                        source: 'draw',
-                        filter: ['all', ['==', '$type', 'LineString'], ['==', 'active', true]],
-                        paint: {
-                            'line-color': '#ff0000',
-                            'line-width': 3
-                        }
-                    });
-                }
-            } else {
-                if (map.getLayer('custom-draw-style')) {
-                    map.removeLayer('custom-draw-style');
-                }
-            }
+            addFeatureToMap(feature, map, drawControl, featuresMeta, allCoords);
         });
 
         if (allCoords.length > 0) {
@@ -717,17 +710,14 @@ const thaiMonths = [
 ];
 
 function isISODate(str) {
-    // Regular expression for ISO 8601 format
     const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
 
     if (!isoDatePattern.test(str)) return false;
 
-    // Additional validation by trying to parse the date
     const date = new Date(str);
     return date instanceof Date && !isNaN(date);
 }
 
-// Function to format date to Thai format
 function formatThaiDate(dateString) {
     if (!dateString) return '';
 
@@ -755,22 +745,9 @@ function formatThaiDateTime(dateString) {
 
     return `${day} ${month} ${year} ${hours}:${minutes} น.`;
 }
-
-const fetchColumnData = async (formid) => {
-    const response = await fetch('/api/load_column_description', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formid }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
-};
-
 const generateFormFields = (columnsData, rowData) => {
+    console.log('Generating form fields:', columnsData, rowData);
+
     const formContainer = document.getElementById('formContainer');
     formContainer.innerHTML = '';
 
@@ -858,234 +835,9 @@ const submitForm = async (formid, columnsData) => {
         const result = await response.json();
         alert('Data submitted successfully!');
 
-        // Reload the table data after a successful update
-        await getTableData(formid);
     } catch (error) {
         console.error('Error submitting form:', error);
         alert('Failed to submit data. Please try again.');
-    }
-};
-
-const fetchTableData = async (formid) => {
-    const response = await fetch('/api/v2/load_layer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formid })
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No data received or invalid data format');
-    }
-
-    return data;
-};
-
-const initializeDataTable = (data, columnsData) => {
-    const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
-
-    const columns = [
-        {
-            title: 'Actions',
-            data: null,
-            orderable: false,
-            searchable: false,
-            render: function (data, type, row) {
-                let _type = row.geojson ? JSON.parse(row.geojson).type : '';
-                let geojson = row.geojson ? JSON.parse(row.geojson) : '';
-
-                if (geojson && geojson.type && geojson.coordinates) {
-                    var _geojson = JSON.stringify(geojson);
-                } else {
-                    // console.error('Invalid GeoJSON:', geojson);
-                    geojson = { type: 'Point', coordinates: [0, 0] };
-                }
-
-                return `<div class="btn-group">
-                    <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-                        <em class="icon ni ni-zoom-in"></em>
-                    </button>
-                    <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                        <em class="icon ni ni-color-palette"></em>
-                    </button>
-                    <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                        <em class="icon ni ni-chat"></em>
-                    </button>
-                    <button class="btn btn-info center detail-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                        <em class="icon ni ni-text-rich"></em>
-                    </button>
-                    <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
-                        <em class="icon ni ni-trash-alt"></em>
-                    </button>
-                </div>`;
-            }
-        },
-        ...Object.keys(data[0])
-            .filter(key => !['geojson', 'style'].includes(key))
-            .map(key => {
-                const isHidden = key === 'refid' || key === 'ts';
-                return {
-                    title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-                    data: key,
-                    className: nonEditableColumns.includes(key) ? '' : 'editable',
-                    visible: !isHidden,
-                    render: function (data, type, row) {
-                        if (isISODate(data)) {
-                            if (type === 'display') {
-                                return formatThaiDate(data);
-                            }
-                            return data;
-                        }
-
-                        if (type === 'display' && !nonEditableColumns.includes(key)) {
-                            return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
-                        }
-                        return data;
-                    }
-                };
-            })
-    ];
-
-    if ($.fn.DataTable.isDataTable('#dataTable')) {
-        $('#dataTable').DataTable().destroy();
-    }
-
-    $('#dataTable').empty();
-
-    columns.forEach(col => {
-        if (col.data === null) return;
-        const match = columnsData.find(i => col.data === i.col_id);
-        if (match) {
-            col.title = match.col_name;
-            col.type = match.col_type;
-        }
-    });
-
-    const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
-    $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
-
-    const table = $('#dataTable').DataTable({
-        data,
-        columns,
-        autoWidth: true,
-        scrollX: true,
-        dom: '<"top"Bf>rt<"bottom"lip><"clear">',
-        buttons: [
-            {
-                extend: 'excel',
-                text: '<i class="fas fa-download"></i> Export to Excel',
-                className: 'btn-primary',
-                title: 'Data Export',
-                exportOptions: {
-                    modifier: {
-                        page: 'all'
-                    }
-                }
-            }
-        ],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search records...",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "Showing 0 to 0 of 0 entries",
-            infoFiltered: "(filtered from _MAX_ total entries)"
-        },
-        initComplete: function () {
-            $('.dataTables_filter input')
-                .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
-                .css('text-indent', '20px');
-            $('.dataTables_length select').addClass('custom-select custom-select-sm');
-        },
-        responsive: false
-    });
-
-    return table;
-};
-
-const getTableData = async (formid) => {
-    try {
-        const columnsData = await fetchColumnData(formid);
-        const data = await fetchTableData(formid);
-
-        const table = initializeDataTable(data, columnsData);
-
-        // Add event listeners for buttons and editable cells
-        $('#dataTable').on('click', '.map-btn', function (e) {
-            e.stopPropagation();
-            try {
-                const geojson = $(this).data('geojson');
-                const bbox = turf.bbox(geojson);
-                map.fitBounds(bbox, {
-                    padding: 20,
-                    duration: 1000
-                });
-            } catch (error) {
-                console.error('Failed to parse GeoJSON:', error);
-            }
-        });
-
-        $('#dataTable').on('click', '.edit-btn', function (e) {
-            e.stopPropagation();
-            const refid = $(this).data('refid');
-            const type = $(this).data('type');
-            openEditModal(refid, type);
-        });
-
-        $('#dataTable').on('click', '.attr-btn', function (e) {
-            e.stopPropagation();
-            const refid = $(this).data('refid');
-            const row = table.row($(this).closest('tr')).data();
-            if (row) {
-                generateFormFields(columnsData, row);
-                openAttrModal(refid);
-            } else {
-                console.error('Row data not found for refid:', refid);
-            }
-        });
-
-        $('#dataTable').on('click', '.detail-btn', function (e) {
-            e.stopPropagation();
-            const refid = $(this).data('refid');
-            const type = $(this).data('type');
-            window.open(`/v5/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
-        });
-
-        // Attach the submitForm function to the submit button
-        document.getElementById('submitButton').addEventListener('click', () => submitForm(formid, columnsData));
-
-        $('#dataTable').on('click', '.delete-btn', function (e) {
-            e.stopPropagation();
-            const refid = $(this).data('refid');
-            if (confirm('ยืนยันการลบ  ?')) {
-                console.log('Delete item:', refid);
-                deleteRow(formid, refid);
-                table.row($(this).closest('tr')).remove().draw(false);
-            }
-        });
-
-    } catch (error) {
-        console.error('Failed to get table data:', error);
-        $('#tableError').text('Failed to load data: ' + error.message).show();
-    }
-};
-
-const updateFeatureSymbol = (refid, type, values) => {
-    console.log(values);
-
-    if (values.applyToAll) {
-        Object.keys(featuresMeta).forEach(refid => {
-            if (featuresMeta[refid].type === type) {
-                applyStyleToFeature(refid, type, values);
-            }
-        });
-    } else {
-        applyStyleToFeature(refid, type, values);
     }
 };
 
@@ -1093,25 +845,6 @@ const updateFeatureStyleToTable = async (refid, type, values) => {
     let style = values;
     const formid = window.currentFormId;
     try {
-        if (values.applyToAll) {
-            for (const id in featuresMeta) {
-                if (featuresMeta[id].type === type) {
-                    const response = await fetch('/api/v2/update_feature_style', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ formid, refid: id, style })
-                    });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    // Use response.text() because the API returns plain text.
-                    const data = await response.text();
-                    console.log('Feature style updated:', data);
-                }
-            }
-            return;
-        }
-
         const response = await fetch('/api/v2/update_feature_style', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1153,8 +886,10 @@ const initMap = () => {
         switchBaseMap('osm');
         const urlParams = new URLSearchParams(window.location.search);
         const formid = urlParams.get('formid');
-        await getTableData(formid);
-        await getFeatures(formid);
+        const refid = urlParams.get('refid');
+        const type = urlParams.get('type');
+        await getFeatures(formid, refid);
+        openEditModal(refid, type);
     });
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -1164,7 +899,6 @@ const initMap = () => {
     MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
     MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
     MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
-
 };
 
 const updateMarkerPreview = () => {
@@ -1181,59 +915,57 @@ const getRandomInt = (min, max) => {
 };
 
 var currentAwesomeIcon = 'map-marker';
+
+const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
+    "university", "school", "coffee", "cutlery", "glass", "beer", "ambulance", "car", "bus", "train", "subway", "taxi", "bicycle", "motorcycle", "ship", "plane",
+    "helicopter", "fire-extinguisher", "anchor", "globe", "institution", "hotel", "bed", "graduation-cap", "truck", "shipping-fast", "rocket", "satellite-dish",
+    "car-alt", "bus-alt", "map-marker-alt", "building-o", "city", "home", "bank", "church", "mosque", "synagogue", "temple", "cathedral", "factory", "office",
+    "store", "shopping-cart", "shopping-basket", "medkit", "fountain", "landmark", "monument", "park", "tree", "leaf", "seedling", "industry", "utensils",
+    "wine-glass", "cocktail", "pizza-slice", "apple-alt", "lemon", "ice-cream", "cookie", "hamburger", "hotdog", "bread-slice", "carrot", "cheese", "mug-hot",
+    "tint", "cloud", "sun", "moon", "star", "book", "camera", "video-camera", "microphone", "music", "paint-brush", "pencil-alt", "paint-roller", "pen", "file",
+    "newspaper", "clock", "calendar", "heart", "bolt", "battery-full", "gift", "shopping-bag", "tag", "money-bill", "credit-card", "chart-bar", "chart-line",
+    "chart-pie", "clipboard", "paper-plane", "key", "lock", "unlock", "wifi", "signal", "battery-empty", "mobile", "tablet", "desktop", "paw", "dog", "cat",
+    "fish", "dove", "feather", "frog", "dragon", "dragonfly", "shuttle-van", "steering-wheel", "school-bus", "walking", "ticket-alt", "theater-masks", "gamepad",
+    "puzzle-piece", "headphones", "tv", "radio", "camera-retro", "flag-usa", "flag-uk", "flag-fr", "paperclip", "folder", "folder-open", "bookmark", "bell",
+    "volume-up", "volume-mute", "wrench", "screwdriver", "hammer", "toolbox", "magic", "cube", "cubes", "sitemap", "trophy", "medal", "certificate", "info-circle",
+    "question-circle", "exclamation-circle", "life-ring", "circle", "square", "star-of-life", "shield-alt", "bomb", "bug", "code", "terminal", "database",
+    "cloud-upload-alt", "cloud-download-alt", "sync", "refresh", "cog", "archive", "circle-o", "square-o", "bell-slash", "plug", "battery-half",
+    "battery-quarter", "battery-three-quarters", "lightbulb", "briefcase", "percent", "dollar-sign", "euro-sign", "yen-sign", "ruble-sign", "wheelchair",
+    "wheelchair-alt", "user", "users", "user-circle", "address-book", "address-card", "id-badge", "id-card", "hand-pointer", "handshake", "envelope", "envelope-open",
+    "comment", "comments", "comment-dots", "phone", "phone-square", "fax", "drum", "drum-steelpan", "volleyball-ball", "football-ball", "baseball-ball", "tennis-ball",
+    "golf-ball", "skateboard", "running", "swimmer", "ticket", "mask", "user-md", "stethoscope", "heartbeat", "thermometer", "thermometer-full", "thermometer-three-quarters",
+    "thermometer-half", "thermometer-quarter", "thermometer-empty", "stamp", "envelope-square", "window-close", "window-maximize", "window-minimize",
+    "window-restore", "clone", "balance-scale", "balance-scale-left", "balance-scale-right", "hourglass"];
+
+const emojiNames = ["📍", "🚩", "🏁", "🎯", "🗺", "🧭", "🚉", "🚂", "🚆", "🚇", "🚊", "🚌", "🚍", "🚎", "🚐", "🚒", "🚑", "🚓", "🚔", "🚕", "🚖", "🚗", "🚙",
+    "🛻", "🚚", "🚛", "🚜", "🛵", "🏍", "🛺", "🚲", "🛴", "🚏", "🚦", "🚧", "🏎", "🚘", "🛣", "🛤", "🗼", "🗽", "🏙", "🌇", "🌆", "🏞", "🏜", "🏝", "🏖", "🏟",
+    "🎡", "🎢", "🏰", "🏯", "🏛", "⛪", "🕌", "🕍", "🕋", "⛩", "🛕", "🏠", "🏡", "🏘", "🏚", "🏢", "🏬", "🏭", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩",
+    "💒", "⛲", "🌳", "🌲", "🌴", "🌵", "🌻", "🌼", "🌸", "🍀", "🍁", "🍂", "🍃", "🌾", "⛰", "🏔", "🌋", "🗻", "🌄", "🌅", "🌉", "🌌", "🌠", "⭐", "🌟", "✨",
+    "⚡", "🌈", "☀️", "🌤", "⛅", "🌥", "☁️", "🌦", "🌧", "⛈", "🌩", "❄️", "🌨", "☃️", "⛄", "💧", "💦", "🌊", "🛳", "⛴", "🚢", "🛥", "⛵", "🚤", "🛶", "🛩", "✈️",
+    "🛫", "🛬", "🚁", "🛰", "🚀", "🛸", "🗾", "🏕", "⛺", "🛖", "🛎", "📌", "🔖", "🏷", "💼", "📦", "🛒", "💰", "🎫", "🗳", "💵", "💳", "💸", "💎", "📈", "📉",
+    "📊", "🔍", "🔎", "📝", "✏️", "📋", "💡", "🔦", "🔑", "🔒", "🔓", "🗝", "💻", "📱", "📲", "☎️", "📞", "📟", "🔋", "🔌", "📡", "🕹", "🎮", "📺", "📻", "🎙",
+    "🎚", "🎛", "⏰", "⏱", "⏲", "🕰", "⌚", "📅", "📆", "🗓", "📇", "📁", "📂", "🗂", "📄", "📃", "📑", "🗞", "📰", "✉️", "📧", "📨", "📩", "📤", "📥", "💌",
+    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "🎈", "🎉", "🎊", "🎁", "🎗", "🏆", "🏅", "🥇", "🥈",
+    "🥉", "🎖", "🏵", "🎯", "🔰", "🚸", "⚠️", "🚫", "⛔", "📛", "❌", "✅", "✔️", "☑️", "🔲", "🔳", "⚪", "⚫", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "🟤", "⬜",
+    "⬛", "◼️", "◻️", "◾", "◽", "🔺", "🔻", "🔸", "🔹", "💠", "🔷", "🔶", "🌀", "🌐", "🎒", "👓", "🕶", "👔", "👕", "👖", "👗", "👙", "👚", "👘", "💄", "💍",
+    "👑", "🎩", "🧢", "⛑", "👒", "👟", "👞", "🥾", "🥿", "👠", "👡", "🩰", "👢", "🧥", "🧤", "🧣"];
+
+let randomEmoji = '';
+for (let i = 0; i < 200; i++) {
+    const randomIndex = getRandomInt(0, emojiNames.length);
+    const emojiName = emojiNames[randomIndex];
+    randomEmoji += `<span class="emoji-choice pointer">${emojiName}</span>\n`;
+}
+
+let randomIconsHTML = '';
+for (let i = 0; i < 200; i++) {
+    const randomIndex = getRandomInt(0, iconNames.length);
+    const iconName = iconNames[randomIndex];
+    randomIconsHTML += `<i class="fa fa-${iconName} pointer" style="font-size: 24px;"></i>\n`;
+}
 document.addEventListener('DOMContentLoaded', () => {
-    const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
-        "university", "school", "coffee", "cutlery", "glass", "beer", "ambulance", "car", "bus", "train", "subway", "taxi", "bicycle", "motorcycle", "ship", "plane",
-        "helicopter", "fire-extinguisher", "anchor", "globe", "institution", "hotel", "bed", "graduation-cap", "truck", "shipping-fast", "rocket", "satellite-dish",
-        "car-alt", "bus-alt", "map-marker-alt", "building-o", "city", "home", "bank", "church", "mosque", "synagogue", "temple", "cathedral", "factory", "office",
-        "store", "shopping-cart", "shopping-basket", "medkit", "fountain", "landmark", "monument", "park", "tree", "leaf", "seedling", "industry", "utensils",
-        "wine-glass", "cocktail", "pizza-slice", "apple-alt", "lemon", "ice-cream", "cookie", "hamburger", "hotdog", "bread-slice", "carrot", "cheese", "mug-hot",
-        "tint", "cloud", "sun", "moon", "star", "book", "camera", "video-camera", "microphone", "music", "paint-brush", "pencil-alt", "paint-roller", "pen", "file",
-        "newspaper", "clock", "calendar", "heart", "bolt", "battery-full", "gift", "shopping-bag", "tag", "money-bill", "credit-card", "chart-bar", "chart-line",
-        "chart-pie", "clipboard", "paper-plane", "key", "lock", "unlock", "wifi", "signal", "battery-empty", "mobile", "tablet", "desktop", "paw", "dog", "cat",
-        "fish", "dove", "feather", "frog", "dragon", "dragonfly", "shuttle-van", "steering-wheel", "school-bus", "walking", "ticket-alt", "theater-masks", "gamepad",
-        "puzzle-piece", "headphones", "tv", "radio", "camera-retro", "flag-usa", "flag-uk", "flag-fr", "paperclip", "folder", "folder-open", "bookmark", "bell",
-        "volume-up", "volume-mute", "wrench", "screwdriver", "hammer", "toolbox", "magic", "cube", "cubes", "sitemap", "trophy", "medal", "certificate", "info-circle",
-        "question-circle", "exclamation-circle", "life-ring", "circle", "square", "star-of-life", "shield-alt", "bomb", "bug", "code", "terminal", "database",
-        "cloud-upload-alt", "cloud-download-alt", "sync", "refresh", "cog", "archive", "circle-o", "square-o", "bell-slash", "plug", "battery-half",
-        "battery-quarter", "battery-three-quarters", "lightbulb", "briefcase", "percent", "dollar-sign", "euro-sign", "yen-sign", "ruble-sign", "wheelchair",
-        "wheelchair-alt", "user", "users", "user-circle", "address-book", "address-card", "id-badge", "id-card", "hand-pointer", "handshake", "envelope", "envelope-open",
-        "comment", "comments", "comment-dots", "phone", "phone-square", "fax", "drum", "drum-steelpan", "volleyball-ball", "football-ball", "baseball-ball", "tennis-ball",
-        "golf-ball", "skateboard", "running", "swimmer", "ticket", "mask", "user-md", "stethoscope", "heartbeat", "thermometer", "thermometer-full", "thermometer-three-quarters",
-        "thermometer-half", "thermometer-quarter", "thermometer-empty", "stamp", "envelope-square", "window-close", "window-maximize", "window-minimize",
-        "window-restore", "clone", "balance-scale", "balance-scale-left", "balance-scale-right", "hourglass"];
-
-    let randomIconsHTML = '';
-    for (let i = 0; i < 200; i++) {
-        const randomIndex = getRandomInt(0, iconNames.length);
-        const iconName = iconNames[randomIndex];
-        randomIconsHTML += `<i class="fa fa-${iconName} pointer" style="font-size: 24px;"></i>\n`;
-    }
-
     document.getElementById('awesomeIconSelection').innerHTML = randomIconsHTML;
-
-    const emojiNames = ["📍", "🚩", "🏁", "🎯", "🗺", "🧭", "🚉", "🚂", "🚆", "🚇", "🚊", "🚌", "🚍", "🚎", "🚐", "🚒", "🚑", "🚓", "🚔", "🚕", "🚖", "🚗", "🚙",
-        "🛻", "🚚", "🚛", "🚜", "🛵", "🏍", "🛺", "🚲", "🛴", "🚏", "🚦", "🚧", "🏎", "🚘", "🛣", "🛤", "🗼", "🗽", "🏙", "🌇", "🌆", "🏞", "🏜", "🏝", "🏖", "🏟",
-        "🎡", "🎢", "🏰", "🏯", "🏛", "⛪", "🕌", "🕍", "🕋", "⛩", "🛕", "🏠", "🏡", "🏘", "🏚", "🏢", "🏬", "🏭", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩",
-        "💒", "⛲", "🌳", "🌲", "🌴", "🌵", "🌻", "🌼", "🌸", "🍀", "🍁", "🍂", "🍃", "🌾", "⛰", "🏔", "🌋", "🗻", "🌄", "🌅", "🌉", "🌌", "🌠", "⭐", "🌟", "✨",
-        "⚡", "🌈", "☀️", "🌤", "⛅", "🌥", "☁️", "🌦", "🌧", "⛈", "🌩", "❄️", "🌨", "☃️", "⛄", "💧", "💦", "🌊", "🛳", "⛴", "🚢", "🛥", "⛵", "🚤", "🛶", "🛩", "✈️",
-        "🛫", "🛬", "🚁", "🛰", "🚀", "🛸", "🗾", "🏕", "⛺", "🛖", "🛎", "📌", "🔖", "🏷", "💼", "📦", "🛒", "💰", "🎫", "🗳", "💵", "💳", "💸", "💎", "📈", "📉",
-        "📊", "🔍", "🔎", "📝", "✏️", "📋", "💡", "🔦", "🔑", "🔒", "🔓", "🗝", "💻", "📱", "📲", "☎️", "📞", "📟", "🔋", "🔌", "📡", "🕹", "🎮", "📺", "📻", "🎙",
-        "🎚", "🎛", "⏰", "⏱", "⏲", "🕰", "⌚", "📅", "📆", "🗓", "📇", "📁", "📂", "🗂", "📄", "📃", "📑", "🗞", "📰", "✉️", "📧", "📨", "📩", "📤", "📥", "💌",
-        "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "🎈", "🎉", "🎊", "🎁", "🎗", "🏆", "🏅", "🥇", "🥈",
-        "🥉", "🎖", "🏵", "🎯", "🔰", "🚸", "⚠️", "🚫", "⛔", "📛", "❌", "✅", "✔️", "☑️", "🔲", "🔳", "⚪", "⚫", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "🟤", "⬜",
-        "⬛", "◼️", "◻️", "◾", "◽", "🔺", "🔻", "🔸", "🔹", "💠", "🔷", "🔶", "🌀", "🌐", "🎒", "👓", "🕶", "👔", "👕", "👖", "👗", "👙", "👚", "👘", "💄", "💍",
-        "👑", "🎩", "🧢", "⛑", "👒", "👟", "👞", "🥾", "🥿", "👠", "👡", "🩰", "👢", "🧥", "🧤", "🧣"];
-
-    let randomEmoji = '';
-    for (let i = 0; i < 200; i++) {
-        const randomIndex = getRandomInt(0, emojiNames.length);
-        const emojiName = emojiNames[randomIndex];
-        randomEmoji += `<span class="emoji-choice pointer">${emojiName}</span>\n`;
-    }
-
     document.getElementById('emojiSelection').innerHTML = randomEmoji;
-
     document.querySelectorAll('input[name="markerType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.value === "simple") {
@@ -1248,16 +980,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('emojiSelection').addEventListener('click', (e) => {
-        if (e.target.classList.contains('emoji-choice')) {
-            const chosenEmoji = e.target.textContent;
-            const fontSize = document.getElementById('markerSize').value;
-            document.getElementById('markerSymbol').value = chosenEmoji;
-            document.getElementById('markerPreview').innerHTML = chosenEmoji;
-            document.getElementById('markerPreview').style.fontSize = `${fontSize}px`;
-        }
-    });
-
     document.getElementById('markerSize').addEventListener('input', (e) => {
         const fontSize = e.target.value;
         document.getElementById('markerPreview').style.fontSize = `${fontSize}px`;
@@ -1265,18 +987,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('markerColor').addEventListener('input', (e) => {
         updateMarkerPreview();
-    });
-
-    document.getElementById('awesomeIconSelection').addEventListener('click', (e) => {
-        if (e.target.classList.contains('fa')) {
-            const classes = e.target.className.split(' ');
-            const iconClass = classes.find(c => c.startsWith('fa-') && c !== 'fa');
-            if (iconClass) {
-                currentAwesomeIcon = iconClass.substring(3);
-                document.getElementById('markerSymbol').value = `${currentAwesomeIcon}`;
-                updateMarkerPreview();
-            }
-        }
     });
 
     document.addEventListener('click', (e) => {
@@ -1287,78 +997,109 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('editForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const refid = document.getElementById('featureId').value;
-        const type = document.getElementById('featureType').value;
-        const formData = new FormData(e.target);
-        const values = Object.fromEntries(formData.entries());
-        const modalEl = document.getElementById('editModal');
-        const editModal = bootstrap.Modal.getInstance(modalEl);
-        if (editModal) {
-            editModal.hide();
-        }
-        updateFeatureSymbol(refid, type, values);
-        updateFeatureStyleToTable(refid, type, values);
-    });
-
-    document.addEventListener('hide.bs.modal', function (event) {
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
-    });
-
-    let marker = null; // Declare a variable to store the marker
+    let marker = null;
 
     document.getElementById('searchLatLng').addEventListener('submit', function (e) {
-        e.preventDefault(); // Prevent the form from submitting
-
-        // Get latitude and longitude from the form
+        e.preventDefault();
         const latitude = parseFloat(document.getElementById('latitude').value);
         const longitude = parseFloat(document.getElementById('longitude').value);
 
-        // Validate the inputs
         if (isNaN(latitude) || isNaN(longitude)) {
             alert('Please enter valid latitude and longitude values.');
             return;
         }
-
-        // Check if the coordinates are within valid ranges
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
             alert('Invalid latitude or longitude values. Latitude must be between -90 and 90, and longitude must be between -180 and 180.');
             return;
         }
-
-        // Fly to the entered coordinates
         map.flyTo({
             center: [longitude, latitude],
             zoom: 15,
             essential: true
         });
-
-        // Remove the existing marker if it exists
         if (marker) {
             marker.remove();
         }
-
-        // Add a new marker at the entered coordinates
         marker = new maplibregl.Marker()
             .setLngLat([longitude, latitude])
-            .addTo(map); // Set the marker's position
+            .addTo(map);
     });
 
-    // Add event listener to the "Clear" button
     document.querySelector('.btn-primary.m[type="button"]').addEventListener('click', function () {
-        // Remove the marker if it exists
         if (marker) {
             marker.remove();
-            marker = null; // Reset the marker variable
+            marker = null;
         }
-
-        // Reset the form fields
         document.getElementById('latitude').value = '';
         document.getElementById('longitude').value = '';
     });
 
     initMap();
+});
+
+const handleEditFormChange = async (e) => {
+    e.preventDefault();
+
+    try {
+        const refid = document.getElementById('featureId').value;
+        const type = document.getElementById('featureType').value;
+        const formData = new FormData(e.currentTarget);
+        const values = Object.fromEntries(formData.entries());
+
+        console.log('Form values:', refid, type, values);
+        await applyStyleToFeature(refid, type, values);
+
+        await updateFeatureStyleToTable(refid, type, values);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const formid = urlParams.get('formid');
+        await reloadFeatures(formid, map, drawControl, featuresMeta);
+    } catch (error) {
+        console.error('Error handling edit form change:', error);
+    }
+};
+
+const triggerFormChange = () => {
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        const event = new Event('change', { bubbles: true });
+        editForm.dispatchEvent(event);
+    } else {
+        console.warn('Edit form element not found.');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        editForm.addEventListener('change', handleEditFormChange);
+    } else {
+        console.warn('Edit form element not found.');
+    }
+});
+
+document.getElementById('emojiSelection').addEventListener('click', (e) => {
+    if (e.target.classList.contains('emoji-choice')) {
+        const chosenEmoji = e.target.textContent;
+        const fontSize = document.getElementById('markerSize').value;
+        document.getElementById('markerSymbol').value = chosenEmoji;
+        document.getElementById('markerPreview').innerHTML = chosenEmoji;
+        document.getElementById('markerPreview').style.fontSize = `${fontSize}px`;
+
+        triggerFormChange();
+    }
+});
+
+document.getElementById('awesomeIconSelection').addEventListener('click', (e) => {
+    if (e.target.classList.contains('fa')) {
+        const classes = e.target.className.split(' ');
+        const iconClass = classes.find(c => c.startsWith('fa-') && c !== 'fa');
+        if (iconClass) {
+            currentAwesomeIcon = iconClass.substring(3);
+            document.getElementById('markerSymbol').value = `${currentAwesomeIcon}`;
+
+            updateMarkerPreview();
+            triggerFormChange();
+        }
+    }
 });
