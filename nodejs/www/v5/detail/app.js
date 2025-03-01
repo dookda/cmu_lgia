@@ -489,19 +489,6 @@ const fetchLayerName = async (formid) => {
 
 const reloadFeatures = async (formid, map, draw, featuresMeta) => {
     try {
-        // Object.keys(featuresMeta).forEach(refid => {
-        //     if (featuresMeta[refid].marker) {
-        //         featuresMeta[refid].marker.remove();
-        //     }
-        //     if (map.getLayer(refid)) {
-        //         map.removeLayer(refid);
-        //     }
-        //     if (map.getSource(refid)) {
-        //         map.removeSource(refid);
-        //     }
-        //     delete featuresMeta[refid];
-        // });
-
         const features = await fetchFeatures(formid);
         if (features.length === 0) {
             console.warn('No features found in the database.');
@@ -599,35 +586,6 @@ const handleFeatureUpdate = (e, map, formid) => {
     });
 };
 
-const handleFeatureDeletion = (e, map, formid) => {
-    const deletedFeatures = e.features;
-    deletedFeatures.forEach((feature) => {
-        const refid = feature.properties.refid;
-
-        if (map.getLayer(refid)) {
-            map.removeLayer(refid);
-        }
-        if (map.getSource(refid)) {
-            map.removeSource(refid);
-        }
-
-        fetch('/api/v2/delete_feature', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ formid, refid })
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Feature deleted:', data);
-                // $('#dataTable').DataTable().destroy();
-                // getTableData(formid);
-            })
-            .catch(error => {
-                console.error('Error deleting feature:', error);
-            });
-    });
-};
-
 let drawControl;
 
 const getFeatures = async (formid, refid) => {
@@ -656,7 +614,7 @@ const getFeatures = async (formid, refid) => {
         const featuresData = await fetchFeatures(formid, refid);
         const rowData = featuresData[0];
 
-        generateFormFields(columnsData, rowData)
+        generateFormFields(columnsData, rowData, formid, refid)
 
         const features = featuresData.filter(feature => feature.geojson !== null);
         const firstFeatureType = JSON.parse(features[0].geojson).type;
@@ -718,36 +676,40 @@ function isISODate(str) {
     return date instanceof Date && !isNaN(date);
 }
 
-function formatThaiDate(dateString) {
-    if (!dateString) return '';
+const updateData = async (formid, refid) => {
+    try {
+        // Collect data from the form fields
+        const formContainer = document.getElementById('formContainer');
+        const inputs = formContainer.querySelectorAll('input, select, textarea');
+        const formData = {};
 
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
+        inputs.forEach(input => {
+            formData[input.name] = input.value;
+        });
 
-    const day = date.getDate();
-    const month = thaiMonths[date.getMonth()];
-    const year = date.getFullYear() + 543; // Convert to Buddhist Era (BE)
+        // Send the data to the backend
+        const response = await fetch(`/api/v2/update_feature/${formid}/${refid}`, {
+            method: 'PUT', // or 'POST' depending on your API
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
 
-    return `${day} ${month} ${year}`;
-}
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-function formatThaiDateTime(dateString) {
-    if (!dateString) return '';
+        const result = await response.json();
+        console.log('Data updated successfully:', result);
+        alert('Data updated successfully!');
+    } catch (error) {
+        console.error('Error updating data:', error);
+        alert('Failed to update data. Please try again.');
+    }
+};
 
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-
-    const day = date.getDate();
-    const month = thaiMonths[date.getMonth()];
-    const year = date.getFullYear() + 543;
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${day} ${month} ${year} ${hours}:${minutes} น.`;
-}
-const generateFormFields = (columnsData, rowData) => {
-    console.log('Generating form fields:', columnsData, rowData);
-
+const generateFormFields = (columnsData, rowData, formid, refid) => {
     const formContainer = document.getElementById('formContainer');
     formContainer.innerHTML = '';
 
@@ -789,7 +751,15 @@ const generateFormFields = (columnsData, rowData) => {
 
         // Populate the input field with existing data
         if (rowData && rowData[column.col_id] !== undefined) {
-            input.value = rowData[column.col_id];
+            if (column.col_type === 'date') {
+                // Convert the date to the correct format (YYYY-MM-DD)
+                const dateValue = new Date(rowData[column.col_id]);
+                if (!isNaN(dateValue.getTime())) {
+                    input.value = dateValue.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+                }
+            } else {
+                input.value = rowData[column.col_id];
+            }
         }
 
         formGroup.appendChild(label);
@@ -797,6 +767,13 @@ const generateFormFields = (columnsData, rowData) => {
 
         formContainer.appendChild(formGroup);
     });
+
+    // Add a Save button
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.className = 'btn btn-primary';
+    saveButton.addEventListener('click', () => updateData(formid, refid));
+    formContainer.appendChild(saveButton);
 };
 
 const submitForm = async (formid, columnsData) => {
@@ -963,6 +940,7 @@ for (let i = 0; i < 200; i++) {
     const iconName = iconNames[randomIndex];
     randomIconsHTML += `<i class="fa fa-${iconName} pointer" style="font-size: 24px;"></i>\n`;
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('awesomeIconSelection').innerHTML = randomIconsHTML;
     document.getElementById('emojiSelection').innerHTML = randomEmoji;
