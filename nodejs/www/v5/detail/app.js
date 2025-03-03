@@ -1038,7 +1038,7 @@ const handleEditFormChange = async (e) => {
 };
 
 const triggerFormChange = () => {
-    const editForm = document.getElementById('editForm');
+    const editForm = document.getElementById('editSymbolForm');
     if (editForm) {
         const event = new Event('change', { bubbles: true });
         editForm.dispatchEvent(event);
@@ -1048,7 +1048,7 @@ const triggerFormChange = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const editForm = document.getElementById('editForm');
+    const editForm = document.getElementById('editSymbolForm');
     if (editForm) {
         editForm.addEventListener('change', handleEditFormChange);
     } else {
