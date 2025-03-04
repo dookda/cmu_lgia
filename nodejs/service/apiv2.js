@@ -495,8 +495,6 @@ app.get('/api/v2/load_layer/:formid/:refid', async (req, res) => {
 app.get('/api/v2/load_layer_description/:formid', async (req, res) => {
     try {
         const { formid } = req.params;
-        console.log('formid:', formid);
-
         const sql = `SELECT * FROM layer_column WHERE formid = $1`;
         const { rows } = await pool.query(sql, [formid]);
         res.status(200).json(rows);
@@ -509,10 +507,9 @@ app.get('/api/v2/load_layer_description/:formid', async (req, res) => {
 app.post('/api/v2/update_feature_style', async (req, res) => {
     try {
         const { formid, refid, style } = req.body;
-
         const sql = `UPDATE ${formid} SET style = $1 WHERE refid = $2`;
         await pool.query(sql, [style, refid]);
-        res.status(200).send('Style updated successfully.');
+        res.status(200);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while updating the feature style.');
@@ -597,9 +594,6 @@ app.put('/api/v2/update_feature/:formid/:refid', async (req, res) => {
 
         // Prepare the values array
         const values = [...Object.values(cleanedData), refid];
-
-        console.log('Generated query:', query);
-        console.log('Values:', values);
 
         // Execute the query
         const result = await pool.query(query, values);
