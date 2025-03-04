@@ -273,11 +273,12 @@ const reloadFeatures = async (formid, refid) => {
     }
 };
 
-const getFeatures = async (formid, refid) => {
+const getFeatures = async (formid, refid, type) => {
     window.currentFormId = formid;
     const allCoords = [];
 
     try {
+        // Clear all existing features first
         featuresMeta.forEach((feature, ref) => {
             if (feature.marker) feature.marker.remove();
             if (map.getLayer(ref)) map.removeLayer(ref);
@@ -299,17 +300,29 @@ const getFeatures = async (formid, refid) => {
         }
 
         const firstFeatureType = features[0].geojson.type;
+        console.log('Features:', firstFeatureType);
+
+        // Remove existing draw control if it exists
+        if (drawControl) {
+            map.removeControl(drawControl);
+        }
+
         drawControl = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
-                point: firstFeatureType === 'Point',
-                line_string: firstFeatureType === 'LineString',
-                polygon: firstFeatureType === 'Polygon',
+                point: type === 'Point',
+                line_string: type === 'LineString',
+                polygon: type === 'Polygon',
                 trash: false
             }
         });
         map.addControl(drawControl);
 
+        // Remove existing event listeners to prevent duplicates
+        map.off('draw.create', handleFeatureCreation);
+        map.off('draw.update', handleFeatureUpdate);
+
+        // Add fresh event listeners
         map.on('draw.create', e => handleFeatureCreation(e, map, drawControl, formid, refid, featuresMeta));
         map.on('draw.update', e => handleFeatureUpdate(e, map, formid, refid));
 
@@ -347,7 +360,21 @@ const handleFeatureCreation = (e, map, draw, formid, refid, featuresMeta) => {
         fetchAPI(`/api/v2/update_feature/${formid}/${refid}`, {
             method: 'PUT',
             body: JSON.stringify({ geom: geometry, style })
-        }).then(() => reloadFeatures(formid, refid)).catch(console.error);
+        })
+            .then(() => {
+                console.log("Feature updated successfully, reloading data...");
+                // Clear all features and reload
+                featuresMeta.forEach((feature, ref) => {
+                    if (feature.marker) feature.marker.remove();
+                    if (map.getLayer(ref)) map.removeLayer(ref);
+                    if (map.getSource(ref)) map.removeSource(ref);
+                    featuresMeta.delete(ref);
+                });
+                return getFeatures(formid, refid, geometry.type);
+            })
+            .catch(error => {
+                console.error("Failed to update feature:", error);
+            });
     });
 };
 
@@ -462,11 +489,16 @@ const initMap = () => {
         switchBaseMap('osm');
 
         const { formid, refid, type } = Object.fromEntries(new URLSearchParams(window.location.search));
-        await getFeatures(formid, refid);
+        await getFeatures(formid, refid, type);
         openEditModal(refid, type);
     });
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    MapboxDraw.constants.classes.CANVAS = 'maplibregl-canvas';
+    MapboxDraw.constants.classes.CONTROL_BASE = 'maplibregl-ctrl';
+    MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+    MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
 };
 
 document.addEventListener('DOMContentLoaded', () => {

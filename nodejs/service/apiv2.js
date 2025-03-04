@@ -504,12 +504,26 @@ app.get('/api/v2/load_layer_description/:formid', async (req, res) => {
     }
 });
 
+app.get('/api/v2/load_feature_style/:formid/:refid', async (req, res) => {
+    try {
+        const { formid, refid } = req.params;
+        const sql = `SELECT style FROM ${formid} WHERE refid = $1`;
+        const { rows } = await pool.query(sql, [refid]);
+        res.status(200).json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 app.post('/api/v2/update_feature_style', async (req, res) => {
     try {
         const { formid, refid, style } = req.body;
+        // console.log('Updating feature style:', formid, refid, style);
+
         const sql = `UPDATE ${formid} SET style = $1 WHERE refid = $2`;
         await pool.query(sql, [style, refid]);
-        res.status(200);
+        res.status(200).json({ message: 'Feature style updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while updating the feature style.');
