@@ -22,9 +22,9 @@
         }
 
         #style-form {
-            position: absolute;
+            /* position: absolute;
             top: 0;
-            left: 0;
+            left: 0; */
             background: white;
             padding: 10px;
             z-index: 1;
@@ -38,7 +38,9 @@
 </head>
 
 <body>
-    <form id="style-form">
+
+    <div id="map"></div>
+    <form id="styleForm">
         <h3>Style Settings</h3>
         <div>
             <label>Point Color: <input type="color" id="point-color" value="#FF0000"></label>
@@ -90,8 +92,37 @@
         </div>
         <button type="submit">Apply Styles</button>
     </form>
-    <div id="map"></div>
 
+    <form id="style-form">
+        <h3>Style Settings</h3>
+        <div>
+            <label for="baseMapSelector" class="form-label">เลือกแผนที่ฐาน</label>
+            <select class="form-select" id="baseMapSelector">
+                <option value="maptiler">Maptiler 3D</option>
+                <option value="osm" selected>OpenStreetMap</option>
+                <option value="grod">Google Road</option>
+                <option value="gsat">Google Satellite</option>
+                <option value="ghyb">Google Hybrid</option>
+            </select>
+        </div>
+    </form>
+
+    <form id="searchLatLng">
+        <div class="mb-3">
+            <label for="latitude" class="form-label">ละติจูด</label>
+            <input type="text" class="form-control" id="latitude" placeholder="Enter latitude" required>
+        </div>
+        <div class="mb-3">
+            <label for="longitude" class="form-label">ลองจิจูด</label>
+            <input type="text" class="form-control" id="longitude" placeholder="Enter longitude" required>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">ค้นหา</button>
+            <button type="button" class="btn btn-primary" id="clear-marker">ลบ</button>
+        </div>
+    </form>
+
+    <div id="formContainer"></div><input type="hidden" id="refid">
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
             try {
@@ -99,12 +130,134 @@
                     MAPTILER: 'QcH5sAeCUv5rMXKrnJms',
                     GEOAPIFY: '5c607231c8c24f9b89ff3af7a110185b'
                 };
-                const map = new maplibregl.Map({
+
+                const BASE_MAPS = {
+                    osm: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    grod: 'https://mt0.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
+                    ghyb: 'https://mt0.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
+                    gsat: 'https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+                };
+
+                const MAP_CONFIG = {
                     container: 'map',
-                    style: 'https://demotiles.maplibre.org/style.json',
+                    style: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`,
                     center: [0, 0],
-                    zoom: 1
-                });
+                    zoom: 1,
+                    pitch: 0,
+                    antialias: true
+                };
+
+                const map = new maplibregl.Map(MAP_CONFIG);
+
+                function updateBaseMap(baseMapValue) {
+                    let newStyle;
+                    switch (baseMapValue) {
+                        case 'maptiler':
+                            newStyle = `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`;
+                            break;
+                        case 'osm':
+                            newStyle = {
+                                version: 8,
+                                sources: {
+                                    'osm-tiles': {
+                                        type: 'raster',
+                                        tiles: [BASE_MAPS.osm],
+                                        tileSize: 256,
+                                    }
+                                },
+                                layers: [{
+                                    id: 'osm-layer',
+                                    type: 'raster',
+                                    source: 'osm-tiles',
+                                    minzoom: 0,
+                                    maxzoom: 22
+                                }]
+                            };
+                            break;
+                        case 'grod':
+                            newStyle = {
+                                version: 8,
+                                sources: {
+                                    'google-tiles': {
+                                        type: 'raster',
+                                        tiles: [BASE_MAPS.grod],
+                                        tileSize: 256,
+                                    }
+                                },
+                                layers: [{
+                                    id: 'google-layer',
+                                    type: 'raster',
+                                    source: 'google-tiles',
+                                    minzoom: 0,
+                                    maxzoom: 22
+                                }]
+                            };
+                            break;
+                        case 'gsat':
+                            newStyle = {
+                                version: 8,
+                                sources: {
+                                    'google-tiles': {
+                                        type: 'raster',
+                                        tiles: [BASE_MAPS.gsat],
+                                        tileSize: 256,
+                                    }
+                                },
+                                layers: [{
+                                    id: 'google-layer',
+                                    type: 'raster',
+                                    source: 'google-tiles',
+                                    minzoom: 0,
+                                    maxzoom: 22
+                                }]
+                            };
+                            break;
+                        case 'ghyb':
+                            newStyle = {
+                                version: 8,
+                                sources: {
+                                    'google-tiles': {
+                                        type: 'raster',
+                                        tiles: [BASE_MAPS.ghyb],
+                                        tileSize: 256,
+                                    }
+                                },
+                                layers: [{
+                                    id: 'google-layer',
+                                    type: 'raster',
+                                    source: 'google-tiles',
+                                    minzoom: 0,
+                                    maxzoom: 22
+                                }]
+                            };
+                            break;
+                    }
+
+                    // Store current view state
+                    const center = map.getCenter();
+                    const zoom = map.getZoom();
+                    const bearing = map.getBearing();
+                    const pitch = map.getPitch();
+
+                    // Update map style
+                    map.setStyle(newStyle);
+
+                    // Restore view state after style loads
+                    map.once('style.load', () => {
+                        map.setCenter(center);
+                        map.setZoom(zoom);
+                        map.setBearing(bearing);
+                        map.setPitch(pitch);
+
+                        // Re-add draw features if they exist
+                        const features = draw.getAll();
+                        if (features.features.length > 0) {
+                            draw.deleteAll();
+                            draw.add(features);
+                        }
+                    });
+                }
+
 
                 map.addControl(new maplibregl.NavigationControl());
 
@@ -167,7 +320,7 @@
                                 'circle-stroke-width': 2,
                                 'circle-stroke-color': '#FFFFFF'
                             },
-                            metadata: { 'marker-icon': selectedIcon } // Store icon in metadata
+                            metadata: { 'marker-icon': selectedIcon }
                         },
                         {
                             id: 'gl-draw-line',
@@ -200,7 +353,6 @@
                 }
 
                 function getMarkerIconFromStyles(styles) {
-                    // Ensure styles is an array; if not, return default 'map-marker'
                     if (!Array.isArray(styles)) {
                         return 'map-marker';
                     }
@@ -211,20 +363,15 @@
                 function calculateBounds(features) {
                     const bounds = new maplibregl.LngLatBounds();
                     features.features.forEach(feature => {
-                        if (feature.geometry.type === 'Point') {
-                            bounds.extend(feature.geometry.coordinates);
-                        } else if (feature.geometry.type === 'LineString') {
-                            feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
-                        } else if (feature.geometry.type === 'Polygon') {
-                            feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
-                        }
+                        if (feature.geometry.type === 'Point') bounds.extend(feature.geometry.coordinates);
+                        else if (feature.geometry.type === 'LineString') feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
+                        else if (feature.geometry.type === 'Polygon') feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
                     });
                     return bounds;
                 }
 
                 const styleResponse = await fetch(`/api/v2/load_feature_style/${formid}/${refid}`);
                 const styleData = await styleResponse.json();
-                // Handle case where styleData.style might be null, undefined, or invalid JSON
                 let json = [];
                 try {
                     json = styleData.style ? JSON.parse(styleData.style) : [];
@@ -233,7 +380,6 @@
                     json = [];
                 }
 
-                // Ensure default styles if json is empty or incomplete
                 if (!json.length || !json[0]) json[0] = { paint: { 'circle-color': '#FF0000', 'circle-radius': 4, 'circle-stroke-width': 2, 'circle-stroke-color': '#FFFFFF' }, metadata: { 'marker-icon': 'map-marker' } };
                 if (!json[1]) json[1] = { paint: { 'line-color': '#00FF00', 'line-width': 2 } };
                 if (!json[2]) json[2] = { paint: { 'fill-color': '#0000FF', 'fill-opacity': 0.5 } };
@@ -244,7 +390,7 @@
                 document.getElementById('line-width').value = json[1].paint['line-width'] || 2;
                 document.getElementById('polygon-color').value = json[2].paint['fill-color'] || '#0000FF';
                 document.getElementById('polygon-opacity').value = json[2].paint['fill-opacity'] || 0.5;
-                document.getElementById('marker-icon').value = getMarkerIconFromStyles(json); // Safe call with array
+                document.getElementById('marker-icon').value = getMarkerIconFromStyles(json);
 
                 let draw = new MapboxDraw({
                     displayControlsDefault: false,
@@ -255,8 +401,96 @@
                 map.addControl(draw);
 
                 let existingFeatures = null;
+                const offset = [0, -16];
 
-                document.getElementById('style-form').addEventListener('submit', async (e) => {
+
+                const updateData = async (formid, refid) => {
+                    try {
+                        const formData = Object.fromEntries(
+                            Array.from(document.getElementById('formContainer').querySelectorAll('input, select, textarea'))
+                                .map(input => [input.name, input.value])
+                        );
+
+                        await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(formData)
+                        });
+                        alert('Data updated successfully!');
+                    } catch (error) {
+                        console.error('Error updating data:', error);
+                        alert('Failed to update data.');
+                    }
+                };
+
+                const generateFormFields = (columnsData, rowData, formid, refid) => {
+                    const formContainer = document.getElementById('formContainer');
+                    formContainer.innerHTML = '';
+
+                    columnsData.forEach(column => {
+                        const formGroup = document.createElement('div');
+                        formGroup.className = 'form-group';
+
+                        const label = document.createElement('label');
+                        label.textContent = column.col_name;
+                        label.setAttribute('for', column.col_id);
+
+                        const input = document.createElement('input');
+                        input.id = column.col_id;
+                        input.name = column.col_id;
+                        input.className = 'form-control';
+                        input.placeholder = column.col_desc;
+                        input.type = { text: 'text', numeric: 'number', date: 'date' }[column.col_type] || 'text';
+
+                        if (rowData?.[column.col_id] !== undefined) {
+                            input.value = column.col_type === 'date' && rowData[column.col_id]
+                                ? new Date(rowData[column.col_id]).toISOString().split('T')[0]
+                                : rowData[column.col_id];
+                        }
+
+                        formGroup.append(label, input);
+                        formContainer.appendChild(formGroup);
+                    });
+
+                    const saveButton = document.createElement('button');
+                    saveButton.textContent = 'Save';
+                    saveButton.className = 'btn btn-primary';
+                    saveButton.addEventListener('click', () => updateData(formid, refid));
+                    formContainer.appendChild(saveButton);
+                };
+
+                const fetchAPI = async (url, options = {}) => {
+                    const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json();
+                };
+
+                const [columnsData, featuresData] = await Promise.all([
+                    fetchAPI(`/api/v2/load_layer_description/${formid}`),
+                    fetchAPI(`/api/v2/load_layer/${formid}/${refid}`)
+                ]);
+
+                generateFormFields(columnsData, featuresData[0], formid, refid);
+
+                document.getElementById('baseMapSelector').addEventListener('change', (e) => {
+                    updateBaseMap(e.target.value);
+                });
+
+                document.getElementById('searchLatLng')?.addEventListener('submit', e => {
+                    e.preventDefault();
+                    const [lat, lng] = ['latitude', 'longitude'].map(id => parseFloat(document.getElementById(id).value));
+                    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                        return alert('Please enter valid latitude (-90 to 90) and longitude (-180 to 180) values.');
+                    }
+                    map.flyTo({ center: [lng, lat], zoom: 15 });
+                    new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
+                });
+
+                document.getElementById('clear-marker')?.addEventListener('click', () => {
+                    document.querySelectorAll('.maplibregl-marker').forEach(marker => marker.remove());
+                    ['latitude', 'longitude'].forEach(id => document.getElementById(id).value = '');
+                });
+
+                document.getElementById('styleForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
 
                     const currentStyles = getCustomStyles();
@@ -278,7 +512,7 @@
                             if (marker) marker.remove();
                             const selectedIcon = getMarkerIconFromStyles(currentStyles);
                             const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
-                            marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                            marker = new maplibregl.Marker({ element: markerIcon, offset }).setLngLat(pointCoordinates).addTo(map);
                         }
                     } else if (existingFeatures) {
                         draw.add(existingFeatures);
@@ -316,9 +550,9 @@
                             if (type === 'Point') {
                                 const pointCoordinates = existingFeatures.features[0].geometry.coordinates;
                                 if (marker) marker.remove();
-                                const storedIcon = getMarkerIconFromStyles(json); // Load from stored styles
+                                const storedIcon = getMarkerIconFromStyles(json);
                                 const markerIcon = createCustomMarkerIcon(json[0].paint['circle-color'].slice(1), storedIcon);
-                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                                marker = new maplibregl.Marker({ element: markerIcon, offset }).setLngLat(pointCoordinates).addTo(map);
                             }
                         }
                     } catch (error) {
@@ -341,7 +575,7 @@
                                 if (marker) marker.remove();
                                 const selectedIcon = getMarkerIconFromStyles(currentStyles);
                                 const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
-                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                                marker = new maplibregl.Marker({ element: markerIcon, offset }).setLngLat(pointCoordinates).addTo(map);
                             }
                         } catch (error) {
                             console.error('Error updating feature on draw.create:', error);
@@ -367,7 +601,7 @@
                                 if (marker) marker.remove();
                                 const selectedIcon = getMarkerIconFromStyles(currentStyles);
                                 const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
-                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                                marker = new maplibregl.Marker({ element: markerIcon, offset }).setLngLat(pointCoordinates).addTo(map);
                             }
                         } catch (error) {
                             console.error('Error updating feature on draw.update:', error);
