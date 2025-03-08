@@ -17,6 +17,10 @@ const upload = multer({ dest: 'uploads/' });
 
 const picture = multer({ dest: 'picture/' });
 
+const sharp = require('sharp');
+const SVGBuilder = require('svg-builder');
+const path = require('path');
+
 app.use(cors());
 app.use(express.json());
 
@@ -516,19 +520,7 @@ app.get('/api/v2/load_feature_style/:formid/:refid', async (req, res) => {
     }
 });
 
-app.post('/api/v2/update_feature_style', async (req, res) => {
-    try {
-        const { formid, refid, style } = req.body;
-        // console.log('Updating feature style:', formid, refid, style);
 
-        const sql = `UPDATE ${formid} SET style = $1 WHERE refid = $2`;
-        await pool.query(sql, [style, refid]);
-        res.status(200).json({ message: 'Feature style updated successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while updating the feature style.');
-    }
-});
 
 app.post('/api/v2/update_layer', async (req, res) => {
     const { formid, changes } = req.body;
@@ -577,51 +569,48 @@ app.post('/api/v2/update_layer', async (req, res) => {
     }
 });
 
-app.put('/api/v2/update_feature/:formid/:refid', async (req, res) => {
-    const { formid, refid } = req.params;
-    const updatedData = req.body;
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
-        return res.status(400).json({ error: 'Invalid table name' });
-    }
+// app.put('/api/v2/update_feature/:formid/:refid', async (req, res) => {
+//     const { formid, refid } = req.params;
+//     const updatedData = req.body;
+//     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
+//         return res.status(400).json({ error: 'Invalid table name' });
+//     }
 
-    try {
-        const cleanedData = {};
-        for (const [key, value] of Object.entries(updatedData)) {
-            if (value === '') {
-                cleanedData[key] = null;
-            } else {
-                cleanedData[key] = value;
-            }
-        }
+//     try {
+//         const cleanedData = {};
+//         for (const [key, value] of Object.entries(updatedData)) {
+//             if (value === '') {
+//                 cleanedData[key] = null;
+//             } else {
+//                 cleanedData[key] = value;
+//             }
+//         }
 
-        const setClause = Object.keys(cleanedData)
-            .map((key, index) => `${key} = $${index + 1}`)
-            .join(', ');
+//         const setClause = Object.keys(cleanedData)
+//             .map((key, index) => `${key} = $${index + 1}`)
+//             .join(', ');
 
-        // Construct the query
-        const query = `
-            UPDATE ${formid}
-            SET ${setClause}
-            WHERE refid = $${Object.keys(cleanedData).length + 1}
-            RETURNING *
-        `;
+//         const query = `
+//             UPDATE ${formid}
+//             SET ${setClause}
+//             WHERE refid = $${Object.keys(cleanedData).length + 1}
+//             RETURNING *
+//         `;
 
-        // Prepare the values array
-        const values = [...Object.values(cleanedData), refid];
+//         const values = [...Object.values(cleanedData), refid];
 
-        // Execute the query
-        const result = await pool.query(query, values);
+//         const result = await pool.query(query, values);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Feature not found' });
-        }
+//         if (result.rows.length === 0) {
+//             return res.status(404).json({ error: 'Feature not found' });
+//         }
 
-        res.status(200).json({ message: 'Data updated successfully', data: result.rows[0] });
-    } catch (error) {
-        console.error('Error updating data:', error);
-        res.status(500).json({ error: 'Failed to update data' });
-    }
-});
+//         res.status(200).json({ message: 'Data updated successfully', data: result.rows[0] });
+//     } catch (error) {
+//         console.error('Error updating data:', error);
+//         res.status(500).json({ error: 'Failed to update data' });
+//     }
+// });
 
 app.delete('/api/v2/delete_row', async (req, res) => {
     try {
@@ -635,9 +624,20 @@ app.delete('/api/v2/delete_row', async (req, res) => {
     }
 });
 
+app.put('/api/v2/update_feature_style', async (req, res) => {
+    try {
+        const { formid, refid, style } = req.body;
+        const sql = `UPDATE ${formid} SET style = $1 WHERE refid = $2`;
+        await pool.query(sql, [style, refid]);
+        res.status(200).json({ message: 'Feature style updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while updating the feature style.');
+    }
+});
+
 app.put('/api/v2/update_feature', async (req, res) => {
     const { formid, refid, geojson, style } = req.body;
-
     if (!formid || !refid || !geojson) {
         return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
     }
@@ -647,22 +647,13 @@ app.put('/api/v2/update_feature', async (req, res) => {
     }
 
     try {
-        // Update the feature. The geojson string is converted into a PostGIS geometry.
-        const query = `
-      UPDATE ${formid}
-      SET geom = ST_SetSRID(ST_GeomFromGeoJSON($1), 4326),
-          style = $2
-      WHERE refid = $3
-      RETURNING *
-    `;
+        const query = `UPDATE ${formid} SET geom = ST_SetSRID(ST_GeomFromGeoJSON($1), 4326), style = $2
+                        WHERE refid = $3 RETURNING * `;
         const values = [geojson, style, refid];
-
         const result = await pool.query(query, values);
-
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Feature not found' });
         }
-
         res.json({
             message: 'Feature updated successfully',
             feature: result.rows[0]
@@ -741,6 +732,99 @@ app.post('/api/v2/create_feature', async (req, res) => {
         });
     } catch (error) {
         console.error('Error inserting feature:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+const createMarkerSVG = (options) => {
+    const { color = '#FF0000', icon = 'circle', size = 48 } = options;
+
+    const svg = SVGBuilder.newInstance()
+        .width(size)
+        .height(size * 1.5); // Making it taller for pin shape
+
+    // Create pin shape
+    svg.path({
+        d: `M${size / 2} ${size} 
+          C${size / 2} ${size / 2}, ${size} ${size / 2}, ${size} ${size / 2} 
+          C${size} 0, 0 0, 0 ${size / 2} 
+          C0 ${size / 2}, ${size / 2} ${size / 2}, ${size / 2} ${size} 
+          Z`,
+        fill: color,
+        stroke: '#000000',
+        'stroke-width': 2
+    });
+
+    // Add icon in the center
+    switch (icon.toLowerCase()) {
+        case 'circle':
+            svg.circle({
+                cx: size / 2,
+                cy: size / 2,
+                r: size / 4,
+                fill: '#FFFFFF'
+            });
+            break;
+        case 'star':
+            svg.path({
+                d: `M${size / 2} ${size / 4} 
+              L${size / 2 + size / 6} ${size / 2 + size / 6} 
+              L${size - size / 6} ${size / 2} 
+              L${size / 2 + size / 6} ${size / 2 - size / 6} 
+              L${size / 2} ${size - size / 4} 
+              Z`,
+                fill: '#FFFFFF'
+            });
+            break;
+        // Add more icon shapes as needed
+        default:
+            break;
+    }
+
+    return svg.render();
+};
+// API endpoint
+app.get('/api/v2/marker', async (req, res) => {
+    try {
+        const {
+            color = '#FF0000',
+            icon = 'circle',
+            size = 48,
+            format = 'png'
+        } = req.query;
+
+        // Validate inputs
+        if (!color.match(/^#[0-9A-Fa-f]{6}$/)) {
+            return res.status(400).json({ error: 'Invalid color format. Use #RRGGBB' });
+        }
+        if (!['circle', 'star'].includes(icon.toLowerCase())) {
+            return res.status(400).json({ error: 'Unsupported icon type' });
+        }
+        const parsedSize = parseInt(size);
+        if (isNaN(parsedSize) || parsedSize < 16 || parsedSize > 256) {
+            return res.status(400).json({ error: 'Size must be between 16 and 256' });
+        }
+
+        // Generate SVG
+        const svgString = createMarkerSVG({
+            color,
+            icon,
+            size: parsedSize
+        });
+
+        // Convert SVG to requested format using Sharp
+        const buffer = await sharp(Buffer.from(svgString))
+            .resize(parsedSize, parsedSize * 1.5)
+            .toFormat(format)
+            .toBuffer();
+
+        // Set appropriate headers
+        res.setHeader('Content-Type', `image/${format}`);
+        res.setHeader('Cache-Control', 'public, max-age=31557600');
+        res.send(buffer);
+
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

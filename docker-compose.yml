@@ -1,13 +1,14 @@
+version: '3.8'
+
 services:
   postgis:
-    platform: linux/amd64 #amd64
+    platform: linux/amd64
     image: postgis/postgis
     container_name: lgia_postgis
     restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=1234
-      # - POSTGRES_DB=geodb
     ports:
       - 5433:5432
     volumes:
@@ -30,3 +31,9 @@ services:
       timeout: 10s
       retries: 3
     command: sh -c "npm i && npm i -g nodemon && nodemon"
+    environment:
+      # Ensure Node.js builds native modules
+      - NODE_ENV=development
+    build:
+      context: .
+      dockerfile: Dockerfile.nodejs

@@ -147,7 +147,7 @@ const applyStyleToFeature = (refid, type, values) => {
             const url = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${values.markerSymbol}&size=small&scaleFactor=2&apiKey=5c607231c8c24f9b89ff3af7a110185b`;
 
             const newMarkerEl = document.createElement('div');
-            newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:35px; height:50px; display:block;">`;
+            newMarkerEl.innerHTML = `<img src="${url}" alt="Marker" style="width:30px; height:45px; display:block;">`;
             newMarkerEl.style.border = `${values.markerBorderWidth}px solid ${values.markerBorderColor}`;
             newMarkerEl.style.cursor = 'pointer';
 

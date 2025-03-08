@@ -17,10 +17,8 @@
         }
 
         #map {
-            position: absolute;
-            top: 50px;
-            bottom: 0;
             width: 100%;
+            height: 300px;
         }
 
         #style-form {
@@ -30,6 +28,11 @@
             background: white;
             padding: 10px;
             z-index: 1;
+        }
+
+        select {
+            width: 100%;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -49,16 +52,53 @@
             <label>Polygon Color: <input type="color" id="polygon-color" value="#0000FF"></label>
             <label>Opacity: <input type="number" id="polygon-opacity" min="0" max="1" step="0.1" value="0.5"></label>
         </div>
+        <div>
+            <label>Marker Icon:
+                <select id="marker-icon">
+                    <option value="map-marker">Map Marker</option>
+                    <option value="star">Star</option>
+                    <option value="home">Home</option>
+                    <option value="car">Car</option>
+                    <option value="tree">Tree</option>
+                    <option value="flag">Flag</option>
+                    <option value="heart">Heart</option>
+                    <option value="user">User</option>
+                    <option value="lock">Lock</option>
+                    <option value="phone">Phone</option>
+                    <option value="bell">Bell</option>
+                    <option value="camera">Camera</option>
+                    <option value="coffee">Coffee</option>
+                    <option value="envelope">Envelope</option>
+                    <option value="gift">Gift</option>
+                    <option value="plane">Plane</option>
+                    <option value="rocket">Rocket</option>
+                    <option value="shopping-cart">Shopping Cart</option>
+                    <option value="tag">Tag</option>
+                    <option value="thumbs-up">Thumbs Up</option>
+                    <option value="trophy">Trophy</option>
+                    <option value="truck">Truck</option>
+                    <option value="umbrella">Umbrella</option>
+                    <option value="wrench">Wrench</option>
+                    <option value="anchor">Anchor</option>
+                    <option value="bicycle">Bicycle</option>
+                    <option value="bolt">Bolt</option>
+                    <option value="cloud">Cloud</option>
+                    <option value="globe">Globe</option>
+                    <option value="leaf">Leaf</option>
+                </select>
+            </label>
+        </div>
         <button type="submit">Apply Styles</button>
     </form>
     <div id="map"></div>
 
     <script>
-
-
-        // document ready
         document.addEventListener('DOMContentLoaded', async function () {
             try {
+                const API_KEYS = {
+                    MAPTILER: 'QcH5sAeCUv5rMXKrnJms',
+                    GEOAPIFY: '5c607231c8c24f9b89ff3af7a110185b'
+                };
                 const map = new maplibregl.Map({
                     container: 'map',
                     style: 'https://demotiles.maplibre.org/style.json',
@@ -68,226 +108,272 @@
 
                 map.addControl(new maplibregl.NavigationControl());
 
-                const formid = "fid_1726206369491";
-                const refid = "ref17410726991640.5099993358388883";
+                const urlParams = new URLSearchParams(window.location.search);
+                const formid = urlParams.get('formid');
+                const refid = urlParams.get('refid');
+                const type = urlParams.get('type');
 
-                fetch(`/api/v2/load_feature_style/${formid}/${refid}`)
-                    .then(json => json.json())
-                    .then(data => {
+                let marker = null;
 
-                        const json = JSON.parse(data.style);
-                        console.log('json', json);
-                        document.getElementById('point-color').value = json[0].paint['circle-color'];
-                        document.getElementById('point-radius').value = json[0].paint['circle-radius'];
-                        document.getElementById('line-color').value = json[1].paint['line-color'];
-                        document.getElementById('line-width').value = json[1].paint['line-width'];
-                        document.getElementById('polygon-color').value = json[2].paint['fill-color'];
-                        document.getElementById('polygon-opacity').value = json[2].paint['fill-opacity'];
+                function createCustomMarkerIcon(color, symbol) {
+                    const img = document.createElement('img');
+                    img.src = `https://api.geoapify.com/v1/icon/?type=awesome&color=%23${color}&icon=${symbol}&size=small&scaleFactor=2&apiKey=${API_KEYS.GEOAPIFY}`;
+                    img.alt = 'Marker';
+                    img.style.width = '35px';
+                    img.style.height = '50px';
+                    img.style.display = 'block';
+                    return img;
+                }
 
-                        function getCustomStyles() {
-                            return [
-                                {
-                                    id: 'gl-draw-point',
-                                    type: 'circle',
-                                    filter: ['all', ['==', '$type', 'Point']],
-                                    paint: {
-                                        'circle-radius': parseInt(document.getElementById('point-radius').value),
-                                        'circle-color': document.getElementById('point-color').value,
-                                        'circle-stroke-width': 2,
-                                        'circle-stroke-color': '#FFFFFF'
-                                    }
-                                },
-                                {
-                                    id: 'gl-draw-line',
-                                    type: 'line',
-                                    filter: ['all', ['==', '$type', 'LineString']],
-                                    paint: {
-                                        'line-color': document.getElementById('line-color').value,
-                                        'line-width': parseInt(document.getElementById('line-width').value)
-                                    }
-                                },
-                                {
-                                    id: 'gl-draw-polygon',
-                                    type: 'fill',
-                                    filter: ['all', ['==', '$type', 'Polygon']],
-                                    paint: {
-                                        'fill-color': document.getElementById('polygon-color').value,
-                                        'fill-opacity': parseFloat(document.getElementById('polygon-opacity').value)
-                                    }
-                                },
-                                {
-                                    id: 'gl-draw-polygon-outline',
-                                    type: 'line',
-                                    filter: ['all', ['==', '$type', 'Polygon']],
-                                    paint: {
-                                        'line-color': document.getElementById('line-color').value,
-                                        'line-width': parseInt(document.getElementById('line-width').value)
-                                    }
-                                }
-                            ];
-                        }
+                function fetchFeatures(formid, refid) {
+                    return fetch(`/api/v2/load_layer/${formid}/${refid}`).then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch features: ${response.status}`);
+                        return response.json();
+                    });
+                }
 
-                        function fetchStyles(formid, refid) {
+                async function updateFeatureStyle(formid, refid, style) {
+                    return fetch('/api/v2/update_feature_style', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ formid, refid, style })
+                    }).then(response => {
+                        if (!response.ok) throw new Error(`Failed to update feature style: ${response.status}`);
+                        return response.json();
+                    });
+                }
 
-                        }
+                async function updateFeatureGeojson(formid, refid, geojson, style) {
+                    return fetch('/api/v2/update_feature', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ formid, refid, geojson, style })
+                    }).then(response => {
+                        if (!response.ok) throw new Error(`Failed to update feature geojson: ${response.status}`);
+                        return response.json();
+                    });
+                }
 
-                        function fetchFeatures(formid, refid) {
-                            return fetch(`/api/v2/load_layer/${formid}/${refid}`)
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(`Failed to fetch features: ${response.status}`);
-                                    }
-                                    return response;
-                                });
-                        }
-
-                        async function updateFeatureStyle(formid, refid, style) {
-                            return fetch('/api/v2/update_feature_style', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    formid: formid,
-                                    refid: refid,
-                                    style: style
-                                })
-                            }).then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`Failed to update feature style: ${response.status}`);
-                                }
-                                return response;
-                            });
-                        }
-
-                        let draw = new MapboxDraw({
-                            displayControlsDefault: true,
-                            controls: {
-                                point: true,
-                                line_string: true,
-                                polygon: true,
-                                trash: true
+                function getCustomStyles() {
+                    const selectedIcon = document.getElementById('marker-icon').value;
+                    return [
+                        {
+                            id: 'gl-draw-point',
+                            type: 'circle',
+                            filter: ['all', ['==', '$type', 'Point']],
+                            paint: {
+                                'circle-radius': parseInt(document.getElementById('point-radius').value),
+                                'circle-color': document.getElementById('point-color').value,
+                                'circle-stroke-width': 2,
+                                'circle-stroke-color': '#FFFFFF'
                             },
-                            styles: getCustomStyles()
-                        });
-
-                        map.addControl(draw);
-
-                        let existingFeatures = null;
-
-                        document.getElementById('style-form').addEventListener('submit', async (e) => {
-                            e.preventDefault();
-
-                            const currentStyles = getCustomStyles();
-                            const stylesJson = JSON.stringify(currentStyles, null, 2);
-                            await updateFeatureStyle(formid, refid, stylesJson);
-
-                            const currentFeatures = draw.getAll();
-                            map.removeControl(draw);
-                            draw = new MapboxDraw({
-                                displayControlsDefault: true,
-                                controls: {
-                                    point: true,
-                                    line_string: true,
-                                    polygon: true,
-                                    trash: true
-                                },
-                                styles: currentStyles
-                            });
-                            map.addControl(draw);
-                            if (currentFeatures && currentFeatures.features.length > 0) {
-                                draw.add(currentFeatures);
-                            } else if (existingFeatures) {
-                                draw.add(existingFeatures);
+                            metadata: { 'marker-icon': selectedIcon } // Store icon in metadata
+                        },
+                        {
+                            id: 'gl-draw-line',
+                            type: 'line',
+                            filter: ['all', ['==', '$type', 'LineString']],
+                            paint: {
+                                'line-color': document.getElementById('line-color').value,
+                                'line-width': parseInt(document.getElementById('line-width').value)
                             }
-                        });
+                        },
+                        {
+                            id: 'gl-draw-polygon',
+                            type: 'fill',
+                            filter: ['all', ['==', '$type', 'Polygon']],
+                            paint: {
+                                'fill-color': document.getElementById('polygon-color').value,
+                                'fill-opacity': parseFloat(document.getElementById('polygon-opacity').value)
+                            }
+                        },
+                        {
+                            id: 'gl-draw-polygon-outline',
+                            type: 'line',
+                            filter: ['all', ['==', '$type', 'Polygon']],
+                            paint: {
+                                'line-color': document.getElementById('line-color').value,
+                                'line-width': parseInt(document.getElementById('line-width').value)
+                            }
+                        }
+                    ];
+                }
 
-                        function calculateBounds(features) {
-                            const bounds = new maplibregl.LngLatBounds();
-                            features.features.forEach(feature => {
-                                if (feature.geometry.type === 'Point') {
-                                    bounds.extend(feature.geometry.coordinates);
-                                } else if (feature.geometry.type === 'LineString') {
-                                    feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
-                                } else if (feature.geometry.type === 'Polygon') {
-                                    feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
-                                }
-                            });
-                            return bounds;
+                function getMarkerIconFromStyles(styles) {
+                    // Ensure styles is an array; if not, return default 'map-marker'
+                    if (!Array.isArray(styles)) {
+                        return 'map-marker';
+                    }
+                    const pointStyle = styles.find(style => style.id === 'gl-draw-point');
+                    return pointStyle && pointStyle.metadata && pointStyle.metadata['marker-icon'] ? pointStyle.metadata['marker-icon'] : 'map-marker';
+                }
+
+                function calculateBounds(features) {
+                    const bounds = new maplibregl.LngLatBounds();
+                    features.features.forEach(feature => {
+                        if (feature.geometry.type === 'Point') {
+                            bounds.extend(feature.geometry.coordinates);
+                        } else if (feature.geometry.type === 'LineString') {
+                            feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
+                        } else if (feature.geometry.type === 'Polygon') {
+                            feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+                        }
+                    });
+                    return bounds;
+                }
+
+                const styleResponse = await fetch(`/api/v2/load_feature_style/${formid}/${refid}`);
+                const styleData = await styleResponse.json();
+                // Handle case where styleData.style might be null, undefined, or invalid JSON
+                let json = [];
+                try {
+                    json = styleData.style ? JSON.parse(styleData.style) : [];
+                } catch (e) {
+                    console.error('Error parsing style JSON:', e);
+                    json = [];
+                }
+
+                // Ensure default styles if json is empty or incomplete
+                if (!json.length || !json[0]) json[0] = { paint: { 'circle-color': '#FF0000', 'circle-radius': 4, 'circle-stroke-width': 2, 'circle-stroke-color': '#FFFFFF' }, metadata: { 'marker-icon': 'map-marker' } };
+                if (!json[1]) json[1] = { paint: { 'line-color': '#00FF00', 'line-width': 2 } };
+                if (!json[2]) json[2] = { paint: { 'fill-color': '#0000FF', 'fill-opacity': 0.5 } };
+
+                document.getElementById('point-color').value = json[0].paint['circle-color'] || '#FF0000';
+                document.getElementById('point-radius').value = json[0].paint['circle-radius'] || 4;
+                document.getElementById('line-color').value = json[1].paint['line-color'] || '#00FF00';
+                document.getElementById('line-width').value = json[1].paint['line-width'] || 2;
+                document.getElementById('polygon-color').value = json[2].paint['fill-color'] || '#0000FF';
+                document.getElementById('polygon-opacity').value = json[2].paint['fill-opacity'] || 0.5;
+                document.getElementById('marker-icon').value = getMarkerIconFromStyles(json); // Safe call with array
+
+                let draw = new MapboxDraw({
+                    displayControlsDefault: false,
+                    controls: { point: type === 'Point', line_string: type === 'LineString', polygon: type === 'Polygon', trash: false },
+                    styles: json.length ? json : getCustomStyles()
+                });
+
+                map.addControl(draw);
+
+                let existingFeatures = null;
+
+                document.getElementById('style-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const currentStyles = getCustomStyles();
+                    const stylesJson = JSON.stringify(currentStyles, null, 2);
+                    await updateFeatureStyle(formid, refid, stylesJson);
+
+                    const currentFeatures = draw.getAll();
+                    map.removeControl(draw);
+                    draw = new MapboxDraw({
+                        displayControlsDefault: false,
+                        controls: { point: type === 'Point', line_string: type === 'LineString', polygon: type === 'Polygon', trash: false },
+                        styles: currentStyles
+                    });
+                    map.addControl(draw);
+                    if (currentFeatures && currentFeatures.features.length > 0) {
+                        draw.add(currentFeatures);
+                        if (type === 'Point' && currentFeatures.features[0]) {
+                            const pointCoordinates = currentFeatures.features[0].geometry.coordinates;
+                            if (marker) marker.remove();
+                            const selectedIcon = getMarkerIconFromStyles(currentStyles);
+                            const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
+                            marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                        }
+                    } else if (existingFeatures) {
+                        draw.add(existingFeatures);
+                    }
+                });
+
+                map.on('load', async () => {
+                    try {
+                        const featureData = await fetchFeatures(formid, refid);
+                        let geojsonData;
+                        if (Array.isArray(featureData) && featureData.length > 0 && featureData[0].geojson) {
+                            const parsed = JSON.parse(featureData[0].geojson);
+                            if (parsed.type === 'Polygon' || parsed.type === 'Point' || parsed.type === 'LineString') {
+                                geojsonData = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: parsed, properties: {} }] };
+                            } else {
+                                geojsonData = parsed;
+                            }
+                        } else if (featureData.features) {
+                            geojsonData = featureData;
+                        } else {
+                            throw new Error('Unexpected API response structure');
                         }
 
-                        map.on('load', async () => {
-                            let rawResponse;
-                            try {
-                                const response = await fetchFeatures(formid, refid);
-                                rawResponse = response;
-                                const featureData = await response.json();
-                                let geojsonData;
-                                if (Array.isArray(featureData) && featureData.length > 0 && featureData[0].geojson) {
-                                    const parsed = JSON.parse(featureData[0].geojson);
-                                    if (parsed.type === 'Polygon' || parsed.type === 'Point' || parsed.type === 'LineString') {
-                                        geojsonData = {
-                                            type: 'FeatureCollection',
-                                            features: [{
-                                                type: 'Feature',
-                                                geometry: parsed,
-                                                properties: {}
-                                            }]
-                                        };
-                                    } else {
-                                        geojsonData = parsed;
-                                    }
-                                } else if (featureData.features) {
-                                    geojsonData = featureData;
-                                } else {
-                                    throw new Error('Unexpected API response structure');
-                                }
+                        if (!geojsonData || !geojsonData.features || !Array.isArray(geojsonData.features)) {
+                            throw new Error(`Invalid GeoJSON structure: ${JSON.stringify(geojsonData)}`);
+                        }
 
-                                if (!geojsonData || !geojsonData.features || !Array.isArray(geojsonData.features)) {
-                                    throw new Error(`Invalid GeoJSON structure: ${JSON.stringify(geojsonData)}`);
-                                }
+                        existingFeatures = geojsonData;
+                        draw.add(existingFeatures);
 
-                                existingFeatures = geojsonData;
-                                draw.add(existingFeatures);
+                        if (existingFeatures.features.length > 0) {
+                            const bounds = calculateBounds(existingFeatures);
+                            if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 50 });
 
-                                if (existingFeatures.features.length > 0) {
-                                    const bounds = calculateBounds(existingFeatures);
-                                    if (!bounds.isEmpty()) {
-                                        map.fitBounds(bounds, {
-                                            padding: 50
-                                        });
-                                    }
-                                }
-
-                                console.log('Default features loaded:', existingFeatures);
-                            } catch (error) {
-                                console.error('Error loading default features:', error);
-                                if (rawResponse) {
-                                    console.error('Raw response that failed:', await rawResponse.clone().text());
-                                }
+                            if (type === 'Point') {
+                                const pointCoordinates = existingFeatures.features[0].geometry.coordinates;
+                                if (marker) marker.remove();
+                                const storedIcon = getMarkerIconFromStyles(json); // Load from stored styles
+                                const markerIcon = createCustomMarkerIcon(json[0].paint['circle-color'].slice(1), storedIcon);
+                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
                             }
+                        }
+                    } catch (error) {
+                        console.error('Error loading default features:', error);
+                    }
 
-                            map.on('draw.create', (e) => {
-                                const allFeatures = draw.getAll();
-                                allFeatures.features.forEach((feature) => {
-                                    if (!e.features.some((newFeature) => newFeature.id === feature.id)) {
-                                        draw.delete(feature.id);
-                                    }
-                                });
-                                console.log('New feature created, previous features removed:', e.features);
-                            });
-
-                            map.on('draw.delete', (e) => {
-                                console.log('Feature deleted:', e.features);
-                            });
-
-                            map.on('draw.update', (e) => {
-                                console.log('Feature updated:', e.features);
-                            });
+                    map.on('draw.create', async (e) => {
+                        const currentStyles = getCustomStyles();
+                        const styleJson = JSON.stringify(currentStyles);
+                        const geojsonJson = JSON.stringify(e.features[0].geometry);
+                        const allFeatures = draw.getAll();
+                        allFeatures.features.forEach(async (feature) => {
+                            if (!e.features.some((newFeature) => newFeature.id === feature.id)) draw.delete(feature.id);
                         });
 
+                        try {
+                            await updateFeatureGeojson(formid, refid, geojsonJson, styleJson);
+                            if (type === 'Point') {
+                                const pointCoordinates = e.features[0].geometry.coordinates;
+                                if (marker) marker.remove();
+                                const selectedIcon = getMarkerIconFromStyles(currentStyles);
+                                const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
+                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                            }
+                        } catch (error) {
+                            console.error('Error updating feature on draw.create:', error);
+                        }
                     });
 
+                    map.on('draw.delete', (e) => {
+                        if (type === 'Point' && marker) {
+                            marker.remove();
+                            marker = null;
+                        }
+                    });
+
+                    map.on('draw.update', async (e) => {
+                        const currentStyles = getCustomStyles();
+                        const styleJson = JSON.stringify(currentStyles);
+                        const geojsonJson = JSON.stringify(e.features[0].geometry);
+
+                        try {
+                            await updateFeatureGeojson(formid, refid, geojsonJson, styleJson);
+                            if (type === 'Point') {
+                                const pointCoordinates = e.features[0].geometry.coordinates;
+                                if (marker) marker.remove();
+                                const selectedIcon = getMarkerIconFromStyles(currentStyles);
+                                const markerIcon = createCustomMarkerIcon(document.getElementById('point-color').value.slice(1), selectedIcon);
+                                marker = new maplibregl.Marker(markerIcon).setLngLat(pointCoordinates).addTo(map);
+                            }
+                        } catch (error) {
+                            console.error('Error updating feature on draw.update:', error);
+                        }
+                    });
+                });
             } catch (error) {
                 console.log('error', error);
             }
