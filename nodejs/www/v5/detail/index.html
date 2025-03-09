@@ -14,8 +14,9 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet">
-    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" rel="stylesheet">
+    <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css"
+        rel="stylesheet" />
     <link href="./../assets/css/dashlite.css?ver=3.2.4" rel="stylesheet">
     <link href="./../assets/css/theme.css?ver=3.2.4" rel="stylesheet" id="skin-default">
     <link href="./style.css" rel="stylesheet">
@@ -182,7 +183,7 @@
                                                 </ul>
                                                 <div class="tab-content">
                                                     <div class="tab-pane active" id="tabItem5">
-                                                        <div>
+                                                        <form id="layerForm">
                                                             <label for="baseMapSelector"
                                                                 class="form-label">เลือกแผนที่ฐาน</label>
                                                             <select class="form-select" id="baseMapSelector">
@@ -192,7 +193,7 @@
                                                                 <option value="gsat">Google Satellite</option>
                                                                 <option value="ghyb">Google Hybrid</option>
                                                             </select>
-                                                        </div>
+                                                        </form>
                                                         <hr>
                                                         <form id="searchLatLng">
                                                             <div class="mb-3">
@@ -215,42 +216,37 @@
                                                         </form>
                                                     </div>
                                                     <div class="tab-pane" id="tabItem6">
-                                                        <form id="editSymbolForm">
+                                                        <!-- <form id="styleForm">
                                                             <div class="mb-3" id="pointFields">
-                                                                <label class="form-label">เลือกประเภท</label>
-                                                                <div class="row">
-                                                                    <div class="col-sm">
-                                                                        <div class="form-check"><input
-                                                                                class="form-check-input" type="radio"
-                                                                                name="markerType" id="markerTypeSimple"
-                                                                                value="simple" checked><label
-                                                                                class="form-check-label"
-                                                                                for="markerTypeSimple">Icon
-                                                                                Marker</label></div>
-                                                                    </div>
-                                                                </div>
                                                                 <div id="simpleMarkerFields">
                                                                     <label class="form-label mt-2">เลือก Icon</label>
                                                                     <div id="awesomeIconSelection" class="marker-list">
                                                                     </div>
-                                                                    <input type="hidden" id="markerSymbol"
-                                                                        name="markerSymbol" value="map-marker">
+                                                                    <input type="hidden" id="marker-icon"
+                                                                        value="map-marker">
                                                                     <label for="markerColor"
-                                                                        class="form-label mt-2">เลือกสี Marker</label>
-                                                                    <input type="color" class="form-control"
-                                                                        id="markerColor" name="markerColor"
-                                                                        value="#007cbf">
+                                                                        class="form-label mt-2">เลือกสี
+                                                                        Marker</label><input type="color"
+                                                                        class="form-control" id="point-color"
+                                                                        value="#FF0000">
+
+                                                                    <label for="markerSize"
+                                                                        class="form-label mt-2">เลือก Size
+                                                                        Marker</label><input type="number"
+                                                                        class="form-control" id="point-radius" min="1"
+                                                                        max="20" value="8">
                                                                 </div>
                                                             </div>
+
                                                             <div class="mb-3" id="lineFields" style="display: none;">
                                                                 <label for="lineColor" class="form-label">Line
                                                                     Color</label><input type="color"
-                                                                    class="form-control" id="lineColor" name="lineColor"
-                                                                    value="#ff0000">
+                                                                    class="form-control" id="line-color"
+                                                                    value="#00FF00">
                                                                 <label for="lineWidth" class="form-label mt-2">Line
                                                                     Width</label><input type="number"
-                                                                    class="form-control" id="lineWidth" name="lineWidth"
-                                                                    min="1" max="20" value="3">
+                                                                    class="form-control" id="line-width" min="1"
+                                                                    max="10" value="2">
                                                                 <label for="lineDash" class="form-label mt-2">Line
                                                                     Dash</label><input type="text" class="form-control"
                                                                     id="lineDash" name="lineDash"
@@ -259,31 +255,59 @@
                                                             <div class="mb-3" id="polygonFields" style="display: none;">
                                                                 <label for="fillColor" class="form-label">Fill
                                                                     Color</label><input type="color"
-                                                                    class="form-control" id="fillColor" name="fillColor"
-                                                                    value="#00ff00">
+                                                                    class="form-control" id="polygon-color"
+                                                                    value="#0000FF">
                                                                 <label for="fillOpacity" class="form-label mt-2">Fill
                                                                     Opacity</label><input type="number"
-                                                                    class="form-control" id="fillOpacity"
-                                                                    name="fillOpacity" min="0" max="1" step="0.1"
-                                                                    value="0.5">
-                                                                <label for="polygonBorderColor"
-                                                                    class="form-label mt-2">Border Color</label><input
-                                                                    type="color" class="form-control"
-                                                                    id="polygonBorderColor" name="polygonBorderColor"
-                                                                    value="#000000">
-                                                                <label for="polygonBorderDash"
-                                                                    class="form-label mt-2">Border Dash</label><input
-                                                                    type="text" class="form-control"
-                                                                    id="polygonBorderDash" name="polygonBorderDash"
+                                                                    class="form-control" id="polygon-opacity" min="0"
+                                                                    max="1" step="0.1" value="0.5">
+
+                                                                <label for="lineColor" class="form-label">Line
+                                                                    Color</label><input type="color"
+                                                                    class="form-control" id="line-color"
+                                                                    value="#00FF00">
+                                                                <label for="lineWidth" class="form-label mt-2">Line
+                                                                    Width</label><input type="number"
+                                                                    class="form-control" id="line-width" min="1"
+                                                                    max="10" value="2">
+                                                                <label for="lineDash" class="form-label mt-2">Line
+                                                                    Dash</label><input type="text" class="form-control"
+                                                                    id="lineDash" name="lineDash"
                                                                     placeholder="e.g., 5,2">
-                                                                <label for="polygonBorderWidth"
-                                                                    class="form-label mt-2">Border Width</label><input
-                                                                    type="number" class="form-control"
-                                                                    id="polygonBorderWidth" name="polygonBorderWidth"
-                                                                    min="1" max="10" value="2">
                                                             </div>
-                                                            <input type="hidden" id="featureId" name="featureId">
-                                                            <input type="hidden" id="featureType" name="featureType">
+                                                        </form> -->
+                                                        <form id="styleForm">
+                                                            <h3>Style Settings</h3>
+                                                            <div>
+                                                                <div id="marker-panel"
+                                                                    style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
+                                                                </div>
+
+                                                                <label>Point Color: <input type="color" id="point-color"
+                                                                        value="#FF0000"></label>
+                                                                <label>Point Size: <input type="number"
+                                                                        id="point-radius" min="1" max="20"
+                                                                        value="8"></label>
+                                                            </div>
+                                                            <div>
+                                                                <label>Line Color: <input type="color" id="line-color"
+                                                                        value="#00FF00"></label>
+                                                                <label>Line Width: <input type="number" id="line-width"
+                                                                        min="1" max="10" value="2"></label>
+                                                            </div>
+                                                            <div>
+                                                                <label>Polygon Color: <input type="color"
+                                                                        id="polygon-color" value="#0000FF"></label>
+                                                                <label>Opacity: <input type="number"
+                                                                        id="polygon-opacity" min="0" max="1" step="0.1"
+                                                                        value="0.5"></label>
+                                                            </div>
+                                                            <div>
+                                                                <input type="hidden" id="marker-icon"
+                                                                    value="map-marker">
+
+                                                            </div>
+                                                            <button type="submit">Apply Styles</button>
                                                         </form>
                                                     </div>
                                                 </div>
@@ -293,7 +317,8 @@
                                     <div class="col-xxl-6 col-lg-12">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <div id="formContainer"></div><input type="hidden" id="refid">
+                                                <div id="formContainer"></div>
+                                                <input type="hidden" id="refid">
                                             </div>
                                         </div>
                                     </div>
@@ -312,7 +337,7 @@
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
     <script src="./../assets/js/bundle.js?ver=3.2.4"></script>
