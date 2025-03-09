@@ -260,13 +260,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const refid = urlParams.get('refid');
     const type = urlParams.get('type');
 
+    // Set display to block for the div with id == type
+    if (type) {
+        const divToShow = document.getElementById(type);
+        if (divToShow) {
+            divToShow.style.display = "block";
+        }
+    }
+
     // Fetch and parse style data
     let styleData = await fetchAPI(`/api/v2/load_feature_style/${formid}/${refid}`);
     let json = [];
     if (styleData && styleData.style) {
         try {
             const parsed = JSON.parse(styleData.style);
-            // Ensure parsed result is an array
             json = Array.isArray(parsed) ? parsed : [];
         } catch (e) {
             console.error('Error parsing style JSON:', e);
