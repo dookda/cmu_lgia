@@ -446,28 +446,39 @@ app.post('/api/v2/load_layer', async (req, res) => {
             return res.status(400).send('Invalid formid.');
         }
 
+        // Fetch non-geom column names from the table
         const columnsQuery = `
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = $1 AND column_name != 'geom'
         `;
         const columnsRes = await pool.query(columnsQuery, [formid]);
-        const columns = columnsRes.rows.map(row => row.column_name).join(', ');
 
+        // Quote each column name to avoid SQL syntax issues
+        const columns = columnsRes.rows
+            .map(row => `"${row.column_name}"`)
+            .join(', ');
+
+        // Build the SELECT clause without a leading comma if no columns found
+        const selectColumns = columns
+            ? `${columns}, ST_AsGeoJSON(geom) as geojson`
+            : `ST_AsGeoJSON(geom) as geojson`;
+
+        // Quote the table name to prevent syntax errors (ensure formid is safe!)
         const sql = `
-            SELECT ${columns}, ST_AsGeoJSON(geom) as geojson 
-            FROM ${formid} 
+            SELECT ${selectColumns}
+            FROM "${formid}"
             ORDER BY ts DESC
         `;
 
         const { rows } = await pool.query(sql);
-
         res.status(200).json(rows);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while getting the selected layer.');
     }
 });
+
 
 app.get('/api/v2/load_layer/:formid/:refid', async (req, res) => {
     try {
