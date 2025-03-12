@@ -20,172 +20,177 @@ document.addEventListener('DOMContentLoaded', async () => {
         antialias: true
     };
 
+    const THAI_MONTHS = [
+        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+
+    // Initialize Map
     const map = new maplibregl.Map(MAP_CONFIG);
     map.addControl(new maplibregl.NavigationControl());
 
-    // Function to add a layer to the map
+    // Helper Functions
     const calculateBoundingBox = (features) => {
-        let minLng = Infinity;
-        let minLat = Infinity;
-        let maxLng = -Infinity;
-        let maxLat = -Infinity;
+        const bounds = new maplibregl.LngLatBounds();
 
         features.forEach(feature => {
             const geometry = JSON.parse(feature.geojson);
             if (geometry.type === 'Point') {
                 const [lng, lat] = geometry.coordinates;
-                minLng = Math.min(minLng, lng);
-                minLat = Math.min(minLat, lat);
-                maxLng = Math.max(maxLng, lng);
-                maxLat = Math.max(maxLat, lat);
-            } else if (geometry.type === 'LineString' || geometry.type === 'Polygon') {
-                geometry.coordinates.flat().forEach(([lng, lat]) => {
-                    minLng = Math.min(minLng, lng);
-                    minLat = Math.min(minLat, lat);
-                    maxLng = Math.max(maxLng, lng);
-                    maxLat = Math.max(maxLat, lat);
+                bounds.extend([lng, lat]);
+            } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+                geometry.coordinates.forEach(coord => {
+                    bounds.extend(coord);
+                });
+            } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+                geometry.coordinates.flat().forEach(coord => {
+                    bounds.extend(coord);
+                });
+            } else if (geometry.type === 'MultiPolygon') {
+                geometry.coordinates.flat(2).forEach(coord => {
+                    bounds.extend(coord);
                 });
             }
         });
 
-        return [[minLng, minLat], [maxLng, maxLat]];
+        return bounds;
     };
 
 
     const zoomToLayerExtent = (features) => {
         const boundingBox = calculateBoundingBox(features);
-        map.fitBounds(boundingBox, {
-            padding: 50,
-            maxZoom: 15
-        });
+        map.fitBounds(boundingBox, { padding: 50, maxZoom: 15 });
     };
 
     const addLayerToMap = (features, featureType) => {
-        // Add the features as a GeoJSON source
-        map.addSource('features-source', {
-            type: 'geojson',
-            data: {
-                type: 'FeatureCollection',
-                features: features.map(feature => ({
-                    type: 'Feature',
-                    geometry: JSON.parse(feature.geojson),
-                    properties: feature
-                }))
+        console.log('Adding layers to map:', features, featureType);
+
+        const sourceId = 'features-source';
+
+        // Remove existing source and layers if they exist
+        if (map.getSource(sourceId)) {
+            map.getSource(sourceId).setData({ type: 'FeatureCollection', features: [] });
+            features.forEach(feature => {
+                const layerId = `feature-layer-${feature.refid}`;
+                if (map.getLayer(layerId)) {
+                    map.removeLayer(layerId);
+                }
+            });
+        } else {
+            map.addSource(sourceId, {
+                type: 'geojson',
+                data: { type: 'FeatureCollection', features: [] }
+            });
+        }
+
+        // Default layer configurations
+        const defaultLayerConfigs = {
+            point: {
+                type: 'circle',
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': '#FF0000',
+                    'circle-opacity': 0.8
+                }
+            },
+            linestring: {
+                type: 'line',
+                paint: {
+                    'line-color': '#00FF00',
+                    'line-width': 2
+                }
+            },
+            polygon: {
+                type: 'fill',
+                paint: {
+                    'fill-color': '#0000FF',
+                    'fill-opacity': 0.5
+                }
+            }
+        };
+
+        // Prepare GeoJSON FeatureCollection
+        const geojsonFeatures = features.map(feature => ({
+            type: 'Feature',
+            geometry: JSON.parse(feature.geojson),
+            properties: { ...feature, refid: feature.refid }
+        }));
+
+        // Update source with all features
+        map.getSource(sourceId).setData({
+            type: 'FeatureCollection',
+            features: geojsonFeatures
+        });
+
+        // Add individual layers for each feature
+        features.forEach(feature => {
+            const geometry = JSON.parse(feature.geojson);
+            const layerId = `feature-layer-${feature.refid}`;
+            let layerConfig;
+
+            // Parse and validate the feature's style
+            let customStyles = [];
+            if (feature.style) {
+                try {
+                    const parsedStyles = JSON.parse(feature.style);
+                    // Ensure parsedStyles is an array
+                    customStyles = Array.isArray(parsedStyles) ? parsedStyles : [];
+                } catch (error) {
+                    console.error(`Error parsing style for feature ${feature.refid}:`, error);
+                }
+            }
+
+            // Map geometry type to style ID
+            const geometryType = geometry.type.toLowerCase();
+            const styleMap = {
+                'point': 'gl-draw-point',
+                'linestring': 'gl-draw-line',
+                'polygon': 'gl-draw-polygon'
+            };
+            const styleId = styleMap[geometryType] || '';
+
+            // Find matching style or use default
+            const customStyle = customStyles.find(style => style.id === styleId) || {};
+
+            if (customStyle.type && customStyle.paint) {
+                layerConfig = {
+                    id: layerId,
+                    source: sourceId,
+                    type: customStyle.type,
+                    paint: customStyle.paint,
+                    filter: ['==', 'refid', feature.refid]
+                };
+            } else {
+                console.warn(`No valid custom style found for feature ${feature.refid}. Using default.`);
+                const defaultType = geometryType === 'point' ? 'point' :
+                    geometryType === 'linestring' ? 'linestring' : 'polygon';
+                layerConfig = {
+                    id: layerId,
+                    source: sourceId,
+                    ...defaultLayerConfigs[defaultType],
+                    filter: ['==', 'refid', feature.refid]
+                };
+            }
+
+            // Add the layer
+            try {
+                if (!map.getLayer(layerId)) {
+                    map.addLayer(layerConfig);
+                }
+            } catch (error) {
+                console.error(`Error adding layer for feature ${feature.refid}:`, error);
             }
         });
 
-        // Add a layer based on the feature type
-        switch (featureType) {
-            case 'Point':
-                map.addLayer({
-                    id: 'features-layer',
-                    type: 'circle',
-                    source: 'features-source',
-                    paint: {
-                        'circle-radius': 5,
-                        'circle-color': '#FF0000',
-                        'circle-opacity': 0.8
-                    }
-                });
-                break;
-
-            case 'LineString':
-                map.addLayer({
-                    id: 'features-layer',
-                    type: 'line',
-                    source: 'features-source',
-                    paint: {
-                        'line-color': '#00FF00',
-                        'line-width': 2
-                    }
-                });
-                break;
-
-            case 'Polygon':
-                map.addLayer({
-                    id: 'features-layer',
-                    type: 'fill',
-                    source: 'features-source',
-                    paint: {
-                        'fill-color': '#0000FF',
-                        'fill-opacity': 0.5
-                    }
-                });
-                break;
-
-            default:
-                console.warn(`Unsupported feature type: ${featureType}`);
-                return;
-        }
-
-        // Zoom to the layer's extent
         zoomToLayerExtent(features);
     };
 
-    const getCustomStyles = () => {
-        const selectedIcon = document.getElementById('marker-icon').value;
-        return [
-            {
-                id: 'gl-draw-point',
-                type: 'circle',
-                filter: ['all', ['==', '$type', 'Point']],
-                paint: {
-                    'circle-radius': parseInt(document.getElementById('point-radius').value),
-                    'circle-color': document.getElementById('point-color').value,
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#FFFFFF'
-                },
-                metadata: { 'marker-icon': selectedIcon }
-            },
-            {
-                id: 'gl-draw-line',
-                type: 'line',
-                filter: ['all', ['==', '$type', 'LineString']],
-                paint: {
-                    'line-color': document.getElementById('line-color').value,
-                    'line-width': parseInt(document.getElementById('line-width').value)
-                }
-            },
-            {
-                id: 'gl-draw-polygon',
-                type: 'fill',
-                filter: ['all', ['==', '$type', 'Polygon']],
-                paint: {
-                    'fill-color': document.getElementById('polygon-color').value,
-                    'fill-opacity': parseFloat(document.getElementById('polygon-opacity').value)
-                }
-            },
-            {
-                id: 'gl-draw-polygon-outline',
-                type: 'line',
-                filter: ['all', ['==', '$type', 'Polygon']],
-                paint: {
-                    'line-color': document.getElementById('line-color').value,
-                    'line-width': parseInt(document.getElementById('line-width').value)
-                }
-            }
-        ];
-    };
-
-    const getMarkerIconFromStyles = (styles) => {
-        if (!Array.isArray(styles)) return 'map-marker';
-        const pointStyle = styles.find(s => s.id === 'gl-draw-point');
-        return pointStyle?.metadata?.['marker-icon'] || 'map-marker';
-    };
-
-    // Function to update the base map
     const updateBaseMap = (baseMapValue) => {
         let newStyle;
         if (baseMapValue === 'maptiler') {
             newStyle = `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`;
         } else {
-            let tileUrl;
-            switch (baseMapValue) {
-                case 'osm': tileUrl = BASE_MAPS.osm; break;
-                case 'grod': tileUrl = BASE_MAPS.grod; break;
-                case 'gsat': tileUrl = BASE_MAPS.gsat; break;
-                case 'ghyb': tileUrl = BASE_MAPS.ghyb; break;
-            }
+            const tileUrl = BASE_MAPS[baseMapValue];
             newStyle = {
                 version: 8,
                 sources: {
@@ -205,11 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         }
 
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        const bearing = map.getBearing();
-        const pitch = map.getPitch();
-
+        const { center, zoom, bearing, pitch } = map.getState();
         map.setStyle(newStyle);
         map.once('style.load', () => {
             map.setCenter(center);
@@ -217,39 +218,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             map.setBearing(bearing);
             map.setPitch(pitch);
 
-            // Re-add the features layer if it exists
             if (map.getSource('features-source')) {
-                addLayerToMap(features);
+                addLayerToMap(features, featureType);
             }
         });
     };
 
-    const thaiMonths = [
-        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-    ];
-
-    function isISODate(str) {
-        const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
-
-        if (!isoDatePattern.test(str)) return false;
-
-        const date = new Date(str);
-        return date instanceof Date && !isNaN(date);
-    }
-
-    function formatThaiDate(dateString) {
+    const formatThaiDate = (dateString) => {
         if (!dateString) return '';
-
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return dateString;
 
         const day = date.getDate();
-        const month = thaiMonths[date.getMonth()];
+        const month = THAI_MONTHS[date.getMonth()];
         const year = date.getFullYear() + 543; // Convert to Buddhist Era (BE)
-
         return `${day} ${month} ${year}`;
-    }
+    };
 
     const initializeDataTable = (data, columnsData) => {
         const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
@@ -260,99 +244,66 @@ document.addEventListener('DOMContentLoaded', async () => {
                 data: null,
                 orderable: false,
                 searchable: false,
-                render: function (data, type, row) {
-                    let _type = row.geojson ? JSON.parse(row.geojson).type : '';
-                    let geojson = row.geojson ? JSON.parse(row.geojson) : '';
-
-                    if (geojson && geojson.type && geojson.coordinates) {
-                        var _geojson = JSON.stringify(geojson);
-                    } else {
-                        // console.error('Invalid GeoJSON:', geojson);
-                        geojson = { type: 'Point', coordinates: [0, 0] };
-                    }
-
-                    return `<div class="btn-group">
-                        <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-                            <em class="icon ni ni-zoom-in"></em>
-                        </button>
-                        <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                            <em class="icon ni ni-color-palette"></em>
-                        </button>
-                        <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                            <em class="icon ni ni-chat"></em>
-                        </button>
-                        <button class="btn btn-info center detail-btn" data-refid="${row.refid}" data-type="${_type || ''}">
-                            <em class="icon ni ni-text-rich"></em>
-                        </button>
-                        <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
-                            <em class="icon ni ni-trash-alt"></em>
-                        </button>
-                    </div>`;
+                render: (data, type, row) => {
+                    const geometry = row.geojson ? JSON.parse(row.geojson) : { type: 'Point', coordinates: [0, 0] };
+                    const geojson = JSON.stringify(geometry);
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${geojson}'>
+                                <em class="icon ni ni-zoom-in"></em>
+                            </button>
+                            <button class="btn btn-info center edit-btn" data-refid="${row.refid}" data-type="${geometry.type}">
+                                <em class="icon ni ni-color-palette"></em>
+                            </button>
+                            <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${geometry.type}">
+                                <em class="icon ni ni-chat"></em>
+                            </button>
+                            <button class="btn btn-info center detail-btn" data-refid="${row.refid}" data-type="${geometry.type}">
+                                <em class="icon ni ni-text-rich"></em>
+                            </button>
+                            <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
+                                <em class="icon ni ni-trash-alt"></em>
+                            </button>
+                        </div>`;
                 }
             },
             ...Object.keys(data[0])
                 .filter(key => !['geojson', 'style'].includes(key))
-                .map(key => {
-                    const isHidden = key === 'refid' || key === 'ts';
-                    return {
-                        title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-                        data: key,
-                        className: nonEditableColumns.includes(key) ? '' : 'editable',
-                        visible: !isHidden,
-                        render: function (data, type, row) {
-                            if (isISODate(data)) {
-                                if (type === 'display') {
-                                    return formatThaiDate(data);
-                                }
-                                return data;
-                            }
-
-                            if (type === 'display' && !nonEditableColumns.includes(key)) {
-                                return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
-                            }
-                            return data;
+                .map(key => ({
+                    title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+                    data: key,
+                    className: nonEditableColumns.includes(key) ? '' : 'editable',
+                    visible: !['refid', 'ts'].includes(key),
+                    render: (data, type, row) => {
+                        if (type === 'display' && !nonEditableColumns.includes(key)) {
+                            return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
                         }
-                    };
-                })
+                        return data;
+                    }
+                }))
         ];
 
         if ($.fn.DataTable.isDataTable('#dataTable')) {
             $('#dataTable').DataTable().destroy();
         }
 
-        $('#dataTable').empty();
-
-        columns.forEach(col => {
-            if (col.data === null) return;
-            const match = columnsData.find(i => col.data === i.col_id);
-            if (match) {
-                col.title = match.col_name;
-                col.type = match.col_type;
-            }
-        });
-
-        const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
-        $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
+        $('#dataTable').empty().html(`<thead><tr>${columns.map(col => `<th>${col.title}</th>`).join('')}</tr></thead><tbody></tbody>`);
 
         const table = $('#dataTable').DataTable({
             data,
             columns,
             autoWidth: true,
             scrollX: true,
+            orderable: false,
+            searchable: false,
             dom: '<"top"Bf>rt<"bottom"lip><"clear">',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: '<i class="fas fa-download"></i> Export to Excel',
-                    className: 'btn-primary',
-                    title: 'Data Export',
-                    exportOptions: {
-                        modifier: {
-                            page: 'all'
-                        }
-                    }
-                }
-            ],
+            buttons: [{
+                extend: 'excel',
+                text: '<i class="fas fa-download"></i> Export to Excel',
+                className: 'btn-primary',
+                title: 'Data Export',
+                exportOptions: { modifier: { page: 'all' } }
+            }],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search records...",
@@ -374,45 +325,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const fetchAPI = async (url, options = {}) => {
-        const response = await fetch(url, {
-            ...options,
-            headers: { 'Content-Type': 'application/json', ...options.headers }
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+        }
     };
 
-    // Fetch data and initialize the map
+    // Main Execution
     const urlParams = new URLSearchParams(window.location.search);
     const formid = urlParams.get('formid');
-    const featureType = urlParams.get('type');
+    const featureType = urlParams.get('type')?.toLowerCase();
 
-    console.log('formid:', formid);
-    console.log('featureType:', featureType);
+    if (!formid || !featureType) {
+        console.error('Missing formid or feature type in URL');
+        return;
+    }
+
+    try {
+        const [columnsData, featuresData] = await Promise.all([
+            fetchAPI(`/api/v2/load_layer_description/${formid}`),
+            fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
+        ]);
+
+        const table = initializeDataTable(featuresData, columnsData);
+
+        // add promise to fetch data from DataTable
+        const features = table.rows().data().toArray();
+        await addLayerToMap(features, featureType);
 
 
-    const [columnsData, featuresData] = await Promise.all([
-        fetchAPI(`/api/v2/load_layer_description/${formid}`),
-        fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
-    ]);
 
-    const columns = columnsData;
-    const features = featuresData;
 
-    // Initialize the DataTable
-    const table = initializeDataTable(features, columns);
+        // Maplibre load from DataTable
+        map.on('load', () => {
+            // const dataTableData = table.rows().data().toArray();
+            // console.log('DataTable data:', dataTableData);
 
-    // Add the features layer to the map
-    map.on('load', () => {
-        if (featureType) {
-            addLayerToMap(features, featureType);
-        } else {
-            console.warn('No feature type specified in the URL.');
-        }
-    });
+            // 
+        })
 
-    // Handle base map selector change
-    document.getElementById('baseMapSelector').addEventListener('change', (e) => {
-        updateBaseMap(e.target.value);
-    });
+        document.getElementById('baseMapSelector').addEventListener('change', (e) => {
+            updateBaseMap(e.target.value);
+        });
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
 });

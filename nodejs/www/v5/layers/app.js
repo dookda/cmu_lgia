@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         data: null,
                         render: function (data, type, row) {
                             return `
-                                <button class="btn btn-warning" data-formid="${row.formid}">แก้ไข</button>
+                                <button class="btn btn-warning" data-formid="${row.formid}" data-type="${row.layertype}">แก้ไข</button>
                                 <button class="btn btn-danger" data-id="${row.gid}">ลบ</button>
                             `;
                         },
@@ -62,8 +62,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             $('#dataTable').on('click', '.btn-warning', function () {
-                const formid = $(this).data('formid');
-                window.location.href = `/v5/input_edit/index.html?formid=${formid}`;
+                const formid = this.getAttribute('data-formid');
+                const type = this.getAttribute('data-type');
+
+                window.location.href = `/v5/input_edit/index.html?formid=${formid}&type=${type}`;
             });
         })
         .catch(error => {
