@@ -60,6 +60,23 @@ content-type: application/json
     "text": "ทดสอบส่งข้อความกลุ่มครับ 111"
 }
 
+### MJ token  7039167221:AAHCDu4rRiKZZUbRHD4RtiZarEc1C-oF2iI
+POST https://api.telegram.org/bot7039167221:AAHCDu4rRiKZZUbRHD4RtiZarEc1C-oF2iI/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-1002284534685",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ MJ ทดสอบ"
+}
+
+### get update
+GET https://api.telegram.org/bot8026922828:AAG6KjaG34BBlvCMFEorEkAgL5FWoqaHMJw/getUpdates
+
+
+
+###
+GET https://api.telegram.org/bot7039167221:AAHCDu4rRiKZZUbRHD4RtiZarEc1C-oF2iI/getUpdates
+
 ###
 POST http://localhost:3000/api/v2/load_layer
 Content-Type: application/json
