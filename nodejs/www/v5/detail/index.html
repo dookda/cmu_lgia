@@ -46,33 +46,33 @@
 <body>
     <div id="map"></div>
     <form id="styleForm">
-        <h3>Style Settings</h3>
+        <div id="casePoint">
+            <label>
+                <input type="radio" name="panel" value="circle" checked onchange="togglePanel()"> Circle Panel
+            </label>
+            <label>
+                <input type="radio" name="panel" value="marker" onchange="togglePanel()"> Marker Panel
+            </label>
 
-        <label>
-            <input type="radio" name="panel" value="circle" checked onchange="togglePanel()"> Circle Panel
-        </label>
-        <label>
-            <input type="radio" name="panel" value="marker" onchange="togglePanel()"> Marker Panel
-        </label>
-
-        <div id="circle-panel">
-            <svg id="circle-svg" width="100" height="80">
-                <circle id="svg-circle" cx="40" cy="40" r="4" fill="#FF0000" stroke="#FFFFFF" stroke-width="1">
-                </circle>
-            </svg>
+            <div id="circle-panel">
+                <svg id="circle-svg" width="100" height="80">
+                    <circle id="svg-circle" cx="40" cy="40" r="4" fill="#FF0000" stroke="#FFFFFF" stroke-width="1">
+                    </circle>
+                </svg>
+            </div>
+            <div id="marker-panel" style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;"></div>
+            <div>
+                <label>Point Color: <input type="color" id="circle-color" value="#FF0000"></label>
+                <label>Point Size: <input type="number" id="circle-radius" min="1" max="20" value="4"></label>
+                <label>Point stroke Color: <input type="color" id="circle-stroke-color" value="#FFFFFF"></label>
+                <label>Point Width: <input type="number" id="circle-stroke-width" min="1" max="10" value="1"></label>
+            </div>
         </div>
-        <div id="marker-panel" style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;"></div>
-        <div>
-            <label>Point Color: <input type="color" id="circle-color" value="#FF0000"></label>
-            <label>Point Size: <input type="number" id="circle-radius" min="1" max="20" value="4"></label>
-            <label>Point stroke Color: <input type="color" id="circle-stroke-color" value="#FFFFFF"></label>
-            <label>Point Width: <input type="number" id="circle-stroke-width" min="1" max="10" value="1"></label>
-        </div>
-        <div>
+        <div id="caseLine">
             <label>Line Color: <input type="color" id="line-color" value="#00FF00"></label>
             <label>Line Width: <input type="number" id="line-width" min="1" max="10" value="2"></label>
         </div>
-        <div>
+        <div id="casePolygon">
             <label>Polygon Color: <input type="color" id="polygon-color" value="#0000FF"></label>
             <label>Opacity: <input type="number" id="polygon-opacity" min="0" max="1" step="0.1" value="0.5"></label>
         </div>

@@ -224,8 +224,6 @@ const updateData = async (formid, refid) => {
 };
 
 const initDraw = (styles, type) => {
-    console.log(type);
-
     return new MapboxDraw({
         displayControlsDefault: false,
         controls: {
@@ -242,6 +240,20 @@ const urlParams = new URLSearchParams(window.location.search);
 const formid = urlParams.get('formid');
 const refid = urlParams.get('refid');
 const type = urlParams.get('type');
+
+if (type == 'Point') {
+    document.getElementById('casePoint').style.display = 'block';
+    document.getElementById('caseLine').style.display = 'none';
+    document.getElementById('casePolygon').style.display = 'none';
+} else if (type == 'LineString') {
+    document.getElementById('casePoint').style.display = 'none';
+    document.getElementById('caseLine').style.display = 'block';
+    document.getElementById('casePolygon').style.display = 'none';
+} else if (type == 'Polygon') {
+    document.getElementById('casePoint').style.display = 'none';
+    document.getElementById('caseLine').style.display = 'block';
+    document.getElementById('casePolygon').style.display = 'block';
+}
 
 const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
     "university", "school", "coffee", "cutlery", "glass", "beer", "ambulance", "car", "bus", "train", "subway", "taxi", "bicycle", "motorcycle", "ship", "plane",
