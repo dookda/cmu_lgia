@@ -19,6 +19,7 @@ const map = new maplibregl.Map({
     pitch: 0,
     antialias: true
 });
+
 map.addControl(new maplibregl.NavigationControl());
 
 let marker = null;
