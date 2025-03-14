@@ -224,13 +224,15 @@ const updateData = async (formid, refid) => {
 };
 
 const initDraw = (styles, type) => {
+    console.log(type);
+
     return new MapboxDraw({
         displayControlsDefault: false,
         controls: {
             point: type === 'Point',
-            line_string: type !== 'Point',
-            polygon: type !== 'Point',
-            trash: true
+            line_string: type == 'LineString',
+            polygon: type == 'Polygon',
+            trash: false
         },
         styles: styles || getCustomStyles()
     });
