@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const BASE_MAPS = {
-        maptiler: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`,
         osm: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         grod: 'https://mt0.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
         ghyb: 'https://mt0.google.com/vt/lyrs=y,m&x={x}&y={y}&z={z}',
@@ -21,13 +20,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         antialias: true
     };
 
+    const map = new maplibregl.Map(MAP_CONFIG);
+    map.addControl(new maplibregl.NavigationControl());
+
     const THAI_MONTHS = [
         'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
         'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
     ];
-
-    const map = new maplibregl.Map(MAP_CONFIG);
-    map.addControl(new maplibregl.NavigationControl());
 
     const calculateBoundingBox = (features) => {
         const bounds = new maplibregl.LngLatBounds();
@@ -87,7 +86,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const defaultLayerConfigs = {
-            point: { type: 'circle', paint: { 'circle-radius': 5, 'circle-color': '#FF0000', 'circle-opacity': 0.8 } },
+            point: {
+                type: 'circle', paint: {
+                    'circle-radius': 5, 'circle-color': '#FF0000', 'circle-opacity': 0.8, 'circle-stroke-width': 1, 'circle-stroke-color': '#FFFFFF'
+                },
+            },
+
             linestring: { type: 'line', paint: { 'line-color': '#00FF00', 'line-width': 2 } },
             polygon: { type: 'fill', paint: { 'fill-color': '#0000FF', 'fill-opacity': 0.5 } }
         };
@@ -306,6 +310,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 $('.dataTables_length select').addClass('custom-select custom-select-sm');
             },
             responsive: false
+        });
+
+        table.on('draw', () => {
+            const filteredData = table.rows({ filter: 'applied' }).data().toArray();
+            addLayerToMap(filteredData, featureType);
         });
 
         $('#dataTable').on('click', '.detail-btn', function (e) {
