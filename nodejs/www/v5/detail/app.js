@@ -15,7 +15,7 @@ const map = new maplibregl.Map({
     container: 'map',
     style: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`,
     center: [0, 0],
-    zoom: 1,
+    zoom: 5,
     pitch: 0,
     antialias: true
 });
@@ -65,8 +65,8 @@ const updateMarker = (coordinates) => {
     const icon = document.getElementById('marker-icon').value || 'M';
 
     if (marker) marker.remove();
-    const markerIcon = createCustomMarkerIcon(color, icon);
-    marker = new maplibregl.Marker({ element: markerIcon, offset })
+    const element = createCustomMarkerIcon(color, icon);
+    marker = new maplibregl.Marker({ element, offset })
         .setLngLat(coordinates)
         .addTo(map);
 };
@@ -227,9 +227,9 @@ const initDraw = (styles, type) => {
     return new MapboxDraw({
         displayControlsDefault: false,
         controls: {
-            point: type === 'Point',
-            line_string: type == 'LineString',
-            polygon: type == 'Polygon',
+            point: type === 'point',
+            line_string: type == 'linestring',
+            polygon: type == 'polygon',
             trash: false
         },
         styles: styles || getCustomStyles()
@@ -239,7 +239,7 @@ const initDraw = (styles, type) => {
 const urlParams = new URLSearchParams(window.location.search);
 const formid = urlParams.get('formid');
 const refid = urlParams.get('refid');
-const type = urlParams.get('type');
+const type = urlParams.get('type').toLowerCase();
 
 if (type == 'Point') {
     document.getElementById('casePoint').style.display = 'block';
