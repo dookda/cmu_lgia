@@ -403,7 +403,7 @@ const initStyle = async (styleData) => {
             if (style.length > 0) {
                 let json = style;
                 document.getElementById('circle-color').value = json[0]?.paint['circle-color'] || '#FF0000';
-                document.getElementById('circle-radius').value = json[0]?.paint['circle-radius'] || 4;
+                document.getElementById('circle-radius').value = json[0]?.paint['circle-radius'] || 5;
                 document.getElementById('circle-stroke-color').value = json[0]?.paint['circle-stroke-color'] || '#FFFFFF';
                 document.getElementById('circle-stroke-width').value = json[0]?.paint['circle-stroke-width'] || 1;
                 document.getElementById('marker-icon').value = json[0]?.metadata?.['marker-icon'] || 'none';

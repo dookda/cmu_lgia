@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const MAP_CONFIG = {
             container: 'map',
             style: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`,
-            center: [0, 0],
+            center: [99.0173, 18.5762],
             zoom: 5,
             pitch: 0,
             antialias: true
