@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 map.setStyle(newStyle);
 
-                // Re-add layers and markers for checked checkboxes
                 checkedLayers.forEach(layer => {
                     getFeatures(layer.formid, layer.layerName, layer.layerType);
                 });
@@ -81,7 +80,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        // Remove markers using object notation
         const removeMarkers = async (formid) => {
             try {
                 markerInstances.forEach(marker => {
@@ -162,7 +160,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 map.getSource(sourceId).setData({ type: 'FeatureCollection', features: geojsonFeatures });
 
                 const layerIds = [];
-                // markerReferences[formid] = [];
 
                 features.forEach(feature => {
                     const geometry = parseGeometry(feature);
@@ -303,23 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        const fetchAPI = async (url, options = {}) => {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: { 'Content-Type': 'application/json', ...options.headers }
-                });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
-                }
-                return response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                return { error: true, message: error.message };
-            }
-        };
-
         const listLayer = async () => {
             try {
                 const response = await fetch('/api/list_layer', {
@@ -363,10 +343,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
+        const fetchAPI = async (url, options = {}) => {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
+                }
+                return response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return { error: true, message: error.message };
+            }
+        };
+
         const getFeatures = async (formid, layerName, featureType) => {
             try {
-                const [columnsData, featuresData] = await Promise.all([
-                    fetchAPI(`/api/v2/load_layer_description/${formid}`),
+                const [featuresData] = await Promise.all([
                     fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
                 ]);
 
@@ -377,10 +373,143 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
+        const addLayerSelect = (checkboxId, checkboxName) => {
+            const layerSelect = document.getElementById('layerSelect');
+            if (![...layerSelect.options].some(opt => opt.value === checkboxId)) {
+                layerSelect.appendChild(new Option(checkboxName, checkboxId));
+            }
+        };
+
+        const removeLayerSelect = (checkboxId) => {
+            const layerSelect = document.getElementById('layerSelect');
+            const option = [...layerSelect.options].find(opt => opt.value === checkboxId);
+            if (option) layerSelect.removeChild(option);
+        }
+
+        const loadColumnList = async (formid) => {
+            try {
+                if ($.fn.DataTable.isDataTable('#table')) {
+                    $('#table').DataTable().destroy();
+                    document.getElementById('table').innerHTML = '';
+                }
+
+                const columnsResponse = await fetch('/api/load_column_description', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ formid }),
+                });
+                const columnsData = await columnsResponse.json();
+
+                const tb = `<th>Zoom</th>` + columnsData.map(i => `<th>${i.col_name}</th>`).join('');
+                const col = [{
+                    "data": "refid",
+                    "title": "Zoom", // Set the column header name to "Zoom"
+                    "render": function (data, type, row) {
+                        return `<button class="btn btn-sm btn-primary zoom-btn" data-refid="${data}">Zoom</button>`;
+                    },
+                    "className": "text-center"
+                }].concat(columnsData.map(i => ({ 'data': i.col_id, })));
+
+                document.getElementById('table').innerHTML = `<thead><tr>${tb}</tr></thead><tbody></tbody>`;
+
+                const layerResponse = await fetch('/api/load_layer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ formid }),
+                });
+                const layerData = await layerResponse.json();
+
+                const table = $('#table').DataTable({
+                    data: layerData,
+                    columns: col,
+                    scrollX: true,
+                    autoWidth: true,
+                });
+
+                // table.on('search.dt', () => {
+                //     const filteredData = table.rows({ search: 'applied' }).data();
+                //     const filteredRefIds = filteredData.toArray().map(row => row.refid);
+
+                //     if (featuresMap[formid]) {
+                //         featuresMap[formid].forEach(feature => {
+                //             const visibility = filteredRefIds.includes(feature) ? 'visible' : 'none';
+                //             map.setLayoutProperty(feature, 'visibility', visibility);
+                //         });
+                //     }
+
+                //     if (markersMap[formid]) {
+                //         markersMap[formid].forEach((marker, index) => {
+                //             const refid = layerData[index].refid;
+                //             if (filteredRefIds.includes(refid)) {
+                //                 marker.getElement().style.display = 'block';
+                //             } else {
+                //                 marker.getElement().style.display = 'none';
+                //             }
+                //         });
+                //     }
+                // });
+
+                $('#table tbody').on('click', '.zoom-btn', function () {
+                    const refid = $(this).data('refid');
+                    zoomToFeature(refid, formid, layerData);
+                });
+
+                currentFormId = formid;
+            } catch (error) {
+                console.error('Failed to load column list:', error);
+            }
+        };
+
+        const zoomToFeature = (refid, formid, featureData) => {
+            const feature = featureData.find(f => f.refid === refid);
+            if (!feature || !feature.geojson) return;
+
+            const data = JSON.parse(feature.geojson);
+            let popupContent = `<strong>Reference ID:</strong> ${refid}<br>`;
+
+            Object.entries(feature).forEach(([key, value]) => {
+                if (key !== 'geojson' && key !== 'refid') {
+                    popupContent += `<strong>${key}:</strong> ${value}<br>`;
+                }
+            });
+
+            if (data.type === 'Point') {
+                map.flyTo({
+                    center: data.coordinates,
+                    zoom: 18,
+                    essential: true
+                });
+
+                new maplibregl.Popup({ offset: 25 })
+                    .setLngLat(data.coordinates)
+                    .setHTML(popupContent)
+                    .addTo(map);
+
+            } else if (data.type === 'Polygon' || data.type === 'LineString') {
+                const bbox = turf.bbox(data);
+                map.fitBounds(bbox, { padding: 50 });
+
+                const center = turf.centerOfMass(data).geometry.coordinates;
+
+                new maplibregl.Popup({ offset: 25 })
+                    .setLngLat(center)
+                    .setHTML(popupContent)
+                    .addTo(map);
+            }
+        };
+
         await listLayer();
 
         document.getElementById('baseMapSelector').addEventListener('change', (e) => {
             updateBaseMap(e.target.value);
+        });
+
+        document.getElementById('layerSelect').addEventListener('change', event => {
+            loadColumnList(event.target.value);
         });
 
         document.getElementById('layerList').addEventListener('change', event => {
@@ -394,9 +523,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (checkbox.checked) {
                 checkedLayers.push({ formid: checkbox.id, layerName, layerType });
                 getFeatures(checkbox.id, layerName, layerType);
+                addLayerSelect(checkbox.id, layerName);
             } else {
                 checkedLayers = checkedLayers.filter(layer => layer.formid !== checkbox.id);
                 removeFeatures(checkbox.id);
+                removeLayerSelect(checkbox.id);
             }
         });
 
