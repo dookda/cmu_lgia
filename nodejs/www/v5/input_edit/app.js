@@ -78,6 +78,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
+        const defaultLayerConfigs = {
+            point: {
+                type: 'circle',
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': '#FF0000',
+                    'circle-opacity': 0.8,
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#FFFFFF'
+                }
+            },
+            linestring: {
+                type: 'line',
+                paint: { 'line-color': '#00FF00', 'line-width': 2 }
+            },
+            polygon: {
+                type: 'fill',
+                paint: { 'fill-color': '#0000FF', 'fill-opacity': 0.5 }
+            }
+        };
+
         const addLayerToMap = (features, featureType) => {
             try {
                 const sourceId = 'features-source';
@@ -89,27 +110,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         data: { type: 'FeatureCollection', features: [] }
                     });
                 }
-
-                const defaultLayerConfigs = {
-                    point: {
-                        type: 'circle',
-                        paint: {
-                            'circle-radius': 5,
-                            'circle-color': '#FF0000',
-                            'circle-opacity': 0.8,
-                            'circle-stroke-width': 1,
-                            'circle-stroke-color': '#FFFFFF'
-                        }
-                    },
-                    linestring: {
-                        type: 'line',
-                        paint: { 'line-color': '#00FF00', 'line-width': 2 }
-                    },
-                    polygon: {
-                        type: 'fill',
-                        paint: { 'fill-color': '#0000FF', 'fill-opacity': 0.5 }
-                    }
-                };
 
                 // Convert features to GeoJSON format
                 const geojsonFeatures = features.map(feature => createGeoJSONFeature(feature));
