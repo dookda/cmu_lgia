@@ -302,21 +302,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const listLayer = async () => {
             try {
-                const response = await fetch('/api/list_layer', {
+                const response_division = await fetch('/api/v2/divisions', { method: 'GET' });
+                if (!response_division.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data_division = await response_division.json();
+                document.getElementById('divisionCount').textContent = data_division.length + ' หน่วยงาน';
+
+                const response_layer = await fetch('/api/list_layer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                if (!response_layer.ok) {
+                    throw new Error('Network response_layer was not ok');
                 }
 
-                const data = await response.json();
+                const data_layer = await response_layer.json();
+                document.getElementById('layerCount').textContent = data_layer.length + ' ชั้นข้อมูล';
+
                 const layerList = document.getElementById('layerList');
 
-                layerList.innerHTML = data.map(layer => `
+                layerList.innerHTML = data_layer.map(layer => `
                     <li class="list-group-item d-flex align-items-center">
                         <input type="checkbox" id="${layer.formid}" layername="${layer.layername}" layertype="${layer.layertype}" class="form-check-input me-2 checkbox">
                         <label for="${layer.formid}" class="form-check-label stretched-link">${layer.layername}</label>
@@ -363,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const getFeatures = async (formid, layerName, featureType) => {
             try {
                 const [featuresData] = await Promise.all([
-                    fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
+                    fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) }),
                 ]);
 
                 addLayerToMap(featuresData, featureType, formid);
@@ -430,29 +439,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     autoWidth: true,
                 });
 
-                // table.on('search.dt', () => {
-                //     const filteredData = table.rows({ search: 'applied' }).data();
-                //     const filteredRefIds = filteredData.toArray().map(row => row.refid);
-
-                //     if (featuresMap[formid]) {
-                //         featuresMap[formid].forEach(feature => {
-                //             const visibility = filteredRefIds.includes(feature) ? 'visible' : 'none';
-                //             map.setLayoutProperty(feature, 'visibility', visibility);
-                //         });
-                //     }
-
-                //     if (markersMap[formid]) {
-                //         markersMap[formid].forEach((marker, index) => {
-                //             const refid = layerData[index].refid;
-                //             if (filteredRefIds.includes(refid)) {
-                //                 marker.getElement().style.display = 'block';
-                //             } else {
-                //                 marker.getElement().style.display = 'none';
-                //             }
-                //         });
-                //     }
-                // });
-
                 $('#table tbody').on('click', '.zoom-btn', function () {
                     const refid = $(this).data('refid');
                     zoomToFeature(refid, formid, layerData);
@@ -461,6 +447,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentFormId = formid;
             } catch (error) {
                 console.error('Failed to load column list:', error);
+            }
+        };
+
+        let popup = null; // Store the popup instance globally
+
+        const togglePopup = (data, popupContent) => {
+            // If a popup already exists, remove it and set the variable to null
+            if (popup) {
+                popup.remove();
+                popup = null;
+                // return; 
+            }
+
+            // Create and add a new popup
+            if (data.type === 'Point') {
+                map.flyTo({
+                    center: data.coordinates,
+                    zoom: 18,
+                    essential: true
+                });
+
+                popup = new maplibregl.Popup({ offset: 10 })
+                    .setLngLat(data.coordinates)
+                    .setHTML(popupContent)
+                    .addTo(map);
+
+            } else if (data.type === 'Polygon' || data.type === 'LineString') {
+                const bbox = turf.bbox(data);
+                map.fitBounds(bbox, { padding: 50 });
+
+                const center = turf.centerOfMass(data).geometry.coordinates;
+
+                popup = new maplibregl.Popup({ offset: 10 })
+                    .setLngLat(center)
+                    .setHTML(popupContent)
+                    .addTo(map);
             }
         };
 
@@ -477,29 +499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            if (data.type === 'Point') {
-                map.flyTo({
-                    center: data.coordinates,
-                    zoom: 18,
-                    essential: true
-                });
-
-                new maplibregl.Popup({ offset: 25 })
-                    .setLngLat(data.coordinates)
-                    .setHTML(popupContent)
-                    .addTo(map);
-
-            } else if (data.type === 'Polygon' || data.type === 'LineString') {
-                const bbox = turf.bbox(data);
-                map.fitBounds(bbox, { padding: 50 });
-
-                const center = turf.centerOfMass(data).geometry.coordinates;
-
-                new maplibregl.Popup({ offset: 25 })
-                    .setLngLat(center)
-                    .setHTML(popupContent)
-                    .addTo(map);
-            }
+            togglePopup(data, "popupContent")
         };
 
         await listLayer();

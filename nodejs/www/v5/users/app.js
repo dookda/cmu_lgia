@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 data: "id",
                 render: function (data) {
                     return `
-                        <button class="btn btn-warning edit-btn" data-id="${data}">แก้ไข</button>
+                        <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
                         <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
                     `;
                 },

@@ -1,24 +1,27 @@
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async () => {
+    const response_division = await fetch('/api/v2/divisions', { method: 'GET' });
+    if (!response_division.ok) {
+        throw new Error('Network response was not ok');
+    }
+    const data_division = await response_division.json();
+
+    document.getElementById('divisionCount').textContent = data_division.length + ' หน่วยงาน';
+
     const table = $('#divisionTable').DataTable({
-        ajax: {
-            url: '/api/v2/divisions',
-            dataSrc: '',
-        },
+        data: data_division,
         columns: [
             {
                 data: 'id',
                 render: function (data) {
-                    // console.log(data);
-
-                    return `<button class="btn btn-warning edit-btn" data-id="${data}">แก้ไข</button>
+                    return `<button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
                             <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>`;
                 },
             },
             { data: 'id' },
             { data: 'division_name' },
             {
-                data: "created_at",
+                data: 'created_at',
                 render: function (data) {
                     const date = new Date(data);
                     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -49,8 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             if (response.ok) {
-                $('#division').val(''); // Clear input
-                table.ajax.reload(); // Refresh datatable
+                $('#division').val('');
+                table.ajax.reload();
             } else {
                 const errorData = await response.json();
                 alert(`Error: ${errorData.error}`);

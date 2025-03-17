@@ -241,6 +241,42 @@
                         <div class="nk-content-body">
                             <div class="nk-block">
                                 <div class="row g-gs">
+                                    <div class="col-xxl-6 col-lg-6">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <div class="card-title-group">
+                                                    <div class="card-title ">
+                                                        <h6 class="title f">ระบบภูมิสารสนเทศชุมชน</h6>
+                                                        <label class="f">Local Geo-Info Application: LGIA</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-lg-3">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <div class="card-title-group">
+                                                    <div class="card-title">
+                                                        <label class="f">จำนวนชั้นข้อมูล</label>
+                                                        <h6 class="title f" id="layerCount"></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-3 col-lg-3">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <div class="card-title-group">
+                                                    <div class="card-title">
+                                                        <label class="f">จำนวนหน่วยงาน</label>
+                                                        <h6 class="title f" id="divisionCount"></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="col-xxl-8 col-lg-8">
                                         <div class="card card-full" id="map"
                                             style="height: 500px; width: 100%; margin: 0px !important;">
@@ -249,20 +285,8 @@
                                     <div class="col-xxl-4 col-lg-4">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <div class="card-title-group">
-                                                    <div class="card-title">
-                                                        <h6 class="title">Top Channels</h6>
-                                                    </div>
-                                                    <div class="card-tools">
-                                                        <a href="#" class="link">View All</a>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="card-inner py-0 mt-n2">
-                                                <div>
-                                                    <label for="layerToggle"
-                                                        class="form-label"></label>เลือกแผนที่ฐาน</label>
+                                                <div class="form-group mb-3">
+                                                    <label class="form-label">เลือกแผนที่ฐาน</label>
                                                     <select class="form-select" id="baseMapSelector">
                                                         <option value="maptiler">Maptiler 3D</option>
                                                         <option value="osm" selected>OpenStreetMap</option>
@@ -272,15 +296,13 @@
                                                     </select>
                                                 </div>
 
-                                                <hr>
-                                                <div>
-                                                    <h6>หน่วยงาน: สำนักงานพัฒนาชุมชน</h6>
+                                                <div class="form-group">
+                                                    <label class="form-label">ชื่อชั้นข้อมูล</label>
                                                     <div class="side-panel">
                                                         <ul class="list-group" id="layerList" role="tablist"></ul>
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div><!-- .card -->
                                     </div><!-- .col -->
                                     <div class="col-xxl-8">
@@ -300,24 +322,17 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-4 mt-2">
-                                                                <input class="form-control" type="text"
+                                                                <!-- <input class="form-control" type="text"
                                                                     name="select-col" id="select-col"
-                                                                    placeholder="เลือกคอลัมน์">
+                                                                    placeholder="เลือกคอลัมน์"> -->
                                                             </div>
                                                             <div class="col-md-4 mt-2">
-                                                                <input class="form-control" type="text" name="keyword"
-                                                                    id="keyword" placeholder="ค่าที่ต้องการค้น">
+                                                                <!-- <input class="form-control" type="text" name="keyword"
+                                                                    id="keyword" placeholder="ค่าที่ต้องการค้น"> -->
                                                             </div>
-
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-8">
-                                        <div class="card card-full">
-                                            <div class="card-inner">
                                                 <table id="table" class="display nowrap">
                                                     <thead></thead>
                                                     <tbody></tbody>

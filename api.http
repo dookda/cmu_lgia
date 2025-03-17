@@ -84,3 +84,16 @@ Content-Type: application/json
 {
     "formid": "fid_1724646615775"
 }
+
+
+### sribeuban token 7613191932:AAGv9bQPR-tYeQfYwLygY6f0dqoYxD5i-08
+GET  https://api.telegram.org/bot7613191932:AAGv9bQPR-tYeQfYwLygY6f0dqoYxD5i-08/getUpdates
+
+### 
+POST https://api.telegram.org/bot7613191932:AAGv9bQPR-tYeQfYwLygY6f0dqoYxD5i-08/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-4727728563",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ Sribeuban ทดสอบ 3"
+}

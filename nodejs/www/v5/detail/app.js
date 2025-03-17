@@ -241,20 +241,6 @@ const formid = urlParams.get('formid');
 const refid = urlParams.get('refid');
 const type = urlParams.get('type').toLowerCase();
 
-if (type == 'Point') {
-    document.getElementById('casePoint').style.display = 'block';
-    document.getElementById('caseLine').style.display = 'none';
-    document.getElementById('casePolygon').style.display = 'none';
-} else if (type == 'LineString') {
-    document.getElementById('casePoint').style.display = 'none';
-    document.getElementById('caseLine').style.display = 'block';
-    document.getElementById('casePolygon').style.display = 'none';
-} else if (type == 'Polygon') {
-    document.getElementById('casePoint').style.display = 'none';
-    document.getElementById('caseLine').style.display = 'block';
-    document.getElementById('casePolygon').style.display = 'block';
-}
-
 const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
     "university", "school", "coffee", "cutlery", "glass", "beer", "ambulance", "car", "bus", "train", "subway", "taxi", "bicycle", "motorcycle", "ship", "plane",
     "helicopter", "fire-extinguisher", "anchor", "globe", "institution", "hotel", "bed", "graduation-cap", "truck", "shipping-fast", "rocket", "satellite-dish",
@@ -326,6 +312,8 @@ strokeWidthInput.addEventListener('change', updateSVGCircle);
 
 function togglePanel() {
     try {
+        console.log('Toggling panel...');
+
         const selectedPanel = document.querySelector('input[name="panel"]:checked').value;
         if (selectedPanel === 'circle') {
             document.getElementById('circle-panel').style.display = 'block';
@@ -536,6 +524,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         map.addControl(draw);
 
         loadFeature(featuresData, draw);
+
+        console.log('Type:', type);
+
+
+        if (type == 'point') {
+            document.getElementById('casePoint').style.display = 'block';
+            document.getElementById('caseLine').style.display = 'none';
+            document.getElementById('casePolygon').style.display = 'none';
+        } else if (type == 'linestring') {
+            document.getElementById('casePoint').style.display = 'none';
+            document.getElementById('caseLine').style.display = 'block';
+            document.getElementById('casePolygon').style.display = 'none';
+        } else if (type == 'polygon') {
+            document.getElementById('casePoint').style.display = 'none';
+            document.getElementById('caseLine').style.display = 'block';
+            document.getElementById('casePolygon').style.display = 'block';
+        }
 
         togglePanel();
 
