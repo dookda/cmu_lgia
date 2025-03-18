@@ -31,7 +31,10 @@ app.use(session({
 
 function ensureAuthenticated(req, res, next) {
     if (!req.session.user) {
-        return res.redirect('/authen/?error=login_required');
+        return res.json({
+            success: false,
+            message: 'Unauthorized'
+        });
     }
     next();
 }
@@ -128,7 +131,7 @@ app.get('/auth/line/callback', async (req, res) => {
             pictureUrl: userProfile.pictureUrl
         };
 
-        res.redirect('/authen/profile.html');
+        res.redirect('/v2/dashboard');
     } catch (error) {
         console.error('Authentication error:', error.message);
         res.redirect('/authen/?error=auth_failed');
@@ -136,7 +139,7 @@ app.get('/auth/line/callback', async (req, res) => {
 });
 
 app.get('/auth/profile', ensureAuthenticated, (req, res) => {
-    res.json({
+    res.status(200).json({
         success: true,
         user: req.session.user
     });
@@ -158,7 +161,11 @@ app.get('/auth/products', ensureAuthenticated, (req, res) => {
 // Logout route
 app.get('/auth/logout', (req, res) => {
     req.session.destroy();
-    res.redirect('/authen');
+    // res.redirect('/authen');
+    res.json({
+        success: true,
+        message: 'Logged out successfully'
+    });
 });
 
 app.get('/auth/debug-session', (req, res) => {

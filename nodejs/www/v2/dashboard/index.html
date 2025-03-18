@@ -200,33 +200,37 @@
                                         <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                             <div class="user-toggle">
-                                                <div class="user-avatar sm">
-                                                    <em class="icon ni ni-user-alt"></em>
-                                                </div>
+                                                <div class="user-avatar sm" id="userAvatarS"></div>
                                             </div>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-md dropdown-menu-end">
-                                            <div class="dropdown-inner user-card-wrap bg-lighter d-none d-md-block">
+                                            <div class="dropdown-inner user-card-wrap bg-lighter" id="userDetail">
                                                 <div class="user-card">
-                                                    <div class="user-avatar">
-                                                        <span>AB</span>
-                                                    </div>
+                                                    <div class="user-avatar" id="userAvatarL"></div>
                                                     <div class="user-info">
-                                                        <span class="lead-text">Abu Bin Ishtiyak</span>
-                                                        <span class="sub-text">info@softnio.com</span>
+                                                        <span class="lead-text" id="displayName"></span>
+                                                        <!-- <span class="sub-text" id="userId"></span> -->
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="dropdown-inner">
+                                            <div class="dropdown-inner" id="userProfile">
                                                 <ul class="link-list">
-                                                    <li><a class="btn-getstarted"
-                                                            href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2007071296&redirect_uri=https://7552-1-10-132-142.ngrok-free.app/v5/dashboard/index.html&state=12345abcde&scope=profile%20openid&nonce=09876xyz">เข้าสู่ระบบ</a>
+                                                    <li>
+                                                        <a href="./../register/">ข้อมูลส่วนตัว</a>
                                                     </li>
                                                 </ul>
                                             </div>
-                                            <div class="dropdown-inner">
+                                            <div class="dropdown-inner" id="lineLogin">
                                                 <ul class="link-list">
-                                                    <li><a href="#"><em class="icon ni ni-signout"></em><span>Sign
+                                                    <li class="in-line"><img src="./../images/icons8-line.svg" alt=""><a
+                                                            href="/auth/login">Login ด้วย LINE</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="dropdown-inner" id="lineLogout">
+                                                <ul class="link-list">
+                                                    <li><a href="#" id="logout"><em
+                                                                class="icon ni ni-signout"></em><span>Sign
                                                                 out</span></a></li>
                                                 </ul>
                                             </div>
