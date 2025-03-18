@@ -2,19 +2,103 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>Product Page</title>
+    <title>Products</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            text-decoration: none;
+            background: #00c300;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .product {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px;
+            width: 200px;
+        }
+
+        .profile {
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 50px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Exclusive Product Details</h1>
-    <p>Welcome! Only logged-in users can see this product page.</p>
-    <ul>
-        <li>Product A: $10</li>
-        <li>Product B: $20</li>
-        <li>Product C: $30</li>
-    </ul>
-    <p><a href="/authen/logout">Logout</a></p>
+    <div class="container">
+        <h1>Our Products</h1>
+        <div id="profile" class="profile"></div>
+        <div id="products"></div>
+        <a href="/authen/profile.html" class="btn">Back to Profile</a>
+        <a href="/auth/logout" class="btn">Logout</a>
+    </div>
+
+    <script>
+        async function loadPageData() {
+            try {
+                // Fetch user profile
+                const profileResponse = await fetch('/auth/profile');
+                if (!profileResponse.ok) {
+                    throw new Error('Profile fetch failed');
+                }
+                const profileData = await profileResponse.json();
+
+                // Fetch products
+                const productsResponse = await fetch('/auth/products');
+                if (!productsResponse.ok) {
+                    throw new Error('Products fetch failed');
+                }
+                const productsData = await productsResponse.json();
+
+                // Display profile
+                const profileDiv = document.getElementById('profile');
+                profileDiv.innerHTML = `
+                    <img src="${profileData.user.pictureUrl}" class="profile-pic" alt="Profile Picture">
+                    <span>Welcome, ${profileData.user.displayName}!</span>
+                `;
+
+                // Display products
+                const productsDiv = document.getElementById('products');
+                productsDiv.innerHTML = '<div class="product-list">' +
+                    productsData.products.map(product => `
+                        <div class="product">
+                            <h3>${product.name}</h3>
+                            <p>Price: $${product.price.toFixed(2)}</p>
+                        </div>
+                    `).join('') +
+                    '</div>';
+            } catch (error) {
+                console.error('Error loading page data:', error);
+                window.location.href = '/authen?error=login_required';
+            }
+        }
+
+        loadPageData();
+    </script>
 </body>
 
 </html>

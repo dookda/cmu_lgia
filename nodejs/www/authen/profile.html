@@ -2,14 +2,67 @@
 <html>
 
 <head>
-    <meta charset="UTF-8" />
     <title>Profile</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            text-decoration: none;
+            background: #00c300;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .profile-pic {
+            width: 100px;
+            border-radius: 50%;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Your Profile</h1>
-    <p>This page is protected and only visible to authenticated users.</p>
-    <p><a href="/authen/logout">Logout</a></p>
+    <div class="container">
+        <h1>User Profile</h1>
+        <div id="profile"></div>
+        <a href="/authen/product.html" class="btn">View Products</a>
+        <a href="/auth/logout" class="btn">Logout</a>
+    </div>
+
+    <script>
+        async function loadProfile() {
+            try {
+                const response = await fetch('/auth/profile');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    window.location.href = '/authen';
+                    return;
+                }
+
+                const profileDiv = document.getElementById('profile');
+                profileDiv.innerHTML = `
+                    <img src="${data.user.pictureUrl}" class="profile-pic" alt="Profile Picture">
+                    <p>Name: ${data.user.displayName}</p>
+                    <p>User ID: ${data.user.userId}</p>
+                `;
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                window.location.href = '/authen';
+            }
+        }
+
+        loadProfile();
+    </script>
 </body>
 
 </html>
