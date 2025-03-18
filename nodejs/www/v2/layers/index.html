@@ -185,30 +185,6 @@
                                                             <div class="nk-notification-time">Just now</div>
                                                         </div>
                                                     </div>
-                                                    <div class="nk-notification-item dropdown-inner">
-                                                        <div class="nk-notification-icon">
-                                                            <em class="icon icon-circle bg-info-dim ni ni-edit"></em>
-                                                        </div>
-                                                        <div class="nk-notification-content">
-                                                            <div class="nk-notification-text">Iliash
-                                                                <span>invited</span> you to edit <span>DashLite</span>
-                                                                folder
-                                                            </div>
-                                                            <div class="nk-notification-time">2 hrs ago</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="nk-notification-item dropdown-inner">
-                                                        <div class="nk-notification-icon">
-                                                            <em
-                                                                class="icon icon-circle bg-primary-dim ni ni-share"></em>
-                                                        </div>
-                                                        <div class="nk-notification-content">
-                                                            <div class="nk-notification-text">You have shared
-                                                                <span>project v2</span> with Parvez.
-                                                            </div>
-                                                            <div class="nk-notification-time">7 days ago</div>
-                                                        </div>
-                                                    </div>
                                                 </div><!-- .nk-notification -->
                                             </div>
                                         </div>
@@ -218,36 +194,37 @@
                                         <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown"
                                             aria-expanded="false">
                                             <div class="user-toggle">
-                                                <div class="user-avatar sm">
-                                                    <em class="icon ni ni-user-alt"></em>
-                                                </div>
+                                                <div class="user-avatar sm" id="userAvatarS"></div>
                                             </div>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-md dropdown-menu-end">
-                                            <div class="dropdown-inner user-card-wrap bg-lighter d-none d-md-block">
+                                            <div class="dropdown-inner user-card-wrap bg-lighter" id="userDetail">
                                                 <div class="user-card">
-                                                    <div class="user-avatar">
-                                                        <span>AB</span>
-                                                    </div>
+                                                    <div class="user-avatar" id="userAvatarL"></div>
                                                     <div class="user-info">
-                                                        <span class="lead-text">Abu Bin Ishtiyak</span>
-                                                        <span class="sub-text">info@softnio.com</span>
+                                                        <span class="lead-text" id="displayName"></span>
+                                                        <!-- <span class="sub-text" id="userId"></span> -->
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="dropdown-inner">
+                                            <div class="dropdown-inner" id="userProfile">
                                                 <ul class="link-list">
-                                                    <li><a href="html/user-profile-regular.html"><em
-                                                                class="icon ni ni-user-alt"></em><span>View
-                                                                Profile</span></a></li>
-                                                    <li><a href="html/user-profile-setting.html"><em
-                                                                class="icon ni ni-setting-alt"></em><span>Account
-                                                                Setting</span></a></li>
+                                                    <li>
+                                                        <a href="./../register/">ข้อมูลส่วนตัว</a>
+                                                    </li>
                                                 </ul>
                                             </div>
-                                            <div class="dropdown-inner">
+                                            <div class="dropdown-inner" id="lineLogin">
                                                 <ul class="link-list">
-                                                    <li><a href="#"><em class="icon ni ni-signout"></em><span>Sign
+                                                    <li class="in-line"><img src="./../images/icons8-line.svg" alt=""><a
+                                                            href="/auth/login">Login ด้วย LINE</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="dropdown-inner" id="lineLogout">
+                                                <ul class="link-list">
+                                                    <li><a href="#" id="logout"><em
+                                                                class="icon ni ni-signout"></em><span>Sign
                                                                 out</span></a></li>
                                                 </ul>
                                             </div>

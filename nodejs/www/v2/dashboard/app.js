@@ -526,10 +526,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 console.error('Error loading profile:', error);
             }
-        }
+        };
 
         await loadUserProfile();
-
         await listLayer();
 
         document.getElementById('logout').addEventListener('click', async () => {
