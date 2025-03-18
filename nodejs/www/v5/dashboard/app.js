@@ -504,6 +504,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await listLayer();
 
+        // get parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+            const response = await fetch('/api/v2/auth/' + code, {
+                method: 'GET'
+            });
+
+            // if (!response.ok) {
+            //     throw new Error('Network response was not ok');
+            // }
+
+            const data = await response.json();
+            console.log(data);
+        }
+
         document.getElementById('baseMapSelector').addEventListener('change', (e) => {
             updateBaseMap(e.target.value);
         });

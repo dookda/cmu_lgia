@@ -8,7 +8,7 @@
     <meta name="description"
         content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
     <!-- Fav Icon  -->
-    <link rel="shortcut icon" href="./images/favicon.png">
+    <link rel="shortcut icon" href="./../images/favicon.png">
     <!-- Page Title  -->
     <title>Local Geo-Info Application</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +55,7 @@
                         <a href="#" class="nk-nav-toggle nk-quick-nav-icon d-xl-none" data-target="sidebarMenu"><em
                                 class="icon ni ni-arrow-left"></em></a>
                     </div>
-                </div>
+                </div><!-- .nk-sidebar-element -->
                 <div class="nk-sidebar-element">
                     <div class="nk-sidebar-content">
                         <div class="nk-sidebar-menu" data-simplebar="init">
@@ -69,8 +69,9 @@
                                             aria-label="scrollable content" style="height: 100%; overflow: hidden;">
                                             <div class="simplebar-content" style="padding: 16px 0px 40px;">
                                                 <ul class="nk-menu">
+
                                                     <li class="nk-menu-item active">
-                                                        <a href="./index.html" class="nk-menu-link">
+                                                        <a href="./../dashboard/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
                                                                     class="icon ni ni-presentation"></em></span>
                                                             <span class="nk-menu-text">รายงาน</span>
@@ -96,7 +97,8 @@
                                                                     class="icon ni ni-layers"></em></span>
                                                             <span class="nk-menu-text">รายการข้อมูล</span>
                                                         </a>
-                                                    </li>
+                                                    </li><!-- .nk-menu-item -->
+
                                                     <li class="nk-menu-item">
                                                         <a href="./../input_division/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
@@ -110,7 +112,7 @@
                                                                     class="icon ni ni-users"></em></span>
                                                             <span class="nk-menu-text">ผู้ใช้งาน</span>
                                                         </a>
-                                                    </li>
+                                                    </li><!-- .nk-menu-item -->
                                                     <li class="nk-menu-item">
                                                         <a href="./../input_edit/index.html" class="nk-menu-link">
                                                             <span class="nk-menu-icon"><em
@@ -118,7 +120,8 @@
                                                             <span class="nk-menu-text">คู่มือการใช้งาน</span>
                                                         </a>
                                                     </li>
-                                                </ul>
+
+                                                </ul><!-- .nk-menu -->
                                             </div>
                                         </div>
                                     </div>
@@ -132,9 +135,9 @@
                                 <div class="simplebar-scrollbar simplebar-visible"
                                     style="height: 0px; transform: translate3d(0px, 21px, 0px); display: none;"></div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </div><!-- .nk-sidebar-menu -->
+                    </div><!-- .nk-sidebar-content -->
+                </div><!-- .nk-sidebar-element -->
             </div>
             <div class="nk-wrap ">
                 <!-- main header @s -->
@@ -216,9 +219,9 @@
                                             </div>
                                             <div class="dropdown-inner">
                                                 <ul class="link-list">
-                                                    <li><a href="html/user-profile-regular.html"><em
-                                                                class="icon ni ni-user-alt"></em><span>View
-                                                                Profile</span></a></li>
+                                                    <li><a class="btn-getstarted"
+                                                            href="https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2007071296&redirect_uri=https://7552-1-10-132-142.ngrok-free.app/v5/dashboard/index.html&state=12345abcde&scope=profile%20openid&nonce=09876xyz">เข้าสู่ระบบ</a>
+                                                    </li>
                                                 </ul>
                                             </div>
                                             <div class="dropdown-inner">
@@ -361,12 +364,12 @@
         </div>
     </div>
     <!-- boostrap -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        crossorigin="anonymous"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
         integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script>
+        crossorigin="anonymous"></script> -->
 
     <!-- datatable -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>

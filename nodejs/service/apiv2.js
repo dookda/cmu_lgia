@@ -17,12 +17,7 @@ const upload = multer({ dest: 'uploads/' });
 
 const picture = multer({ dest: 'picture/' });
 
-const sharp = require('sharp');
-const SVGBuilder = require('svg-builder');
-const path = require('path');
-
-app.use(cors());
-app.use(express.json());
+const qs = require('qs');
 
 // PostgreSQL connection
 const pool = new Pool({
@@ -33,7 +28,154 @@ const pool = new Pool({
     port: process.env.PG_PORT
 });
 
-function isValidTableName(tableName) {
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/v2/auth/:code', async (req, res) => {
+    const { code } = req.params;
+
+    if (!code) {
+        return res.status(400).send('Code parameter is missing');
+    }
+
+    const data = qs.stringify({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: 'http://localhost:3000/v5/dashboard/index.html',
+        client_id: process.env.LINE_CHANNEL_ID,
+        client_secret: process.env.LINE_CHANNEL_SECRET,
+    });
+
+    try {
+        // Step 1: Get access token using Fetch API
+        const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: data,
+        });
+
+        if (!tokenResponse.ok) {
+            throw new Error(`Failed to fetch access token: ${tokenResponse.statusText}`);
+        }
+
+        const tokenData = await tokenResponse.json();
+        const accessToken = tokenData.access_token;
+
+        // Step 2: Get user profile using Fetch API
+        const profileResponse = await fetch('https://api.line.me/v2/profile', {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        if (!profileResponse.ok) {
+            throw new Error(`Failed to fetch user profile: ${profileResponse.statusText}`);
+        }
+
+        const profileData = await profileResponse.json();
+        const { userId, displayName, pictureUrl } = profileData;
+
+        console.log(userId);
+
+        // Step 3: Insert or update user in the database
+        const query = `
+            INSERT INTO tb_user (userid, ts) 
+            VALUES ($1, CURRENT_TIMESTAMP) 
+            ON CONFLICT (userid) 
+            DO UPDATE SET ts = CURRENT_TIMESTAMP 
+            RETURNING *;
+        `;
+
+        await pool.query(query, [userId]);
+
+        // Step 4: Generate JWT and set it as a cookie
+        const token = jwt.sign({ userId, displayName, pictureUrl }, process.env.JWT_SECRET, { expiresIn: '5m' });
+
+        res.cookie('jwt', token, { httpOnly: true, secure: false });
+        res.redirect('https://7552-1-10-132-142.ngrok-free.app/dashboard');
+        res.status(200).json({ message: 'User logged in successfully', user: { userId, displayName, pictureUrl } });
+
+    } catch (error) {
+        console.error('Error occurred:', error.message);
+        res.status(500).send('Error occurred while processing the request');
+    }
+});
+
+const verifyJWT = (req, res, next) => {
+    const token = req.cookies && req.cookies.jwt;
+
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided. Please log in.' });
+    }
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: 'Failed to authenticate token.' });
+        }
+        req.user = decoded;
+        next();
+    });
+};
+
+app.get('/api/v2/auth/profile', verifyJWT, (req, res) => {
+    res.status(200).json({ message: 'User is logged in', user: req.user });
+});
+
+app.get('/api/v2/auth/logout', (req, res) => {
+    res.clearCookie('jwt');
+    res.status(200).json({ message: 'Logged out successfully' });
+});
+
+// app.post('/api/v2/users', verifyJWT, async (req, res) => {
+//     const { userid, username, pictureurl } = req.body;
+//     console.log(userid, username, pictureurl);
+//     try {
+//         const result = await pool.query(
+//             `SELECT * FROM users`
+//         );
+//         res.json(result.rows);
+//     } catch (err) {
+//         res.status(500).send('Server Error');
+//     }
+// });
+
+app.post('/api/v2/register', async (req, res) => {
+    const {
+        userid,
+        firstName,
+        lastName,
+        gender,
+        birthdate,
+        phone,
+        email,
+        occupation,
+        organizationName,
+        subDistrict,
+        district,
+        province,
+        otherOccupation,
+    } = req.body;
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO users (userid, first_name, last_name, gender, birthdate, phone, email, occupation, organization_name, sub_district, district, province, other_occupation)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+            [userid, firstName, lastName, gender, birthdate, phone, email, occupation, organizationName, subDistrict, district, province, otherOccupation]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
+
+const isValidTableName = (tableName) => {
     return /^[a-zA-Z0-9_]+$/.test(tableName);
 }
 
