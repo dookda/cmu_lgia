@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         e.stopPropagation();
                         const refid = $(this).data('refid');
                         const type = $(this).data('type');
-                        window.open(`/v5/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
+                        window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
                     } catch (error) {
                         console.error('Error in detail-btn click event:', error);
                     }
@@ -678,7 +678,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const refid = document.getElementById('refid').value;
                     const type = document.getElementById('type').value;
-                    window.open(`/v5/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
+                    window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
                 } catch (error) {
                     console.error('Error in btn-edit click event:', error);
                 }

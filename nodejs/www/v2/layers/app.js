@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const formid = this.getAttribute('data-formid');
                 const type = this.getAttribute('data-type');
 
-                window.location.href = `/v5/input_edit/index.html?formid=${formid}&type=${type}`;
+                window.location.href = `/v2/input_edit/index.html?formid=${formid}&type=${type}`;
             });
         })
         .catch(error => {
