@@ -15,6 +15,15 @@ a {
     font-family: "Noto Sans Thai", serif !important;
 }
 
+.in-line {
+    display: flex;
+    align-items: center;
+}
+
+.in-line img {
+    margin-right: 8px;
+}
+
 .btn {
     font-family: "Noto Sans Thai", serif !important;
 }

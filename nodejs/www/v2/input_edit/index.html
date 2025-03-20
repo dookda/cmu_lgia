@@ -210,8 +210,8 @@
                                             <div class="dropdown-inner" id="lineLogout">
                                                 <ul class="link-list">
                                                     <li><a href="#" id="logout"><em
-                                                                class="icon ni ni-signout"></em><span>Sign
-                                                                out</span></a></li>
+                                                                class="icon ni ni-signout"></em><span>ออกจากระบบ</span></a>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -226,56 +226,63 @@
                         <div class="nk-content-body">
                             <div class="nk-block">
                                 <div class="row g-gs">
-                                    <div class="col-xxl-8 col-lg-8">
+                                    <div class="col-xxl-7 col-lg-7">
                                         <div class="card card-full" id="map"
                                             style="height: 500px; width: 100%; margin: 0px !important;">
                                         </div><!-- .card -->
                                     </div><!-- .col -->
-                                    <div class="col-xxl-4 col-lg-4">
+                                    <div class="col-xxl-5 col-lg-5">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <div class="card-title-group">
-                                                    <div class="card-title">
-                                                        <h6 class="title">Top Channels</h6>
+                                                <ul class="nav nav-tabs">
+                                                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
+                                                            href="#tabBasemap"><em
+                                                                class="icon ni ni-map"></em><span>แผนที่ฐาน</span></a>
+                                                    </li>
+                                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
+                                                            href="#tabSearchLatLng"><em
+                                                                class="icon ni ni-search"></em><span>ค้นหา</span></a>
+                                                    </li>
+                                                    <!-- <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
+                                                            href="#tabStyleForm"><em
+                                                                class="icon ni ni-color-palette"></em><span>แก้ไขสัญลักษณ์</span></a>
+                                                    </li> -->
+                                                </ul>
+                                                <div class="tab-content">
+                                                    <div class="tab-pane active" id="tabBasemap">
+                                                        <form id="layerForm">
+                                                            <label for="baseMapSelector"
+                                                                class="form-label">เลือกแผนที่ฐาน</label>
+                                                            <select class="form-select" id="baseMapSelector">
+                                                                <option value="maptiler">Maptiler 3D</option>
+                                                                <option value="osm" selected>OpenStreetMap</option>
+                                                                <option value="grod">Google Road</option>
+                                                                <option value="gsat">Google Satellite</option>
+                                                                <option value="ghyb">Google Hybrid</option>
+                                                            </select>
+                                                        </form>
                                                     </div>
-                                                    <div class="card-tools">
-                                                        <a href="#" class="link">View All</a>
+                                                    <div class="tab-pane" id="tabSearchLatLng">
+                                                        <form id="searchLatLng">
+                                                            <div class="mb-3">
+                                                                <label for="latitude" class="form-label">ละติจูด</label>
+                                                                <input type="text" class="form-control" id="latitude"
+                                                                    placeholder="Enter latitude" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="longitude"
+                                                                    class="form-label">ลองจิจูด</label>
+                                                                <input type="text" class="form-control" id="longitude"
+                                                                    placeholder="Enter longitude" required>
+                                                            </div>
+                                                            <div class="gap-2">
+                                                                <button type="submit"
+                                                                    class="btn btn-primary">ค้นหา</button>
+                                                                <button type="button" class="btn btn-light"
+                                                                    id="clear-marker">ยกเลิก</button>
+                                                            </div>
+                                                        </form>
                                                     </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="card-inner py-0 mt-n2">
-                                                <div>
-                                                    <label for="layerToggle" class="form-label">เลือกแผนที่ฐาน</label>
-                                                    <select class="form-select" id="baseMapSelector">
-                                                        <option value="maptiler" selected>Maptiler 3D</option>
-                                                        <option value="osm">OpenStreetMap</option>
-                                                        <option value="grod">Google Road</option>
-                                                        <option value="gsat">Google Satellite</option>
-                                                        <option value="ghyb">Google Hybrid</option>
-                                                    </select>
-                                                </div>
-
-                                                <hr>
-                                                <div>
-                                                    <form id="searchLatLng">
-                                                        <div class="">
-                                                            <label for="latitude" class="">ละติจูด</label>
-                                                            <input type="text" class="form-control" id="latitude"
-                                                                placeholder="Enter latitude" required>
-                                                        </div>
-                                                        <div class="">
-                                                            <label for="longitude" class="">ลองจิจูด</label>
-                                                            <input type="text" class="form-control" id="longitude"
-                                                                placeholder="Enter longitude" required>
-                                                        </div>
-                                                        <div class="d-flex align-items-end mt-2">
-                                                            <button type="submit"
-                                                                class="btn btn-primary m">ค้นหา</button>
-                                                            <button type="button" class="btn btn-primary m"
-                                                                id="clear-marker">ลบ</button>
-                                                        </div>
-                                                    </form>
                                                 </div>
                                             </div>
 
