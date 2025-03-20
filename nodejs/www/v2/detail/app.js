@@ -312,16 +312,16 @@ strokeWidthInput.addEventListener('change', updateSVGCircle);
 
 function togglePanel() {
     try {
-        console.log('Toggling panel...');
-
         const selectedPanel = document.querySelector('input[name="panel"]:checked').value;
         if (selectedPanel === 'circle') {
             document.getElementById('circle-panel').style.display = 'block';
             document.getElementById('marker-panel').style.display = 'none';
             document.getElementById('marker-icon').value = 'none';
+            document.getElementById('circle-prop').style.display = 'block';
         } else if (selectedPanel === 'marker') {
             document.getElementById('circle-panel').style.display = 'none';
             document.getElementById('marker-panel').style.display = 'flex';
+            document.getElementById('circle-prop').style.display = 'none';
         }
     } catch (error) {
         console.error('Error toggling panel:', error);
@@ -354,7 +354,7 @@ const loadFeature = async (featuresData, draw) => {
                 const bounds = calculateBounds(existingFeatures);
                 if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 50 });
                 // if (type === 'Point') updateMarker(existingFeatures.features[0].geometry.coordinates);
-                if (type === 'Point') {
+                if (type === 'point') {
                     let currentMarker = document.getElementById('marker-icon').value;
                     if (currentMarker !== 'none') {
                         updateMarker(existingFeatures.features[0].geometry.coordinates);
@@ -390,10 +390,29 @@ const initStyle = async (styleData) => {
             let style = JSON.parse(styleData.style)
             if (style.length > 0) {
                 let json = style;
-                document.getElementById('circle-color').value = json[0]?.paint['circle-color'] || '#FF0000';
-                document.getElementById('circle-radius').value = json[0]?.paint['circle-radius'] || 5;
-                document.getElementById('circle-stroke-color').value = json[0]?.paint['circle-stroke-color'] || '#FFFFFF';
-                document.getElementById('circle-stroke-width').value = json[0]?.paint['circle-stroke-width'] || 1;
+
+                const circleColor = json[0]?.paint['circle-color'] || '#FF0000';
+                const circleRadius = json[0]?.paint['circle-radius'] || 5;
+                const circleStrokeColor = json[0]?.paint['circle-stroke-color'] || '#FFFFFF';
+                const circleStrokeWidth = json[0]?.paint['circle-stroke-width'] || 1;
+
+                // Update input values (if you have input elements with these IDs)
+                document.getElementById('circle-color').value = circleColor;
+                document.getElementById('circle-radius').value = circleRadius;
+                document.getElementById('circle-stroke-color').value = circleStrokeColor;
+                document.getElementById('circle-stroke-width').value = circleStrokeWidth;
+
+                // Update the SVG circle attributes
+                const svgCircle = document.getElementById('svg-circle');
+                svgCircle.setAttribute('fill', circleColor);
+                svgCircle.setAttribute('r', circleRadius);
+                svgCircle.setAttribute('stroke', circleStrokeColor);
+                svgCircle.setAttribute('stroke-width', circleStrokeWidth);
+
+                // document.getElementById('circle-color').value = json[0]?.paint['circle-color'] || '#FF0000';
+                // document.getElementById('circle-radius').value = json[0]?.paint['circle-radius'] || 5;
+                // document.getElementById('circle-stroke-color').value = json[0]?.paint['circle-stroke-color'] || '#FFFFFF';
+                // document.getElementById('circle-stroke-width').value = json[0]?.paint['circle-stroke-width'] || 1;
                 document.getElementById('marker-icon').value = json[0]?.metadata?.['marker-icon'] || 'none';
                 document.getElementById('line-color').value = json[1]?.paint['line-color'] || '#00FF00';
                 document.getElementById('line-width').value = json[1]?.paint['line-width'] || 2;
@@ -418,7 +437,7 @@ const handleDrawUpdate = async (e) => {
         const geojsonJson = JSON.stringify(e.features[0].geometry);
         await saveGeojson(formid, refid, geojsonJson, JSON.stringify(currentStyles));
         // if (type === 'Point') updateMarker(e.features[0].geometry.coordinates);
-        if (type === 'Point') {
+        if (type === 'point') {
             let currentMarker = document.getElementById('marker-icon').value;
             if (currentMarker !== 'none') {
                 updateMarker(e.features[0].geometry.coordinates);
@@ -447,7 +466,7 @@ const handleDrawCreate = async (e) => {
 
 const handleDrawDelete = async () => {
     try {
-        if (type === 'Point' && marker) {
+        if (type === 'point' && marker) {
             marker.remove();
             marker = null;
         }
@@ -464,7 +483,7 @@ const displayStyle = async () => {
     map.addControl(draw);
     if (currentFeatures.features.length > 0) {
         draw.add(currentFeatures);
-        if (type === 'Point') {
+        if (type === 'point') {
             let currentMarker = document.getElementById('marker-icon').value;
             if (currentMarker !== 'none') {
                 updateMarker(currentFeatures.features[0].geometry.coordinates);
@@ -472,7 +491,6 @@ const displayStyle = async () => {
                 updateCircleMarker(currentFeatures.features[0].geometry.coordinates);
             }
         }
-
     } else if (existingFeatures) {
         draw.add(existingFeatures);
     }
@@ -524,9 +542,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         map.addControl(draw);
 
         loadFeature(featuresData, draw);
-
-        console.log('Type:', type);
-
 
         if (type == 'point') {
             document.getElementById('casePoint').style.display = 'block';

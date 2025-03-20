@@ -166,24 +166,28 @@
                         <div class="nk-content-body">
                             <div class="nk-block">
                                 <div class="row g-gs">
-                                    <div class="col-xxl-6 col-lg-6">
+                                    <div class="col-xxl-7 col-lg-7">
                                         <div class="card card-full" id="map" style="height: 500px;"></div>
                                     </div>
-                                    <div class="col-xxl-6 col-lg-6">
+                                    <div class="col-xxl-5 col-lg-5">
                                         <div class="card card-full">
-                                            <div class="card-inner py-0 mt-0">
+                                            <div class="card-inner ">
                                                 <ul class="nav nav-tabs">
                                                     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
-                                                            href="#tabItem5"><em
+                                                            href="#tabBasemap"><em
+                                                                class="icon ni ni-map"></em><span>แผนที่ฐาน</span></a>
+                                                    </li>
+                                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
+                                                            href="#tabSearchLatLng"><em
                                                                 class="icon ni ni-search"></em><span>ค้นหา</span></a>
                                                     </li>
                                                     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
-                                                            href="#tabItem6"><em
+                                                            href="#tabStyleForm"><em
                                                                 class="icon ni ni-color-palette"></em><span>แก้ไขสัญลักษณ์</span></a>
                                                     </li>
                                                 </ul>
                                                 <div class="tab-content">
-                                                    <div class="tab-pane active" id="tabItem5">
+                                                    <div class="tab-pane active" id="tabBasemap">
                                                         <form id="layerForm">
                                                             <label for="baseMapSelector"
                                                                 class="form-label">เลือกแผนที่ฐาน</label>
@@ -195,7 +199,8 @@
                                                                 <option value="ghyb">Google Hybrid</option>
                                                             </select>
                                                         </form>
-                                                        <hr>
+                                                    </div>
+                                                    <div class="tab-pane" id="tabSearchLatLng">
                                                         <form id="searchLatLng">
                                                             <div class="mb-3">
                                                                 <label for="latitude" class="form-label">ละติจูด</label>
@@ -211,61 +216,77 @@
                                                             <div class="gap-2">
                                                                 <button type="submit"
                                                                     class="btn btn-primary">ค้นหา</button>
-                                                                <button type="button" class="btn btn-primary"
-                                                                    id="clear-marker">ลบ</button>
+                                                                <button type="button" class="btn btn-light"
+                                                                    id="clear-marker">ยกเลิก</button>
                                                             </div>
                                                         </form>
                                                     </div>
-                                                    <div class="tab-pane" id="tabItem6">
+                                                    <div class="tab-pane" id="tabStyleForm">
                                                         <form id="styleForm">
                                                             <div id="casePoint">
-                                                                <label>
-                                                                    <input class="form-control" type="radio"
-                                                                        name="panel" value="circle" checked
-                                                                        onchange="togglePanel()">
-                                                                    Circle Panel
-                                                                </label>
-                                                                <label>
-                                                                    <input class="form-control" type="radio"
-                                                                        name="panel" value="marker"
-                                                                        onchange="togglePanel()"> Marker
-                                                                    Panel
-                                                                </label>
-
-                                                                <div id="circle-panel">
-                                                                    <svg id="circle-svg" width="100" height="80">
-                                                                        <circle id="svg-circle" cx="40" cy="40" r="4"
-                                                                            fill="#FF0000" stroke="#FFFFFF"
-                                                                            stroke-width="1">
-                                                                        </circle>
-                                                                    </svg>
-                                                                </div>
-                                                                <div id="marker-panel"
-                                                                    style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
-                                                                </div>
-                                                                <div>
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Point Color: </label>
-                                                                        <input class="form-control" type="color"
-                                                                            id="circle-color" value="#FF0000">
+                                                                <div class="row">
+                                                                    <div class="col-6 ">
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input class="form-check-input" type="radio"
+                                                                                name="panel" id="circle" value="circle"
+                                                                                checked onchange="togglePanel()">
+                                                                            <label class="form-check-label"
+                                                                                for="circle">Simple point</label>
+                                                                        </div>
                                                                     </div>
+                                                                    <div class="col-6">
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input class="form-check-input" type="radio"
+                                                                                name="panel" id="marker" value="marker"
+                                                                                onchange="togglePanel()">
+                                                                            <label class="form-check-label"
+                                                                                for="marker">Marker</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
 
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Point Size: </label>
+                                                                <div class="mt-2">
+                                                                    <div class="form-control" id="circle-panel">
+                                                                        <svg id="circle-svg" width="100" height="80">
+                                                                            <circle id="svg-circle" cx="40" cy="40"
+                                                                                r="4" fill="#FF0000" stroke="#FFFFFF"
+                                                                                stroke-width="1">
+                                                                            </circle>
+                                                                        </svg>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mt-2">
+                                                                    <div class="form-control" id="marker-panel"
+                                                                        style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label class="form-label">เลือกสี: </label>
+                                                                    <input class="form-control" type="color"
+                                                                        id="circle-color" value="#FF0000">
+                                                                </div>
+
+                                                                <div id="circle-prop">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">ขนาดของสัญลักษณ์:
+                                                                        </label>
                                                                         <input class="form-control" type="number"
                                                                             id="circle-radius" min="1" max="20"
                                                                             value="4">
                                                                     </div>
 
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Point stroke Color:
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">สีของเส้นขอบ:
                                                                         </label>
                                                                         <input class="form-control" type="color"
                                                                             id="circle-stroke-color" value="#FFFFFF">
                                                                     </div>
 
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label">Point Width: </label>
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">ความหนาของเส้นขอบ:
+                                                                        </label>
                                                                         <input class="form-control" type="number"
                                                                             id="circle-stroke-width" min="1" max="10"
                                                                             value="1">
@@ -273,44 +294,54 @@
                                                                 </div>
                                                             </div>
                                                             <div id="caseLine">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Line Color: </label>
+                                                                <div class="form-group">
+                                                                    <label class="form-label">สีของเส้น: </label>
                                                                     <input class="form-control" type="color"
                                                                         id="line-color" value="#00FF00">
                                                                 </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Line Width: </label>
+                                                                <div class="form-group">
+                                                                    <label class="form-label">ความหนาของเส้น: </label>
                                                                     <input class="form-control" type="number"
                                                                         id="line-width" min="1" max="10" value="2">
                                                                 </div>
                                                             </div>
                                                             <div id="casePolygon">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Polygon Color: </label>
+                                                                <div class="form-group">
+                                                                    <label class="form-label">สีพื้น: </label>
                                                                     <input class="form-control" type="color"
                                                                         id="polygon-color" value="#0000FF">
                                                                 </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Opacity: </label>
+                                                                <div class="form-group">
+                                                                    <label class="form-label">ความโปร่งแสง: </label>
                                                                     <input class="form-control" type="number"
-                                                                        id="polygon-opacity" min="0" max="1" step="0.1"
-                                                                        value="0.5">
+                                                                        id="polygon-opacity" min="0" max="1.0"
+                                                                        step="0.1" value="0.5">
                                                                 </div>
                                                             </div>
-                                                            <input type="hidden" id="marker-icon" value="map-marker">
-                                                            <button class="btn btn-success" type="submit">Apply
-                                                                Styles</button>
+                                                            <div class="form-group mt-3">
+                                                                <input type="hidden" id="marker-icon"
+                                                                    value="map-marker">
+                                                                <button class="btn btn-primary"
+                                                                    type="submit">ตกลง</button>
+                                                            </div>
                                                         </form>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-xxl-6 col-lg-12">
+                                    <div class="col-xxl-7 col-lg-7">
                                         <div class="card card-full">
                                             <div class="card-inner">
                                                 <div id="formContainer"></div>
                                                 <input type="hidden" id="refid">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-5 col-lg-5">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <div id="formImage"></div>
                                             </div>
                                         </div>
                                     </div>
