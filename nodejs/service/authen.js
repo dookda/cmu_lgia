@@ -168,7 +168,7 @@ app.get('/auth/profiledetail', ensureAuthenticated, async (req, res) => {
         const sql = `SELECT * FROM tb_user WHERE userid = $1;`;
         const values = [req.session.user.userId];
         const data = await pool.query(sql, values);
-        console.log(data.rows[0]);
+        // console.log(data.rows[0]);
         res.status(200).json({
             success: true,
             user: data.rows[0]
