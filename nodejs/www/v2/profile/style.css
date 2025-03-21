@@ -24,16 +24,12 @@ h5,
     margin-right: 8px;
 }
 
-#dataTable {
-    width: 100% !important;
-}
-
-.dataTables_wrapper {
-    overflow-x: auto;
-}
-
-.buttons-excel:before {
-    content: "" !important;
+.img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    /* Ensures the image fills the container */
 }
 
 .nk-menu-text {

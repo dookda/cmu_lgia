@@ -41,11 +41,11 @@ function ensureAuthenticated(req, res, next) {
 
 async function upsertUser(userProfile) {
     const query = `
-        INSERT INTO tb_user (userid, username, picture_url, created_at, updated_at)
+        INSERT INTO tb_user (userid, displayname, picture_url, created_at, updated_at)
         VALUES ($1, $2, $3, NOW(), NOW())
         ON CONFLICT (userid)
         DO UPDATE SET
-            username = EXCLUDED.username,
+            displayname = EXCLUDED.displayname,
             picture_url = EXCLUDED.picture_url,
             updated_at = NOW()
         RETURNING *;
@@ -68,18 +68,27 @@ async function upsertUser(userProfile) {
 
 // Login route
 app.get('/auth/login', (req, res) => {
-    const state = Math.random().toString(36).substring(7);
-    req.session.state = state;
+    try {
+        const state = Math.random().toString(36).substring(7);
+        req.session.state = state;
 
-    const authUrl = 'https://access.line.me/oauth2/v2.1/authorize?' + querystring.stringify({
-        response_type: 'code',
-        client_id: config.channelId,
-        redirect_uri: config.callbackUrl,
-        state: state,
-        scope: config.scope
-    });
+        const authUrl = 'https://access.line.me/oauth2/v2.1/authorize?' + querystring.stringify({
+            response_type: 'code',
+            client_id: config.channelId,
+            redirect_uri: config.callbackUrl,
+            state: state,
+            scope: config.scope
+        });
 
-    res.redirect(authUrl);
+        res.redirect(authUrl);
+
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        res.json({
+            success: false,
+            message: 'Error loading profile'
+        });
+    }
 });
 
 // Callback route
@@ -139,10 +148,39 @@ app.get('/auth/line/callback', async (req, res) => {
 });
 
 app.get('/auth/profile', ensureAuthenticated, (req, res) => {
-    res.status(200).json({
-        success: true,
-        user: req.session.user
-    });
+    try {
+        res.status(200).json({
+            success: true,
+            user: req.session.user
+        });
+    }
+    catch (error) {
+        console.error('Error loading profile:', error);
+        res.json({
+            success: false,
+            message: 'Error loading profile'
+        });
+    }
+});
+
+app.get('/auth/profiledetail', ensureAuthenticated, async (req, res) => {
+    try {
+        const sql = `SELECT * FROM tb_user WHERE userid = $1;`;
+        const values = [req.session.user.userId];
+        const data = await pool.query(sql, values);
+        console.log(data.rows[0]);
+        res.status(200).json({
+            success: true,
+            user: data.rows[0]
+        });
+    }
+    catch (error) {
+        console.error('Error loading profile:', error);
+        res.json({
+            success: false,
+            message: 'Error loading profile'
+        });
+    }
 });
 
 // Products API endpoint (example data)
@@ -160,12 +198,20 @@ app.get('/auth/products', ensureAuthenticated, (req, res) => {
 
 // Logout route
 app.get('/auth/logout', (req, res) => {
-    req.session.destroy();
-    // res.redirect('/authen');
-    res.json({
-        success: true,
-        message: 'Logged out successfully'
-    });
+    try {
+        req.session.destroy();
+        res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Error logging out:', error);
+        res.json({
+            success: false,
+            message: 'Error logging out'
+        });
+
+    }
 });
 
 app.get('/auth/debug-session', (req, res) => {
