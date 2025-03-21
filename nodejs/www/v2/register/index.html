@@ -37,49 +37,36 @@
                 <!-- content @s -->
                 <div class="nk-content ">
                     <div class="nk-block nk-block-middle nk-auth-body wide-xs">
-                        <div class="brand-logo pb-4 text-center">
-                            <a href="html/index.html" class="logo-link">
-                                <img class="logo-light logo-img logo-img-lg" src="./images/logo.png"
-                                    srcset="./images/logo2x.png 2x" alt="logo">
-                                <img class="logo-dark logo-img logo-img-lg" src="./images/logo-dark.png"
-                                    srcset="./images/logo-dark2x.png 2x" alt="logo-dark">
-                            </a>
-                        </div>
+
                         <div class="card">
                             <div class="card-inner card-inner-lg">
-                                <div class="nk-block-head">
-                                    <div class="nk-block-head-content">
-                                        <h4 class="nk-block-title">Register</h4>
-                                        <div class="nk-block-des">
-                                            <p>Create New Dashlite Account</p>
-                                        </div>
-                                    </div>
+                                <div class="brand-logo pb-4 text-center">
+                                    <a class="logo-link" id="userAvatarS"> </a>
                                 </div>
                                 <form action="html/pages/auths/auth-success-v2.html">
                                     <div class="form-group">
-                                        <label class="form-label" for="name">Name</label>
+                                        <label class="form-label" for="name">ชื่อ Line</label>
                                         <div class="form-control-wrap">
-                                            <input type="text" class="form-control form-control-lg" id="name"
+                                            <input type="text" class="form-control form-control-lg" id="displayName"
                                                 placeholder="Enter your name">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label" for="email">Email or Username</label>
+                                        <label class="form-label" for="email">ชื่อผู้ใช้</label>
                                         <div class="form-control-wrap">
-                                            <input type="text" class="form-control form-control-lg" id="email"
-                                                placeholder="Enter your email address or username">
+                                            <input type="text" class="form-control form-control-lg" id="userName">
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label" for="password">Passcode</label>
+                                        <label class="form-label" for="email">Email</label>
                                         <div class="form-control-wrap">
-                                            <a href="#" class="form-icon form-icon-right passcode-switch lg"
-                                                data-target="password">
-                                                <em class="passcode-icon icon-show icon ni ni-eye"></em>
-                                                <em class="passcode-icon icon-hide icon ni ni-eye-off"></em>
-                                            </a>
-                                            <input type="password" class="form-control form-control-lg" id="password"
-                                                placeholder="Enter your passcode">
+                                            <input type="text" class="form-control form-control-lg" id="userEmail">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="email">สิทธิ์การใช้งาน</label>
+                                        <div class="form-control-wrap">
+                                            <input type="text" class="form-control form-control-lg" id="userRole">
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -94,78 +81,13 @@
                                         <button class="btn btn-lg btn-primary btn-block">Register</button>
                                     </div>
                                 </form>
-                                <div class="form-note-s2 text-center pt-4"> Already have an account? <a
-                                        href="html/pages/auths/auth-login-v2.html"><strong>Sign in instead</strong></a>
-                                </div>
-                                <div class="text-center pt-4 pb-3">
-                                    <h6 class="overline-title overline-title-sap"><span>OR</span></h6>
-                                </div>
-                                <ul class="nav justify-center gx-8">
-                                    <li class="nav-item"><a class="link link-primary fw-normal py-2 px-3"
-                                            href="#">Facebook</a></li>
-                                    <li class="nav-item"><a class="link link-primary fw-normal py-2 px-3"
-                                            href="#">Google</a></li>
-                                </ul>
                             </div>
                         </div>
                     </div>
-                    <div class="nk-footer nk-auth-footer-full">
-                        <div class="container wide-lg">
-                            <div class="row g-3">
-                                <div class="col-lg-6 order-lg-last">
-                                    <ul class="nav nav-sm justify-content-center justify-content-lg-end">
-                                        <li class="nav-item">
-                                            <a class="link link-primary fw-normal py-2 px-3" href="#">Terms &
-                                                Condition</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="link link-primary fw-normal py-2 px-3" href="#">Privacy Policy</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="link link-primary fw-normal py-2 px-3" href="#">Help</a>
-                                        </li>
-                                        <li class="nav-item dropup">
-                                            <a class="dropdown-toggle dropdown-indicator has-indicator link link-primary fw-normal py-2 px-3"
-                                                data-bs-toggle="dropdown" data-offset="0,10"><span>English</span></a>
-                                            <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
-                                                <ul class="language-list">
-                                                    <li>
-                                                        <a href="#" class="language-item">
-                                                            <img src="./images/flags/english.png" alt=""
-                                                                class="language-flag">
-                                                            <span class="language-name">English</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="#" class="language-item">
-                                                            <img src="./images/flags/spanish.png" alt=""
-                                                                class="language-flag">
-                                                            <span class="language-name">Español</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="#" class="language-item">
-                                                            <img src="./images/flags/french.png" alt=""
-                                                                class="language-flag">
-                                                            <span class="language-name">Français</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="#" class="language-item">
-                                                            <img src="./images/flags/turkey.png" alt=""
-                                                                class="language-flag">
-                                                            <span class="language-name">Türkçe</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="nk-block-content text-center text-lg-left">
-                                        <p class="text-soft">&copy; 2024 DashLite. All Rights Reserved.</p>
-                                    </div>
+                    <div class="nk-footer">
+                        <div class="container-xl wide-xl">
+                            <div class="nk-footer-wrap">
+                                <div class="nk-footer-copyright"> © 2025 lgia
                                 </div>
                             </div>
                         </div>
