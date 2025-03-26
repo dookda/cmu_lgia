@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         data: null,
                         render: function (data, type, row) {
                             return `
-                                <button class="btn btn-primary btn-edit" data-formid="${row.formid}" data-type="${row.layertype}">แก้ไข</button>
+                                <button class="btn btn-primary btn-edit" data-formid="${row.formid}" data-type="${row.layertype}">เปิด</button>
                                 <button class="btn btn-danger" data-id="${row.gid}">ลบ</button>
                             `;
                         },
@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                 ],
                 scrollX: true,
+                responsive: false,
+                autoWidth: true,
             });
 
             $('#dataTable').on('click', '.btn-danger', function () {

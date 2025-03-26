@@ -28,12 +28,16 @@ let existingFeatures = null;
 const offset = [0, -16];
 
 const fetchAPI = async (url, options = {}) => {
-    const response = await fetch(url, {
-        ...options,
-        headers: { 'Content-Type': 'application/json', ...options.headers }
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: { 'Content-Type': 'application/json', ...options.headers }
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    } catch (error) {
+        throw error;
+    }
 };
 
 const saveStyle = async (formid, refid, style) => {
@@ -176,50 +180,235 @@ const updateBaseMap = (baseMapValue) => {
     }, 50);
 };
 
+// const generateFormFields = (columnsData, rowData, formid, refid) => {
+//     const formContainer = document.getElementById('formContainer');
+//     formContainer.innerHTML = '';
+//     columnsData.forEach(column => {
+//         console.log('Column:', column);
+
+//         const formGroup = document.createElement('div');
+//         formGroup.className = 'form-group';
+//         const label = document.createElement('label');
+//         label.textContent = column.col_name;
+//         label.setAttribute('for', column.col_id);
+//         const input = document.createElement('input');
+//         input.id = column.col_id;
+//         input.name = column.col_id;
+//         input.className = 'form-control';
+//         input.placeholder = column.col_desc;
+//         input.type = { text: 'text', numeric: 'number', date: 'date' }[column.col_type] || 'text';
+//         if (rowData?.[column.col_id] !== undefined) {
+//             input.value = column.col_type === 'date' && rowData[column.col_id]
+//                 ? new Date(rowData[column.col_id]).toISOString().split('T')[0]
+//                 : rowData[column.col_id];
+//         }
+//         formGroup.append(label, input);
+//         formContainer.appendChild(formGroup);
+//     });
+//     const saveButton = document.createElement('button');
+//     saveButton.textContent = 'Save';
+//     saveButton.className = 'btn btn-primary';
+//     saveButton.addEventListener('click', () => updateData(formid, refid));
+//     formContainer.appendChild(saveButton);
+// };
+
+// const updateData = async (formid, refid) => {
+//     try {
+//         const formData = Object.fromEntries(
+//             Array.from(document.getElementById('formContainer').querySelectorAll('input'))
+//                 .map(input => [input.name, input.value])
+//         );
+//         await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
+//             method: 'PUT',
+//             body: JSON.stringify(formData)
+//         });
+//         alert('Data updated successfully!');
+//     } catch (error) {
+//         console.error('Error updating data:', error);
+//         alert('Failed to update data.');
+//     }
+// };
+
+// Generate form fields dynamically
 const generateFormFields = (columnsData, rowData, formid, refid) => {
     const formContainer = document.getElementById('formContainer');
     formContainer.innerHTML = '';
+
+    const inputTypeMap = {
+        text: 'text',
+        numeric: 'number',
+        date: 'date',
+        file: 'file'
+    };
+
     columnsData.forEach(column => {
         const formGroup = document.createElement('div');
         formGroup.className = 'form-group';
+
         const label = document.createElement('label');
         label.textContent = column.col_name;
         label.setAttribute('for', column.col_id);
-        const input = document.createElement('input');
-        input.id = column.col_id;
-        input.name = column.col_id;
-        input.className = 'form-control';
-        input.placeholder = column.col_desc;
-        input.type = { text: 'text', numeric: 'number', date: 'date' }[column.col_type] || 'text';
-        if (rowData?.[column.col_id] !== undefined) {
-            input.value = column.col_type === 'date' && rowData[column.col_id]
-                ? new Date(rowData[column.col_id]).toISOString().split('T')[0]
-                : rowData[column.col_id];
+        formGroup.appendChild(label);
+
+        if (column.col_type === 'file') {
+            if (rowData?.[column.col_id]) {
+                const imgPreview = document.createElement('img');
+                imgPreview.src = rowData[column.col_id]; // Assuming base64 or URL
+                // imgPreview.style.maxWidth = '200px';
+                // imgPreview.style.maxHeight = '200px';
+                imgPreview.style.display = 'block';
+                imgPreview.style.margin = '10px 0';
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = column.col_id;
+                fileInput.name = column.col_id;
+                fileInput.className = 'form-control';
+                fileInput.accept = 'image/*';
+
+                formGroup.append(imgPreview, fileInput);
+            } else {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = column.col_id;
+                fileInput.name = column.col_id;
+                fileInput.className = 'form-control';
+                fileInput.accept = 'image/*';
+                formGroup.appendChild(fileInput);
+            }
+        } else {
+            const input = document.createElement('input');
+            input.id = column.col_id;
+            input.name = column.col_id;
+            input.className = 'form-control';
+            input.placeholder = column.col_desc || '';
+            input.type = inputTypeMap[column.col_type] || 'text';
+            input.required = true;
+
+            if (rowData?.[column.col_id] !== undefined) {
+                input.value = column.col_type === 'date' && rowData[column.col_id]
+                    ? new Date(rowData[column.col_id]).toISOString().split('T')[0]
+                    : rowData[column.col_id];
+            }
+
+            formGroup.appendChild(input);
         }
-        formGroup.append(label, input);
+
         formContainer.appendChild(formGroup);
     });
+
     const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save';
+    saveButton.textContent = 'บันทึก';
     saveButton.className = 'btn btn-primary';
-    saveButton.addEventListener('click', () => updateData(formid, refid));
+    let isSaving = false;
+
+    saveButton.addEventListener('click', async () => {
+        if (isSaving) return;
+        isSaving = true;
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
+
+        try {
+            await updateData(formid, refid);
+            alert('Data updated successfully!');
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`Failed to update data: ${error.message}`);
+        } finally {
+            isSaving = false;
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save';
+        }
+    });
+
     formContainer.appendChild(saveButton);
 };
 
+// Resize image to max width of 640
+const resizeImage = (file, maxWidth = 640) => {
+    return new Promise((resolve, reject) => {
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            reject(new Error('File too large. Maximum size is 5MB.'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const scaleFactor = maxWidth / img.width;
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scaleFactor;
+
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Error('Failed to get canvas context');
+
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) reject(new Error('Failed to create blob'));
+                        resolve(new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        }));
+                    }, 'image/jpeg', 0.8); // 80% quality
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+};
+
+// Convert file to base64
+const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+};
+
+// Update data with resizing
 const updateData = async (formid, refid) => {
     try {
-        const formData = Object.fromEntries(
-            Array.from(document.getElementById('formContainer').querySelectorAll('input'))
-                .map(input => [input.name, input.value])
-        );
-        await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
+        const formInputs = Array.from(document.getElementById('formContainer').querySelectorAll('input'));
+        const jsonData = {};
+
+        // Validation and data processing
+        for (const input of formInputs) {
+            // if (input.required && !input.value && input.type !== 'file') {
+            //     throw new Error(`Field ${input.name} is required`);
+            // }
+
+            if (input.type === 'file' && input.files.length > 0) {
+                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
+                const base64String = await fileToBase64(resizedFile);
+                jsonData[input.name] = base64String; // Send as base64
+            } else if (input.type !== 'file' && input.value) {
+                jsonData[input.name] = input.value;
+            }
+        }
+
+        const response = await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
             method: 'PUT',
-            body: JSON.stringify(formData)
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jsonData)
         });
-        alert('Data updated successfully!');
+
+        return response;
     } catch (error) {
         console.error('Error updating data:', error);
-        alert('Failed to update data.');
+        throw error;
     }
 };
 

@@ -721,9 +721,53 @@ app.post('/api/v2/update_layer', async (req, res) => {
     }
 });
 
+// app.put('/api/v2/update_row/:formid/:refid', async (req, res) => {
+//     const { formid, refid } = req.params;
+//     const updatedData = req.body;
+//     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
+//         return res.status(400).json({ error: 'Invalid table name' });
+//     }
+
+//     try {
+//         const cleanedData = {};
+//         for (const [key, value] of Object.entries(updatedData)) {
+//             if (value === '') {
+//                 cleanedData[key] = null;
+//             } else {
+//                 cleanedData[key] = value;
+//             }
+//         }
+
+//         const setClause = Object.keys(cleanedData)
+//             .map((key, index) => `${key} = $${index + 1}`)
+//             .join(', ');
+
+//         const query = `
+//             UPDATE ${formid}
+//             SET ${setClause}
+//             WHERE refid = $${Object.keys(cleanedData).length + 1}
+//             RETURNING *
+//         `;
+
+//         const values = [...Object.values(cleanedData), refid];
+
+//         const result = await pool.query(query, values);
+
+//         if (result.rows.length === 0) {
+//             return res.status(404).json({ error: 'Feature not found' });
+//         }
+
+//         res.status(200).json({ message: 'Data updated successfully', data: result.rows[0] });
+//     } catch (error) {
+//         console.error('Error updating data:', error);
+//         res.status(500).json({ error: 'Failed to update data' });
+//     }
+// });
+
 app.put('/api/v2/update_row/:formid/:refid', async (req, res) => {
     const { formid, refid } = req.params;
     const updatedData = req.body;
+
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }
@@ -734,7 +778,7 @@ app.put('/api/v2/update_row/:formid/:refid', async (req, res) => {
             if (value === '') {
                 cleanedData[key] = null;
             } else {
-                cleanedData[key] = value;
+                cleanedData[key] = value; // Base64 strings are stored as-is
             }
         }
 

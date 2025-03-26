@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
 
                 const columns = [{
-                    title: 'Actions',
+                    title: '',
                     data: null,
                     orderable: false,
                     searchable: false,
@@ -530,33 +530,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
 
                 const table = $('#dataTable').DataTable({
-                    data,
-                    columns,
-                    autoWidth: true,
+                    data: data,
+                    columns: columns,
+                    // autoWidth: true,
+                    // scrollX: true,
+                    // dom: '<"top"Bf>rt<"bottom"lip><"clear">',
+                    // buttons: [{
+                    //     extend: 'excel',
+                    //     text: '<i class="fas fa-download"></i> Export to Excel',
+                    //     className: 'btn-primary',
+                    //     title: 'Data Export',
+                    //     exportOptions: { modifier: { page: 'all' } }
+                    // }],
+                    // language: {
+                    //     search: "_INPUT_",
+                    //     searchPlaceholder: "ค้นหา",
+                    //     lengthMenu: "แสดง _MENU_ entries",
+                    //     info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    //     infoEmpty: "Showing 0 to 0 of 0 entries",
+                    //     infoFiltered: "(filtered from _MAX_ total entries)"
+                    // },
+                    // initComplete: function () {
+                    //     $('.dataTables_filter input')
+                    //         .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
+                    //         .css('text-indent', '20px');
+                    //     $('.dataTables_length select').addClass('custom-select custom-select-sm');
+                    // },
                     scrollX: true,
-                    dom: '<"top"Bf>rt<"bottom"lip><"clear">',
-                    buttons: [{
-                        extend: 'excel',
-                        text: '<i class="fas fa-download"></i> Export to Excel',
-                        className: 'btn-primary',
-                        title: 'Data Export',
-                        exportOptions: { modifier: { page: 'all' } }
-                    }],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "Search records...",
-                        lengthMenu: "Show _MENU_ entries",
-                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                        infoEmpty: "Showing 0 to 0 of 0 entries",
-                        infoFiltered: "(filtered from _MAX_ total entries)"
-                    },
-                    initComplete: function () {
-                        $('.dataTables_filter input')
-                            .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
-                            .css('text-indent', '20px');
-                        $('.dataTables_length select').addClass('custom-select custom-select-sm');
-                    },
-                    responsive: false
+                    responsive: false,
+                    autoWidth: true,
                 });
 
                 table.on('draw', () => {
@@ -674,15 +676,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            document.getElementById('editButton').addEventListener('click', () => {
-                try {
-                    const refid = document.getElementById('refid').value;
-                    const type = document.getElementById('type').value;
-                    window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
-                } catch (error) {
-                    console.error('Error in btn-edit click event:', error);
-                }
-            });
+            // document.getElementById('editButton').addEventListener('click', () => {
+            //     try {
+            //         const refid = document.getElementById('refid').value;
+            //         const type = document.getElementById('type').value;
+            //         window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
+            //     } catch (error) {
+            //         console.error('Error in btn-edit click event:', error);
+            //     }
+            // });
 
             map.on('click', (e) => {
                 try {
