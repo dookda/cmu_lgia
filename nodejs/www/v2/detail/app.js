@@ -180,55 +180,6 @@ const updateBaseMap = (baseMapValue) => {
     }, 50);
 };
 
-// const generateFormFields = (columnsData, rowData, formid, refid) => {
-//     const formContainer = document.getElementById('formContainer');
-//     formContainer.innerHTML = '';
-//     columnsData.forEach(column => {
-//         console.log('Column:', column);
-
-//         const formGroup = document.createElement('div');
-//         formGroup.className = 'form-group';
-//         const label = document.createElement('label');
-//         label.textContent = column.col_name;
-//         label.setAttribute('for', column.col_id);
-//         const input = document.createElement('input');
-//         input.id = column.col_id;
-//         input.name = column.col_id;
-//         input.className = 'form-control';
-//         input.placeholder = column.col_desc;
-//         input.type = { text: 'text', numeric: 'number', date: 'date' }[column.col_type] || 'text';
-//         if (rowData?.[column.col_id] !== undefined) {
-//             input.value = column.col_type === 'date' && rowData[column.col_id]
-//                 ? new Date(rowData[column.col_id]).toISOString().split('T')[0]
-//                 : rowData[column.col_id];
-//         }
-//         formGroup.append(label, input);
-//         formContainer.appendChild(formGroup);
-//     });
-//     const saveButton = document.createElement('button');
-//     saveButton.textContent = 'Save';
-//     saveButton.className = 'btn btn-primary';
-//     saveButton.addEventListener('click', () => updateData(formid, refid));
-//     formContainer.appendChild(saveButton);
-// };
-
-// const updateData = async (formid, refid) => {
-//     try {
-//         const formData = Object.fromEntries(
-//             Array.from(document.getElementById('formContainer').querySelectorAll('input'))
-//                 .map(input => [input.name, input.value])
-//         );
-//         await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
-//             method: 'PUT',
-//             body: JSON.stringify(formData)
-//         });
-//         alert('Data updated successfully!');
-//     } catch (error) {
-//         console.error('Error updating data:', error);
-//         alert('Failed to update data.');
-//     }
-// };
-
 // Generate form fields dynamically
 const generateFormFields = (columnsData, rowData, formid, refid) => {
     const formContainer = document.getElementById('formContainer');

@@ -97,3 +97,15 @@ content-type: application/json
     "chat_id": "-4727728563",
     "text": "ทดสอบส่งข้อความกลุ่มครับ Sribeuban ทดสอบ 3"
 }
+
+###
+GET https://api.telegram.org/bot7666509037:AAFO4sjV1qQYXAXAzzGALbtsV3qFdrnexkg/getUpdates
+
+### 
+POST https://api.telegram.org/bot7666509037:AAFO4sjV1qQYXAXAzzGALbtsV3qFdrnexkg/sendMessage
+content-type: application/json
+
+{
+    "chat_id": "-4755002640",
+    "text": "ทดสอบส่งข้อความกลุ่มครับ Sribeuban ทดสอบ 3"
+}
