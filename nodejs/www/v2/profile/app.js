@@ -5,7 +5,7 @@ const loadUserProfile = async () => {
         const data = await response.json();
         // console.log(data);
 
-        if (!data.success || !data.auth) {
+        if (!data.success) {
             console.log('User not logged in');
             window.location.href = '../dashboard/index.html';
             userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
