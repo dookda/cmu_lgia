@@ -132,12 +132,13 @@ app.get('/auth/line/callback', async (req, res) => {
 
         const userProfile = await profileResponse.json();
 
-        await upsertUser(userProfile);
+        const profile = await upsertUser(userProfile);
 
         req.session.user = {
             userId: userProfile.userId,
             displayName: userProfile.displayName,
-            pictureUrl: userProfile.pictureUrl
+            pictureUrl: userProfile.pictureUrl,
+            auth: profile.auth
         };
 
         res.redirect('/v2/dashboard');
@@ -151,7 +152,8 @@ app.get('/auth/profile', ensureAuthenticated, (req, res) => {
     try {
         res.status(200).json({
             success: true,
-            user: req.session.user
+            user: req.session.user,
+            auth: req.session.user.auth === 'admin' || req.session.user.auth === 'editor' ? true : false
         });
     }
     catch (error) {

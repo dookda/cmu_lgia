@@ -63,9 +63,9 @@ const loadUserProfile = async () => {
         let userAvatarS = document.getElementById('userAvatarS');
         let userAvatarL = document.getElementById('userAvatarL');
         let displayName = document.getElementById('displayName');
-        if (!data.success) {
+        if (!data.success || !data.auth) {
             console.log('User not logged in');
-
+            window.location.href = '../dashboard/index.html';
             userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
             document.getElementById('userDetail').style.display = "none";
             document.getElementById('lineLogout').style.display = "none";

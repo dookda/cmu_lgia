@@ -5,10 +5,10 @@ const loadUserProfile = async () => {
         const data = await response.json();
         // console.log(data);
 
-        if (!data.success) {
+        if (!data.success || !data.auth) {
             console.log('User not logged in');
+            window.location.href = '../dashboard/index.html';
             userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
-            window.location.href = '/auth/login';
             return null
         }
 
