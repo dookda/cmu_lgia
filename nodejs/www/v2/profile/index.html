@@ -43,18 +43,20 @@
                                 <div class="brand-logo pb-4 text-center">
                                     <a class="logo-link" id="userAvatarS"> </a>
                                 </div>
-                                <form action="html/pages/auths/auth-success-v2.html">
+                                <input type="hidden" id="userId">
+                                <form id="profileForm" class="form-validate">
                                     <div class="form-group">
                                         <label class="form-label" for="displayName">ชื่อ Line</label>
                                         <div class="form-control-wrap">
                                             <input type="text" class="form-control form-control-lg" id="displayName"
-                                                placeholder="Enter your name">
+                                                disabled>
                                         </div>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label" for="userName">ชื่อผู้ใช้</label>
                                         <div class="form-control-wrap">
-                                            <input type="text" class="form-control form-control-lg" id="userName">
+                                            <input type="text" class="form-control form-control-lg" id="userName"
+                                                required>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -72,7 +74,8 @@
                                     <div class="form-group">
                                         <label class="form-label" for="userRole">สิทธิ์การใช้งาน</label>
                                         <div class="form-control-wrap">
-                                            <input type="text" class="form-control form-control-lg" id="userRole">
+                                            <input type="text" class="form-control form-control-lg" id="userRole"
+                                                disabled>
                                         </div>
                                     </div>
                                     <div class="form-group">

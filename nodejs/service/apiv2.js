@@ -480,7 +480,7 @@ app.delete("/api/v2/divisions/:id", async (req, res) => {
 app.get("/api/v2/users", async (req, res) => {
     try {
         const result = await pool.query(
-            "SELECT id, username, email, ts, auth, division FROM tb_user ORDER BY id ASC"
+            "SELECT id, username, displayname, email, ts, auth, division FROM tb_user ORDER BY id ASC"
         );
         res.json(result.rows);
     } catch (error) {
@@ -489,22 +489,46 @@ app.get("/api/v2/users", async (req, res) => {
     }
 });
 
+app.get("/api/v2/users/:userid", async (req, res) => {
+    try {
+        const { userid } = req.params;
+        const sql = "SELECT * FROM tb_user WHERE userid = $1";
+        const result = await pool.query(sql, [userid]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // Update user
-app.put("/api/v2/users/:id", async (req, res) => {
-    const { id } = req.params;
-    const { username, email, auth, division } = req.body;
+app.put("/api/v2/users/:userid", async (req, res) => {
+    const { userid } = req.params;
+    const { displayName, userName, userEmail, userDivision } = req.body;
 
     try {
         const result = await pool.query(
-            "UPDATE tb_user SET username = $1, email = $2, auth = $3, division = $4 WHERE id = $5 RETURNING *",
-            [username, email, auth, division, id]
+            `UPDATE tb_user 
+             SET displayname = $1, 
+                 username = $2, 
+                 email = $3, 
+                 division = $4 
+             WHERE userid = $5 
+             RETURNING id, displayname AS "displayName", 
+                       username AS "userName", 
+                       email AS "userEmail", 
+                       division AS "userDivision"`,
+            [displayName, userName, userEmail, userDivision, userid]
         );
 
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        res.json({ message: "User updated successfully", user: result.rows[0] });
+        res.json({
+            message: "User updated successfully",
+            user: result.rows[0]
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });

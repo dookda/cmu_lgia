@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
     const table = $('#userTable').DataTable({
         ajax: {
-            url: "http://localhost:3000/api/v2/users",
+            url: "/api/v2/users",
             dataSrc: "",
         },
         columns: [
             {
                 data: "id",
-                render: function (data) {
+                render: function (data, type, row) {
                     return `
                         <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
                         <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             { data: "id" },
             { data: "username" },
+            { data: "displayname" },
             { data: "email" },
             {
                 data: "ts",

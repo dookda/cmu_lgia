@@ -41,8 +41,8 @@ function ensureAuthenticated(req, res, next) {
 
 async function upsertUser(userProfile) {
     const query = `
-        INSERT INTO tb_user (userid, displayname, picture_url, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
+        INSERT INTO tb_user (userid, displayname, picture_url, created_at, updated_at, ts)
+        VALUES ($1, $2, $3, NOW(), NOW(), NOW())
         ON CONFLICT (userid)
         DO UPDATE SET
             displayname = EXCLUDED.displayname,
