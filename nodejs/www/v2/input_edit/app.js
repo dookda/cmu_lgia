@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const _geojson = JSON.stringify(geojson);
                             const _type = geojson.type || '';
                             return `<div class="btn-group">
-                                <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                                <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson="${_geojson}">
                                     <em class="icon ni ni-zoom-in"></em>
                                 </button>
                                 <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type="${_type}">
@@ -532,30 +532,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const table = $('#dataTable').DataTable({
                     data: data,
                     columns: columns,
-                    // autoWidth: true,
-                    // scrollX: true,
-                    // dom: '<"top"Bf>rt<"bottom"lip><"clear">',
-                    // buttons: [{
-                    //     extend: 'excel',
-                    //     text: '<i class="fas fa-download"></i> Export to Excel',
-                    //     className: 'btn-primary',
-                    //     title: 'Data Export',
-                    //     exportOptions: { modifier: { page: 'all' } }
-                    // }],
-                    // language: {
-                    //     search: "_INPUT_",
-                    //     searchPlaceholder: "ค้นหา",
-                    //     lengthMenu: "แสดง _MENU_ entries",
-                    //     info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    //     infoEmpty: "Showing 0 to 0 of 0 entries",
-                    //     infoFiltered: "(filtered from _MAX_ total entries)"
-                    // },
-                    // initComplete: function () {
-                    //     $('.dataTables_filter input')
-                    //         .before('<i class="fas fa-search" style="position: relative; left: 25px;"></i>')
-                    //         .css('text-indent', '20px');
-                    //     $('.dataTables_length select').addClass('custom-select custom-select-sm');
-                    // },
                     scrollX: true,
                     responsive: false,
                     autoWidth: true,
@@ -676,6 +652,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
+            const refidCreate = () => {
+                const d = new Date();
+                const n = d.getTime();
+                return 'ref' + n;
+            };
+
+            document.getElementById('newFeature').addEventListener('click', async (e) => {
+                const ref = refidCreate();
+                console.log(ref);
+
+                try {
+                    const response = await fetch('/api/v2/insert_row', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ formid, refid: ref })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log(result);
+                    window.open(`/v2/detail/index.html?formid=${formid}&refid=${ref}&type=${featureType}`, '_blank');
+                } catch (error) {
+                    console.error('Error in detail-btn click event:', error);
+                }
+            });
+
             map.on('click', (e) => {
                 try {
                     const features = map.queryRenderedFeatures(e.point, {
@@ -727,6 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             map.on('error', (e) => {
                 console.error('MapLibre error:', e.error);
             });
+
         } catch (error) {
             console.error('Initialization error:', error);
         }
@@ -745,7 +751,6 @@ const loadUserProfile = async () => {
         let displayName = document.getElementById('displayName');
         if (!data.success) {
             console.log('User not logged in');
-
             userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
             document.getElementById('userDetail').style.display = "none";
             document.getElementById('lineLogout').style.display = "none";
@@ -786,3 +791,4 @@ document.getElementById('logout').addEventListener('click', async () => {
         console.error('Error logging out:', error);
     }
 });
+

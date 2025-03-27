@@ -821,26 +821,58 @@ app.delete('/api/v2/delete_feature', async (req, res) => {
 });
 
 // create new feature
-app.post('/api/v2/create_feature', async (req, res) => {
-    const { formid, geojson, style } = req.body;
-    const refid = `ref${Date.now()}${Math.random()}`;
+// app.post('/api/v2/create_feature', async (req, res) => {
+//     const { formid, geojson, style } = req.body;
+//     const refid = `ref${Date.now()}${Math.random()}`;
 
-    if (!formid || !refid || !geojson) {
-        return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
+//     if (!formid || !refid || !geojson) {
+//         return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
+//     }
+
+//     if (!isValidTableName(formid)) {
+//         return res.status(400).json({ error: 'Invalid formid (table name)' });
+//     }
+
+//     try {
+//         const query = `
+//       INSERT INTO ${formid} (refid, geom, style)
+//       VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), $3)
+//       RETURNING *
+//     `;
+//         const values = [refid, geojson, style];
+
+//         const result = await pool.query(query, values);
+
+//         if (result.rowCount === 0) {
+//             return res.status(500).json({ error: 'Failed to insert feature' });
+//         }
+
+//         res.json({
+//             message: 'Feature inserted successfully',
+//             feature: result.rows[0]
+//         });
+//     } catch (error) {
+//         console.error('Error inserting feature:', error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// });
+
+app.post('/api/v2/insert_row', async (req, res) => {
+    const { formid, refid } = req.body;
+
+    console.log('Creating row:', formid, refid);
+
+    if (!formid || !refid) {
+        return res.status(400).json({ error: 'Invalid request body' });
     }
 
     if (!isValidTableName(formid)) {
-        return res.status(400).json({ error: 'Invalid formid (table name)' });
+        return res.status(400).json({ error: 'Invalid table name' });
     }
 
     try {
-        const query = `
-      INSERT INTO ${formid} (refid, geom, style)
-      VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), $3)
-      RETURNING *
-    `;
-        const values = [refid, geojson, style];
-
+        const query = `INSERT INTO ${formid} (refid) VALUES ($1) RETURNING *`;
+        const values = [refid];
         const result = await pool.query(query, values);
 
         if (result.rowCount === 0) {
@@ -851,8 +883,9 @@ app.post('/api/v2/create_feature', async (req, res) => {
             message: 'Feature inserted successfully',
             feature: result.rows[0]
         });
+
     } catch (error) {
-        console.error('Error inserting feature:', error);
+        console.error('Error creating row:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
