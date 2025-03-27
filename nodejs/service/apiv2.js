@@ -15,8 +15,6 @@ const xlsx = require('xlsx');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-const picture = multer({ dest: 'picture/' });
-
 const qs = require('qs');
 
 // PostgreSQL connection
@@ -128,19 +126,6 @@ app.get('/api/v2/auth/logout', (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
-// app.post('/api/v2/users', verifyJWT, async (req, res) => {
-//     const { userid, username, pictureurl } = req.body;
-//     console.log(userid, username, pictureurl);
-//     try {
-//         const result = await pool.query(
-//             `SELECT * FROM users`
-//         );
-//         res.json(result.rows);
-//     } catch (err) {
-//         res.status(500).send('Server Error');
-//     }
-// });
-
 app.post('/api/v2/register', async (req, res) => {
     const {
         userid,
@@ -171,24 +156,9 @@ app.post('/api/v2/register', async (req, res) => {
     }
 });
 
-
-
-
-
 const isValidTableName = (tableName) => {
     return /^[a-zA-Z0-9_]+$/.test(tableName);
-}
-
-app.post('/api/v2/uploadpicture', picture.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: false, error: 'No file uploaded.' });
-    }
-
-    // Construct the file URL
-    const fileUrl = `/picture/${req.file.filename}`;
-
-    res.json({ success: true, fileUrl });
-});
+};
 
 app.post("/api/v2/login", async (req, res) => {
     const { email, password } = req.body;

@@ -676,16 +676,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // document.getElementById('editButton').addEventListener('click', () => {
-            //     try {
-            //         const refid = document.getElementById('refid').value;
-            //         const type = document.getElementById('type').value;
-            //         window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
-            //     } catch (error) {
-            //         console.error('Error in btn-edit click event:', error);
-            //     }
-            // });
-
             map.on('click', (e) => {
                 try {
                     const features = map.queryRenderedFeatures(e.point, {
