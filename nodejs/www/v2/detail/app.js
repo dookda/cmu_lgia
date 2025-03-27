@@ -15,12 +15,43 @@ const map = new maplibregl.Map({
     container: 'map',
     style: `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`,
     center: [0, 0],
-    zoom: 5,
+    zoom: 5, // Lower zoom to show globe
     pitch: 0,
-    antialias: true
+    antialias: true,
+    projection: 'globe',
+    fog: {
+        'range': [0.5, 10],
+        'color': 'rgba(186, 210, 235, 0.8)',
+        'horizon-blend': 0.1
+    }
 });
 
 map.addControl(new maplibregl.NavigationControl());
+
+const updateBaseMap = (baseMapValue) => {
+    let newStyle;
+    if (baseMapValue === 'maptiler') {
+        newStyle = `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`;
+    } else {
+        const tileUrl = BASE_MAPS[baseMapValue];
+        newStyle = {
+            version: 8,
+            sources: { 'raster-tiles': { type: 'raster', tiles: [tileUrl], tileSize: 256 } },
+            layers: [{ id: 'raster-layer', type: 'raster', source: 'raster-tiles', minzoom: 0, maxzoom: 22 }]
+        };
+    }
+    map.setStyle(newStyle);
+
+    setTimeout(() => {
+        const features = draw.getAll();
+        if (features && features.length > 0 && featureType) {
+            draw.deleteAll();
+            draw.add(features);
+        } else {
+            console.warn('No features or featureType available to re-add layers');
+        }
+    }, 50);
+};
 
 let marker = null;
 let draw = null;
@@ -64,7 +95,6 @@ const createCustomMarkerIcon = (color, symbol) => {
 };
 
 const updateMarker = (coordinates) => {
-
     const color = document.getElementById('circle-color').value;
     const icon = document.getElementById('marker-icon').value || 'M';
 
@@ -96,7 +126,6 @@ const updateCircleMarker = (coordinates) => {
         .setLngLat(coordinates)
         .addTo(map);
 };
-
 
 const calculateBounds = (features) => {
     const bounds = new maplibregl.LngLatBounds();
@@ -151,36 +180,147 @@ const getCustomStyles = () => {
             }
         }
     ];
-    // console.log('Custom styles:', style);
     return style;
 };
 
-const updateBaseMap = (baseMapValue) => {
-    let newStyle;
-    if (baseMapValue === 'maptiler') {
-        newStyle = `https://api.maptiler.com/maps/streets/style.json?key=${API_KEYS.MAPTILER}`;
-    } else {
-        const tileUrl = BASE_MAPS[baseMapValue];
-        newStyle = {
-            version: 8,
-            sources: { 'raster-tiles': { type: 'raster', tiles: [tileUrl], tileSize: 256 } },
-            layers: [{ id: 'raster-layer', type: 'raster', source: 'raster-tiles', minzoom: 0, maxzoom: 22 }]
-        };
-    }
-    map.setStyle(newStyle);
+const handleColumnItem = async (columnsData, formid, refid) => {
+    const formColumn = document.getElementById('formDeleteColumnItem');
+    formColumn.innerHTML = '';
 
-    setTimeout(() => {
-        const features = draw.getAll();
-        if (features && features.length > 0 && featureType) {
-            draw.deleteAll();
-            draw.add(features);
-        } else {
-            console.warn('No features or featureType available to re-add layers');
+    const deleteColumn = async (colId) => {
+        try {
+            const response = await fetch(`/api/v2/delete_column/${formid}/${colId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete column');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Delete error:', error);
+            throw error;
         }
-    }, 50);
+    };
+
+    columnsData.forEach(column => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group d-flex flex-row inner-flex';
+
+        const inputDiv = document.createElement('input');
+        inputDiv.type = 'text';
+        inputDiv.id = column.col_id;
+        inputDiv.name = column.col_id;
+        inputDiv.value = column.col_name;
+        inputDiv.className = 'form-control flex-grow-1';
+        inputDiv.placeholder = column.col_desc || '';
+        formGroup.appendChild(inputDiv);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'ลบ';
+        deleteButton.className = 'btn btn-danger';
+
+        deleteButton.addEventListener('click', async () => {
+            if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอลัมน์นี้?')) return;
+
+            const originalText = deleteButton.textContent;
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'กำลังลบ...';
+
+            try {
+                await deleteColumn(column.col_id);
+                // Remove the row from UI
+                formGroup.remove();
+                // Refresh parent form if needed
+                initForm();
+                alert('ลบคอลัมน์สำเร็จแล้ว');
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`การลบล้มเหลว: ${error.message}`);
+                deleteButton.disabled = false;
+                deleteButton.textContent = originalText;
+            }
+        });
+
+        formGroup.appendChild(deleteButton);
+        formColumn.appendChild(formGroup);
+    });
 };
 
-// Generate form fields dynamically
+const handleColumnName = async (columnsData, formid, refid) => {
+    const formColumn = document.getElementById('formColumnName');
+    formColumn.innerHTML = '';
+
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
+
+    columnsData.forEach(column => {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group align-items-center ';
+
+        const inputDiv = document.createElement('input');
+        inputDiv.type = 'text';
+        inputDiv.id = column.col_id;
+        inputDiv.name = column.col_id;
+        inputDiv.value = column.col_name;
+        inputDiv.className = 'form-control';
+        inputDiv.placeholder = column.col_desc || '';
+
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'save-status';
+        statusDiv.style.minWidth = '60px';
+        statusDiv.style.fontSize = '0.8rem';
+
+        inputDiv.addEventListener('input', debounce(async (e) => {
+            try {
+                statusDiv.textContent = 'กำลังบันทึก...';
+                statusDiv.style.color = '#666';
+
+                const updatePayload = {
+                    [e.target.name]: e.target.value
+                };
+
+                await updateColumnName(formid, updatePayload);
+
+                statusDiv.textContent = 'บันทึกแล้ว';
+                statusDiv.style.color = 'green';
+
+                initForm();
+
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.textContent = 'ข้อผิดพลาด';
+                statusDiv.style.color = 'red';
+                e.target.value = column.col_name;
+            }
+        }, 500));
+
+        formGroup.appendChild(inputDiv);
+        formGroup.appendChild(statusDiv);
+        formColumn.appendChild(formGroup);
+    });
+
+    // Add global status message
+    const globalStatus = document.createElement('div');
+    globalStatus.className = 'mt-3 text-muted';
+    globalStatus.style.fontSize = '0.9rem';
+    globalStatus.textContent = 'หากมีการเปลี่ยนแปลงชื่อจะถูกบันทึกโดยอัตโนมัติ';
+    formColumn.appendChild(globalStatus);
+};
+
 const generateFormFields = (columnsData, rowData, formid, refid) => {
     const formContainer = document.getElementById('formContainer');
     formContainer.innerHTML = '';
@@ -268,14 +408,13 @@ const generateFormFields = (columnsData, rowData, formid, refid) => {
         } finally {
             isSaving = false;
             saveButton.disabled = false;
-            saveButton.textContent = 'Save';
+            saveButton.textContent = 'บันทึก';
         }
     });
 
     formContainer.appendChild(saveButton);
 };
 
-// Resize image to max width of 640
 const resizeImage = (file, maxWidth = 640) => {
     return new Promise((resolve, reject) => {
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -317,7 +456,6 @@ const resizeImage = (file, maxWidth = 640) => {
     });
 };
 
-// Convert file to base64
 const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -327,18 +465,75 @@ const fileToBase64 = (file) => {
     });
 };
 
-// Update data with resizing
+const deleteColumnItem = async (formid, refid) => {
+    try {
+        const formInputs = Array.from(document.getElementById('formColumnItem').querySelectorAll('input'));
+        const jsonData = {};
+
+        for (const input of formInputs) {
+            if (input.type === 'file' && input.files.length > 0) {
+                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
+                const base64String = await fileToBase64(resizedFile);
+                jsonData[input.name] = base64String; // Send as base64
+            } else if (input.type !== 'file' && input.value) {
+                jsonData[input.name] = input.value;
+            }
+        }
+
+        console.log('jsonData:', formid, refid, jsonData);
+
+
+        // const response = await fetchAPI(`/api/v2/update_column/${formid}/${refid}`, {
+        //     method: 'PUT',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify(jsonData)
+        // });
+
+        return response;
+    } catch (error) {
+        console.error('Error updating data:', error);
+        throw error;
+    }
+};
+
+const updateColumnName = async (formid, refid) => {
+    try {
+        const formInputs = Array.from(document.getElementById('formColumnName').querySelectorAll('input'));
+        const jsonData = {};
+
+        for (const input of formInputs) {
+            if (input.type === 'file' && input.files.length > 0) {
+                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
+                const base64String = await fileToBase64(resizedFile);
+                jsonData[input.name] = base64String; // Send as base64
+            } else if (input.type !== 'file' && input.value) {
+                jsonData[input.name] = input.value;
+            }
+        }
+
+        const response = await fetchAPI(`/api/v2/update_column/${formid}/${refid}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jsonData)
+        });
+
+        return response;
+    } catch (error) {
+        console.error('Error updating data:', error);
+        throw error;
+    }
+};
+
 const updateData = async (formid, refid) => {
     try {
         const formInputs = Array.from(document.getElementById('formContainer').querySelectorAll('input'));
         const jsonData = {};
 
-        // Validation and data processing
         for (const input of formInputs) {
-            // if (input.required && !input.value && input.type !== 'file') {
-            //     throw new Error(`Field ${input.name} is required`);
-            // }
-
             if (input.type === 'file' && input.files.length > 0) {
                 const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
                 const base64String = await fileToBase64(resizedFile);
@@ -364,6 +559,12 @@ const updateData = async (formid, refid) => {
 };
 
 const initDraw = (styles, type) => {
+    MapboxDraw.constants.classes.CANVAS = 'maplibregl-canvas';
+    MapboxDraw.constants.classes.CONTROL_BASE = 'maplibregl-ctrl';
+    MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
+    MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
+    MapboxDraw.constants.classes.ATTRIBUTION = 'maplibregl-ctrl-attrib';
+
     return new MapboxDraw({
         displayControlsDefault: false,
         controls: {
@@ -380,6 +581,8 @@ const urlParams = new URLSearchParams(window.location.search);
 const formid = urlParams.get('formid');
 const refid = urlParams.get('refid');
 const type = urlParams.get('type').toLowerCase();
+
+// document.getElementById('formid').value = formid;
 
 const iconNames = ["map-marker", "map-pin", "location-arrow", "crosshairs", "compass", "street-view", "road", "flag", "flag-checkered", "building", "hospital",
     "university", "school", "coffee", "cutlery", "glass", "beer", "ambulance", "car", "bus", "train", "subway", "taxi", "bicycle", "motorcycle", "ship", "plane",
@@ -440,7 +643,6 @@ function updateStyle(type) {
     }
 }
 
-// Attach change event listeners to each input
 const colorInput = document.getElementById('circle-color');
 const radiusInput = document.getElementById('circle-radius');
 const strokeColorInput = document.getElementById('circle-stroke-color');
@@ -636,6 +838,20 @@ const displayStyle = async () => {
     }
 }
 
+const initForm = async () => {
+    try {
+        const [columnsData, featuresData] = await Promise.all([
+            fetchAPI(`/api/v2/load_layer_description/${formid}`),
+            fetchAPI(`/api/v2/load_layer/${formid}/${refid}`)
+        ]);
+        generateFormFields(columnsData, featuresData[0], formid, refid);
+        handleColumnName(columnsData, formid, refid);
+        handleColumnItem(columnsData, formid, refid);
+    } catch (error) {
+        console.error('Error reloading form:', error);
+    }
+};
+
 document.getElementById('baseMapSelector').addEventListener('change', (e) => {
     updateBaseMap(e.target.value);
 });
@@ -667,13 +883,14 @@ document.getElementById('styleForm').addEventListener('submit', async (e) => {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const [columnsData, featuresData, styleData] = await Promise.all([
-            fetchAPI(`/api/v2/load_layer_description/${formid}`),
+        const [featuresData, styleData] = await Promise.all([
             fetchAPI(`/api/v2/load_layer/${formid}/${refid}`),
             fetchAPI(`/api/v2/load_feature_style/${formid}/${refid}`)
         ]);
 
-        generateFormFields(columnsData, featuresData[0], formid, refid);
+        // generateFormFields(columnsData, featuresData[0], formid, refid);
+        // handleColumnChange(columnsData);
+        initForm();
         populateMarkerPanel();
 
         let json = await initStyle(styleData);
@@ -707,7 +924,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-
 const loadUserProfile = async () => {
     try {
         const response = await fetch('/auth/profile');
@@ -736,6 +952,52 @@ const loadUserProfile = async () => {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadUserProfile();
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+    document.getElementById('createColumnForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        const newColumn = {
+            col_id: formid + '_' + Date.now(),
+            col_name: form.newColName.value.trim(),
+            col_type: form.newColType.value,
+            col_desc: form.newColDesc.value.trim()
+        };
+
+        const submitButton = form.querySelector('button');
+        const originalText = submitButton.textContent;
+
+        try {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating...';
+
+            const response = await fetch(`/api/v2/create_column/${formid}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newColumn)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create column');
+            }
+
+            form.reset();
+            alert('Column created successfully!');
+            initForm();
+        } catch (error) {
+            console.error('Creation error:', error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+        }
+    });
 });
 
 document.getElementById('logout').addEventListener('click', async () => {

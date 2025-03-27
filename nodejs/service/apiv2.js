@@ -672,8 +672,6 @@ app.get('/api/v2/load_feature_style/:formid/:refid', async (req, res) => {
     }
 });
 
-
-
 app.post('/api/v2/update_layer', async (req, res) => {
     const { formid, changes } = req.body;
     if (!formid || !changes || !Array.isArray(changes)) {
@@ -889,96 +887,174 @@ app.post('/api/v2/create_feature', async (req, res) => {
     }
 });
 
-const createMarkerSVG = (options) => {
-    const { color = '#FF0000', icon = 'circle', size = 48 } = options;
+app.put('/api/v2/update_column/:formid/:refid', async (req, res) => {
+    const { formid } = req.params;
+    const updateData = req.body;
 
-    const svg = SVGBuilder.newInstance()
-        .width(size)
-        .height(size * 1.5); // Making it taller for pin shape
-
-    // Create pin shape
-    svg.path({
-        d: `M${size / 2} ${size} 
-          C${size / 2} ${size / 2}, ${size} ${size / 2}, ${size} ${size / 2} 
-          C${size} 0, 0 0, 0 ${size / 2} 
-          C0 ${size / 2}, ${size / 2} ${size / 2}, ${size / 2} ${size} 
-          Z`,
-        fill: color,
-        stroke: '#000000',
-        'stroke-width': 2
-    });
-
-    // Add icon in the center
-    switch (icon.toLowerCase()) {
-        case 'circle':
-            svg.circle({
-                cx: size / 2,
-                cy: size / 2,
-                r: size / 4,
-                fill: '#FFFFFF'
-            });
-            break;
-        case 'star':
-            svg.path({
-                d: `M${size / 2} ${size / 4} 
-              L${size / 2 + size / 6} ${size / 2 + size / 6} 
-              L${size - size / 6} ${size / 2} 
-              L${size / 2 + size / 6} ${size / 2 - size / 6} 
-              L${size / 2} ${size - size / 4} 
-              Z`,
-                fill: '#FFFFFF'
-            });
-            break;
-        // Add more icon shapes as needed
-        default:
-            break;
+    const entries = Object.entries(updateData);
+    if (entries.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
     }
 
-    return svg.render();
-};
-// API endpoint
-app.get('/api/v2/marker', async (req, res) => {
     try {
-        const {
-            color = '#FF0000',
-            icon = 'circle',
-            size = 48,
-            format = 'png'
-        } = req.query;
+        const valueClauses = [];
+        const params = [];
+        let paramIndex = 1;
 
-        // Validate inputs
-        if (!color.match(/^#[0-9A-Fa-f]{6}$/)) {
-            return res.status(400).json({ error: 'Invalid color format. Use #RRGGBB' });
-        }
-        if (!['circle', 'star'].includes(icon.toLowerCase())) {
-            return res.status(400).json({ error: 'Unsupported icon type' });
-        }
-        const parsedSize = parseInt(size);
-        if (isNaN(parsedSize) || parsedSize < 16 || parsedSize > 256) {
-            return res.status(400).json({ error: 'Size must be between 16 and 256' });
-        }
-
-        // Generate SVG
-        const svgString = createMarkerSVG({
-            color,
-            icon,
-            size: parsedSize
+        entries.forEach(([colId, colName]) => {
+            valueClauses.push(`($${paramIndex}, $${paramIndex + 1})`);
+            params.push(colId, colName);
+            paramIndex += 2;
         });
 
-        // Convert SVG to requested format using Sharp
-        const buffer = await sharp(Buffer.from(svgString))
-            .resize(parsedSize, parsedSize * 1.5)
-            .toFormat(format)
-            .toBuffer();
+        params.push(formid);
 
-        // Set appropriate headers
-        res.setHeader('Content-Type', `image/${format}`);
-        res.setHeader('Cache-Control', 'public, max-age=31557600');
-        res.send(buffer);
+        const query = `
+            WITH updated_data (col_id, col_name) AS (
+                VALUES ${valueClauses.join(', ')}
+            )
+            UPDATE layer_column lc
+            SET col_name = ud.col_name
+            FROM updated_data ud
+            WHERE lc.col_id = ud.col_id AND lc.formid = $${params.length}
+        `;
+
+        const result = await pool.query(query, params);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                error: 'No rows updated. Check if formid and col_ids are valid'
+            });
+        }
+
+        res.json({
+            message: `${result.rowCount} column(s) updated successfully`,
+            updatedFields: entries.map(([colId]) => colId)
+        });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+});
+
+app.delete('/api/v2/delete_column/:formid/:colid', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { formid, colid } = req.params;
+
+        // Validate table name to prevent SQL injection
+        if (!/^[a-zA-Z0-9_]+$/.test(formid)) {
+            return res.status(400).json({ error: 'Invalid form ID format' });
+        }
+
+        await client.query('BEGIN');
+
+        // 1. Delete from layer_column
+        const deleteResult = await client.query(
+            `DELETE FROM layer_column 
+            WHERE formid = $1 AND col_id = $2 
+            RETURNING *`,
+            [formid, colid]
+        );
+
+        if (deleteResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Column not found' });
+        }
+
+        // 2. Drop column from dynamic table
+        await client.query(
+            `ALTER TABLE ${formid} 
+            DROP COLUMN IF EXISTS ${client.escapeIdentifier(colid)}`
+        );
+
+        await client.query('COMMIT');
+        res.json({
+            message: `Column ${colid} deleted successfully from both tables`,
+            deletedColumn: deleteResult.rows[0]
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal server error' });
+        await client.query('ROLLBACK');
+        console.error('Delete error:', error);
+
+        const errorMessage = error.code === '42703' ?
+            'Column does not exist in form table' :
+            'Internal server error';
+
+        res.status(500).json({
+            error: errorMessage,
+            detail: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/v2/create_column/:formid', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { formid } = req.params;
+        const { col_id, col_name, col_type, col_desc } = req.body;
+
+        // Validate inputs
+        if (!/^[a-zA-Z0-9_]+$/.test(formid) || !/^[a-zA-Z0-9_]+$/.test(col_id)) {
+            return res.status(400).json({ error: 'Invalid ID format (alphanumeric and underscores only)' });
+        }
+
+        const pgTypeMap = {
+            text: 'TEXT',
+            numeric: 'NUMERIC',
+            date: 'DATE',
+            file: 'TEXT'
+        };
+
+        await client.query('BEGIN');
+
+        const insertResult = await client.query(
+            `INSERT INTO layer_column 
+            (formid, col_id, col_name, col_type, col_desc)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *`,
+            [formid, col_id, col_name, col_type, col_desc]
+        );
+
+        await client.query(
+            `ALTER TABLE ${client.escapeIdentifier(formid)}
+            ADD COLUMN ${client.escapeIdentifier(col_id)} ${pgTypeMap[col_type]}`
+        );
+
+        await client.query('COMMIT');
+
+        res.json({
+            message: 'Column created successfully',
+            column: insertResult.rows[0]
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Creation error:', error);
+
+        const errorMapping = {
+            '42701': { status: 400, message: 'Column already exists' },
+            '42P01': { status: 404, message: 'Form table not found' },
+            '23505': { status: 409, message: 'Column ID already exists' }
+        };
+
+        const errorInfo = errorMapping[error.code] || {
+            status: 500,
+            message: 'Internal server error'
+        };
+
+        res.status(errorInfo.status).json({
+            error: errorInfo.message,
+            detail: error.message
+        });
+    } finally {
+        client.release();
     }
 });
 
