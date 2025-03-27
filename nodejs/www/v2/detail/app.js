@@ -197,10 +197,11 @@ const handleColumnItem = async (columnsData, formid, refid) => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to delete column');
+                throw new Error(`Failed to delete column: ${response.statusText}`);
             }
 
-            return await response.json();
+            const responseData = await response.json();
+            return responseData;
         } catch (error) {
             console.error('Delete error:', error);
             throw error;
@@ -233,11 +234,8 @@ const handleColumnItem = async (columnsData, formid, refid) => {
 
             try {
                 await deleteColumn(column.col_id);
-                // Remove the row from UI
                 formGroup.remove();
-                // Refresh parent form if needed
                 initForm();
-                alert('ลบคอลัมน์สำเร็จแล้ว');
             } catch (error) {
                 console.error('Error:', error);
                 alert(`การลบล้มเหลว: ${error.message}`);
@@ -463,39 +461,6 @@ const fileToBase64 = (file) => {
         reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsDataURL(file);
     });
-};
-
-const deleteColumnItem = async (formid, refid) => {
-    try {
-        const formInputs = Array.from(document.getElementById('formColumnItem').querySelectorAll('input'));
-        const jsonData = {};
-
-        for (const input of formInputs) {
-            if (input.type === 'file' && input.files.length > 0) {
-                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
-                const base64String = await fileToBase64(resizedFile);
-                jsonData[input.name] = base64String; // Send as base64
-            } else if (input.type !== 'file' && input.value) {
-                jsonData[input.name] = input.value;
-            }
-        }
-
-        console.log('jsonData:', formid, refid, jsonData);
-
-
-        // const response = await fetchAPI(`/api/v2/update_column/${formid}/${refid}`, {
-        //     method: 'PUT',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     },
-        //     body: JSON.stringify(jsonData)
-        // });
-
-        return response;
-    } catch (error) {
-        console.error('Error updating data:', error);
-        throw error;
-    }
 };
 
 const updateColumnName = async (formid, refid) => {
