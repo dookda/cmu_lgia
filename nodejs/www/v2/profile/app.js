@@ -22,7 +22,7 @@ const loadUserProfile = async () => {
 
 const loadUserData = async (userid) => {
     try {
-        const response = await fetch(`/api/v2/users/${userid}`);
+        const response = await fetch(`/api/v2/user/${userid}`);
         const data = await response.json();
         // console.log(data);
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // Corrected endpoint URL
-            const response = await fetch(`/api/v2/users/${userId}`, {
+            const response = await fetch(`/api/v2/profile/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

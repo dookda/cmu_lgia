@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     window.saveEdit = async function () {
-        const userId = document.getElementById("editUserId").value;
+        const id = document.getElementById("editUserId").value;
         const updatedData = {
             username: document.getElementById("editUsername").value,
             email: document.getElementById("editEmail").value,
@@ -84,11 +84,18 @@ document.addEventListener("DOMContentLoaded", function () {
             division: document.getElementById("editDivision").value,
         };
 
-        await fetch(`/api/v2/users/${userId}`, {
+        const response = await fetch(`/api/v2/users/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData),
         });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update profile');
+        }
+
+        const result = await response.json();
 
         table.ajax.reload();
         bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
