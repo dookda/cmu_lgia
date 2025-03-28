@@ -76,10 +76,8 @@ const getTasabanInfo = async () => {
         }
         const data = await response.json();
 
-        // Update text content
         document.getElementById('tasabanInfo').textContent = data.name;
 
-        // Update logo image
         const logoImg1 = document.getElementById('imgLogo1');
         const logoImg2 = document.getElementById('imgLogo2');
         if (data.img) {
@@ -100,13 +98,11 @@ const getTasabanInfo = async () => {
 
     } catch (error) {
         console.error('Error fetching tasaban info:', error);
-        // Optional: Restore original logo on error
         document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
     }
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-
     await loadUserProfile();
     await getTasabanInfo();
 });
