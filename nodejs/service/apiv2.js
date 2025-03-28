@@ -203,7 +203,7 @@ app.post('/api/v2/create_table', async (req, res) => {
     }
     const formid = 'fid_' + Date.now();
 
-    console.log('Creating table:', formid, division, layername, layertype, columns);
+    // console.log('Creating table:', formid, division, layername, layertype, columns);
 
     try {
         const sqlTable = `INSERT INTO layer_name (formid, division, layername, layertype, ts) 
@@ -222,7 +222,7 @@ app.post('/api/v2/create_table', async (req, res) => {
         columns.forEach((column, index) => {
             const colId = `${formid}_${index}`;
             const colType = column.column_type === 'file' ? 'TEXT' : column.column_type.toUpperCase();
-            const validColumnTypes = ['TEXT', 'INTEGER', 'FLOAT', 'BOOLEAN', 'DATE', 'TIMESTAMP'];
+            const validColumnTypes = ['TEXT', 'NUMERIC', 'FLOAT', 'BOOLEAN', 'DATE', 'TIMESTAMP'];
             if (!validColumnTypes.includes(colType)) {
                 throw new Error(`Invalid column type: ${colType}`);
             }

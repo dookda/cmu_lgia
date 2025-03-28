@@ -46,3 +46,19 @@ h5 {
 .m {
     margin: 1px;
 }
+
+#message {
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+#message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+#message.error {
+    background: #f8d7da;
+    color: #721c24;
+}

@@ -267,27 +267,15 @@
                                                             <label for="division"
                                                                 class="form-label">ชื่อหน่วยงาน</label>
                                                             <select class="form-select" id="division" required>
-                                                                <option selected disabled value="">เลือก...
+                                                                <option value="" disabled selected>เลือกหน่วยงาน
                                                                 </option>
-                                                                <option value="สำนักปลัดฝ่ายอำนวยการ">
-                                                                    สำนักปลัด: ฝ่ายอำนวยการ</option>
-                                                                <option value="สำนักปลัดฝ่ายปกครองงานนิติการ">
-                                                                    สำนักปลัด: ฝ่ายปกครอง งานนิติการ
-                                                                </option>
-                                                                <!-- Other options -->
                                                             </select>
-                                                            <div class="invalid-feedback">
-                                                                ต้องเลือกหน่วยงานเจ้าของข้อมูล
-                                                            </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label for="layername"
                                                                 class="form-label">ชื่อชั้นข้อมูล</label>
                                                             <input type="text" class="form-control" id="layername"
                                                                 placeholder="ระบุ.." required>
-                                                            <div class="invalid-feedback">
-                                                                ต้องระบุชื่อชั้นข้อมูล
-                                                            </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label for="layertype"
@@ -302,9 +290,6 @@
                                                                 <option value="polygon">รูปปิด (Polygon)
                                                                 </option>
                                                             </select>
-                                                            <div class="invalid-feedback">
-                                                                ต้องเลือกประเภทข้อมูลแผนที่
-                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="mt-3">
@@ -322,9 +307,6 @@
                                                                 class="form-label">ชื่อคอลัมน์</label>
                                                             <input type="text" class="form-control" id="columnname"
                                                                 placeholder="ระบุ.." required>
-                                                            <div class="invalid-feedback">
-                                                                ต้องใส่ชื่อคอลัมน์
-                                                            </div>
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label for="validationDatype"
@@ -337,9 +319,6 @@
                                                                 <option value="date">วันที่</option>
                                                                 <option value="file">รูปภาพ</option>
                                                             </select>
-                                                            <div class="invalid-feedback">
-                                                                ต้องเลือกชนิดข้อมูล
-                                                            </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label for="validationField"
@@ -362,7 +341,7 @@
 
                                     <div class="col-xxl-12 col-lg-12">
                                         <div class="card card-full">
-                                            <div class="card-inner">
+                                            <div class="card-inner" id="tableForm" style="display: none;">
                                                 <h5><i class="bi bi-3-circle-fill"></i>&nbsp;สร้างชั้นข้อมูล</h5>
                                                 <div class="mt-2">
                                                     <p><b>ชื่อชั้นข้อมูล:</b> <span id="nameLayername"></span>
@@ -393,6 +372,7 @@
                                                             id="btn_create">สร้างชั้นข้อมูล</button>
                                                     </div>
                                                 </div>
+                                                <div id="message"></div>
                                             </div>
                                         </div><!-- .card -->
                                     </div>
