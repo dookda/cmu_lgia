@@ -47,18 +47,25 @@ h5 {
     margin: 1px;
 }
 
-#message {
+.mt-3 {
+    margin-top: 3px;
+}
+
+.alert {
     padding: 1rem;
-    margin-top: 1rem;
-    border-radius: 4px;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
 }
 
-#message.success {
-    background: #d4edda;
-    color: #155724;
+.alert-success {
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
 }
 
-#message.error {
-    background: #f8d7da;
-    color: #721c24;
+.alert-danger {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
 }
