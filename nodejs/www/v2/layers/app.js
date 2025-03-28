@@ -101,8 +101,47 @@ const loadUserProfile = async () => {
     }
 };
 
+const getTasabanInfo = async () => {
+    try {
+        const response = await fetch('/api/v2/info', { method: 'GET' });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+
+        // Update text content
+        document.getElementById('tasabanInfo').textContent = data.name;
+
+        // Update logo image
+        const logoImg1 = document.getElementById('imgLogo1');
+        const logoImg2 = document.getElementById('imgLogo2');
+        if (data.img) {
+            logoImg1.src = data.img;
+            logoImg1.removeAttribute('srcset');
+            logoImg1.onerror = () => {
+                console.error('Failed to load logo image');
+                logoImg1.src = './../images/logo-dark2x.png'; // Fallback
+            };
+
+            logoImg2.src = data.img;
+            logoImg2.removeAttribute('srcset');
+            logoImg2.onerror = () => {
+                console.error('Failed to load logo image');
+                logoImg2.src = './../images/logo-dark2x.png'; // Fallback
+            };
+        }
+
+    } catch (error) {
+        console.error('Error fetching tasaban info:', error);
+        // Optional: Restore original logo on error
+        document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
+
     await loadUserProfile();
+    await getTasabanInfo();
 });
 
 document.getElementById('logout').addEventListener('click', async () => {
