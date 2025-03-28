@@ -36,13 +36,13 @@
             <div class="nk-sidebar is-light nk-sidebar-fixed is-light" data-content="sidebarMenu">
                 <div class="nk-sidebar-element nk-sidebar-head">
                     <div class="nk-sidebar-brand">
-                        <a href="./../html/index.html" class="logo-link nk-sidebar-logo">
-                            <img class="logo-light logo-img" src="./../images/logo.png"
-                                srcset="./../images/logo2x.png 2x" alt="logo">
-                            <img class="logo-dark logo-img" src="./../images/logo-dark.png"
+                        <a href="./../dashboard/index.html" class="logo-link nk-sidebar-logo">
+                            <!-- <img class="logo-light logo-img" src="./../images/logo.png"
+                                srcset="./../images/logo2x.png 2x" alt="logo"> -->
+                            <img class="logo-dark logo-img" src="./../images/logo-dark2x.png"
                                 srcset="./../images/logo-dark2x.png 2x" alt="logo-dark">
-                            <img class="logo-small logo-img logo-img-small" src="./../images/logo-small.png"
-                                srcset="./../images/logo-small2x.png 2x" alt="logo-small">
+                            <!-- <img class="logo-small logo-img logo-img-small" src="./../images/logo-small.png"
+                                srcset="./../images/logo-small2x.png 2x" alt="logo-small"> -->
                         </a>
                     </div>
                     <div class="nk-menu-trigger me-n2">
@@ -256,41 +256,20 @@
                                             <div class="card-inner">
 
                                                 <form id="uploadForm">
-                                                    <!-- Text Input -->
+                                                    <input type="hidden" id="idInput">
                                                     <div class="mb-3">
-                                                        <label for="textInput" class="form-label">Description</label>
-                                                        <input type="text" class="form-control" id="textInput"
-                                                            placeholder="Enter description" required>
-                                                        <div class="invalid-feedback">
-                                                            Please provide a description.
-                                                        </div>
+                                                        <label class="form-label">ชื่อเทศบาล</label>
+                                                        <input type="text" class="form-control" id="nameInput" required>
                                                     </div>
 
-                                                    <!-- Image Upload -->
-                                                    <div class="mb-4">
-                                                        <label for="imageUpload" class="form-label">Upload Image</label>
-                                                        <div class="custom-file">
-                                                            <input type="file" class="form-control" id="imageUpload"
-                                                                accept="image/*" required>
-                                                            <div class="invalid-feedback">
-                                                                Please select an image file.
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Image Preview -->
-                                                        <div class="mt-3 text-center" id="imagePreview"
-                                                            style="display: none;">
-                                                            <img src="#" alt="Image Preview" class="img-fluid rounded"
-                                                                style="max-height: 200px;">
-                                                        </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">โลโก้ (ขนาด 260 x 80 px)</label>
+                                                        <input type="file" class="form-control" id="imageInput"
+                                                            accept="image/*">
+                                                        <div class="mt-2" id="imagePreview"></div>
                                                     </div>
 
-                                                    <!-- Submit Button -->
-                                                    <div class="">
-                                                        <button type="submit" class="btn btn-primary">
-                                                            <i class="bi bi-upload me-2"></i>Submit
-                                                        </button>
-                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">บันทึก</button>
                                                 </form>
 
                                             </div>

@@ -607,6 +607,77 @@ app.post("/api/v2/users", async (req, res) => {
     }
 });
 
+app.get('/api/v2/info', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM tb_info LIMIT 1');
+
+        res.json(result.rows[0] || null);
+    } catch (error) {
+        console.error('Check error:', error);
+        res.status(500).json({ error: 'Check failed' });
+    }
+});
+
+app.get('/api/v2/info/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            'SELECT * FROM tb_info WHERE id = $1',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/v2/info', async (req, res) => {
+    try {
+        const { id, name, img } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+
+        // For new entries, require image
+        if (!id && !img) {
+            return res.status(400).json({ error: 'Image is required for new entries' });
+        }
+
+        let result;
+        if (id) {
+            // Update existing record (preserve image if not provided)
+            result = await pool.query(
+                `UPDATE tb_info 
+                SET name = $1, img = COALESCE($2, img) 
+                WHERE id = $3 
+                RETURNING *`,
+                [name, img, id]
+            );
+        } else {
+            // Insert new record
+            result = await pool.query(
+                `INSERT INTO tb_info (name, img) 
+                VALUES ($1, $2) 
+                RETURNING *`,
+                [name, img]
+            );
+        }
+
+        res.status(200).json(result.rows[0]);
+
+    } catch (error) {
+        console.error('Error saving data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.post('/api/v2/load_layer', async (req, res) => {
     try {
         const { formid } = req.body;
