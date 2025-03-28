@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const loadUserProfile = async () => {
     try {
-        const response = await fetch('/auth/profile');
+        const response = await fetch('/auth/profile/editor');
         const data = await response.json();
 
         let userAvatarS = document.getElementById('userAvatarS');

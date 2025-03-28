@@ -148,17 +148,28 @@ app.get('/auth/line/callback', async (req, res) => {
     }
 });
 
-app.get('/auth/profile', ensureAuthenticated, (req, res) => {
+app.get('/auth/profile/:auth', ensureAuthenticated, (req, res) => {
     try {
+        const { auth } = req.params;
+        const userAuth = req.session.user.auth;
+
+        const rolePermissions = {
+            admin: ['admin'],
+            editor: ['admin', 'editor']
+        };
+
+        const allowedRoles = rolePermissions[auth] || [];
+        const isAuthorized = allowedRoles.includes(userAuth);
+
         res.status(200).json({
             success: true,
             user: req.session.user,
-            auth: req.session.user.auth === 'admin' || req.session.user.auth === 'editor' ? true : false
+            auth: isAuthorized
         });
     }
     catch (error) {
         console.error('Error loading profile:', error);
-        res.json({
+        res.status(500).json({
             success: false,
             message: 'Error loading profile'
         });

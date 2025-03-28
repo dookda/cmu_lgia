@@ -10,8 +10,18 @@ h1,
 h2,
 h3,
 h4,
-h5 {
+h5,
+.btn {
     font-family: "Noto Sans Thai", serif !important;
+}
+
+.in-line {
+    display: flex;
+    align-items: center;
+}
+
+.in-line img {
+    margin-right: 8px;
 }
 
 #dataTable {
