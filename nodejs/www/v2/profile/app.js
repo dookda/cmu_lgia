@@ -1,87 +1,139 @@
+// DOM Elements Cache
+const domElements = {
+    userId: document.getElementById('userId'),
+    userAvatarS: document.getElementById('userAvatarS'),
+    displayName: document.getElementById('displayName'),
+    userName: document.getElementById('userName'),
+    userEmail: document.getElementById('userEmail'),
+    userDivision: document.getElementById('userDivision'),
+    userRole: document.getElementById('userRole'),
+    profileForm: document.getElementById('profileForm'),
+    message: document.getElementById('message')
+};
 
+// Configuration
+const config = {
+    apiEndpoints: {
+        profileDetail: '/auth/profiledetail',
+        userData: (userId) => `/api/v2/user/${userId}`,
+        updateProfile: (userId) => `/api/v2/profile/${userId}`
+    },
+    fallbackAvatar: '<em class="icon ni ni-user-alt"></em>'
+};
+
+// Error Handling
+const showMessage = (text, type = 'info') => {
+    domElements.message.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${text}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    domElements.message.style.display = 'block';
+};
+
+// User Profile Handling
 const loadUserProfile = async () => {
     try {
-        const response = await fetch('/auth/profiledetail');
-        const data = await response.json();
-        // console.log(data);
+        const response = await fetch(config.apiEndpoints.profileDetail);
 
-        if (!data.success) {
-            console.log('User not logged in');
-            window.location.href = '../dashboard/index.html';
-            userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
-            return null
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
 
-        document.getElementById('userId').value = data.user.userid;
+        const data = await response.json();
+
+        if (!data.success) {
+            window.location.href = '../dashboard/index.html';
+            return;
+        }
+
+        domElements.userId.value = data.user.userid;
         await loadUserData(data.user.userid);
 
     } catch (error) {
-        console.error('Error loading profile:', error);
+        showMessage('Failed to load user profile', 'danger');
+        console.error('Profile load error:', error);
     }
 };
 
-const loadUserData = async (userid) => {
+const loadUserData = async (userId) => {
     try {
-        const response = await fetch(`/api/v2/user/${userid}`);
+        const response = await fetch(config.apiEndpoints.userData(userId));
+
+        if (!response.ok) {
+            throw new Error('Failed to load user data');
+        }
+
         const data = await response.json();
-        // console.log(data);
+        const user = data[0];
 
-        let userAvatarS = document.getElementById('userAvatarS');
-        let displayName = document.getElementById('displayName');
-        let userName = document.getElementById('userName');
-        let userEmail = document.getElementById('userEmail');
-        let userDivision = document.getElementById('userDivision');
-        let userRole = document.getElementById('userRole');
+        // Safe DOM updates
+        domElements.userAvatarS.innerHTML = '';
+        const img = document.createElement('img');
+        img.className = 'img';
+        img.src = user.picture_url;
+        img.alt = 'Profile Picture';
+        domElements.userAvatarS.appendChild(img);
 
-        userAvatarS.innerHTML += `<img src="${await data[0].picture_url}" class="img" alt="Profile Picture">`;
-        displayName.value = `${await data[0].displayname}`;
-        userName.value = `${await data[0].username}`;
-        userEmail.value = `${await data[0].email}`;
-        userDivision.value = `${await data[0].division}`;
-        userRole.value = `${await data[0].auth}`;
+        domElements.displayName.value = user.displayname;
+        domElements.userName.value = user.username;
+        domElements.userEmail.value = user.email;
+        domElements.userDivision.value = user.division;
+        domElements.userRole.value = user.auth;
 
     } catch (error) {
-        console.error('Error loading profile:', error);
+        showMessage('Failed to load user details', 'danger');
+        console.error('User data error:', error);
     }
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadUserProfile();
+// Form Handling
+const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-    document.getElementById('profileForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    const userData = {
+        displayName: domElements.displayName.value.trim(),
+        userName: domElements.userName.value.trim(),
+        userEmail: domElements.userEmail.value.trim(),
+        userDivision: domElements.userDivision.value.trim()
+    };
 
-        const userId = document.getElementById('userId').value;
-        const userData = {
-            displayName: document.getElementById('displayName').value, // Added missing field
-            userName: document.getElementById('userName').value,
-            userEmail: document.getElementById('userEmail').value,
-            userDivision: document.getElementById('userDivision').value,
-        };
-
-        try {
-            // Corrected endpoint URL
-            const response = await fetch(`/api/v2/profile/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Uncomment and add authorization if needed
-                    // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(userData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to update profile');
-            }
-
-            const result = await response.json();
-            alert('Profile updated successfully!');
-        } catch (error) {
-            console.error('Error:', error);
-            alert(error.message || 'Error updating profile');
+    try {
+        // Basic validation
+        if (!Object.values(userData).every(field => field)) {
+            throw new Error('All fields are required');
         }
-    });
-});
 
+        const response = await fetch(config.apiEndpoints.updateProfile(domElements.userId.value), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                // Uncomment if authentication is required
+                // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Update failed');
+        }
+
+        showMessage('Profile updated successfully!', 'success');
+        await loadUserData(domElements.userId.value); // Refresh data
+
+    } catch (error) {
+        showMessage(error.message, 'danger');
+        console.error('Update error:', error);
+    }
+};
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+    // Load initial data
+    loadUserProfile();
+
+    // Event Listeners
+    domElements.profileForm.addEventListener('submit', handleFormSubmit);
+});

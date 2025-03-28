@@ -1,205 +1,260 @@
+// DOM Elements Cache
+const domElements = {
+    divisionTable: $('#divisionTable'),
+    addForm: document.getElementById('addDivisionName'),
+    divisionInput: document.getElementById('division'),
+    divisionCount: document.getElementById('divisionCount'),
+    editModal: new bootstrap.Modal('#editModal'),
+    editDivisionId: document.getElementById('division_id'),
+    editDivisionName: document.getElementById('division_name'),
+    saveBtn: document.querySelector('#editModal .btn-primary'),
+    logoutBtn: document.getElementById('logout'),
+    userAvatarS: document.getElementById('userAvatarS'),
+    userAvatarL: document.getElementById('userAvatarL'),
+    displayName: document.getElementById('displayName'),
+    imgLogo1: document.getElementById('imgLogo1'),
+    imgLogo2: document.getElementById('imgLogo2'),
+    message: document.getElementById('message')
+};
 
-document.addEventListener("DOMContentLoaded", async () => {
-    // Initialize DataTable with AJAX sourcing
-    const table = $('#divisionTable').DataTable({
+// Configuration
+const config = {
+    apiEndpoints: {
+        divisions: '/api/v2/divisions',
+        info: '/api/v2/info',
+        profile: '/auth/profile/admin',
+        logout: '/auth/logout'
+    },
+    fallbackLogo: './../images/logo-dark2x.png'
+};
+
+// Initialize DataTable
+const initDataTable = () => {
+    return domElements.divisionTable.DataTable({
         ajax: {
-            url: '/api/v2/divisions',
-            dataSrc: function (data) {
-                // Update division count each time data is loaded
-                document.getElementById('divisionCount').textContent = data.length + ' หน่วยงาน';
+            url: config.apiEndpoints.divisions,
+            dataSrc: data => {
+                domElements.divisionCount.textContent = `${data.length} หน่วยงาน`;
                 return data;
             }
         },
         columns: [
             {
                 data: 'id',
-                render: function (data) {
-                    return `<button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
-                            <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>`;
-                },
+                render: (data) => `
+                    <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
+                    <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
+                `
             },
             { data: 'id' },
             { data: 'division_name' },
             {
                 data: 'created_at',
-                render: function (data) {
-                    const date = new Date(data);
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    return date.toLocaleDateString('th-TH', options);
-                },
-            },
-        ],
-    });
-
-    // Handle form submission
-    document.getElementById('addDivisionName').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const divisionName = $('#division').val();
-
-        if (!divisionName) {
-            alert('Please enter a division name.');
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/v2/divisions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ division_name: divisionName }),
-            });
-
-            if (response.ok) {
-                $('#division').val('');
-                table.ajax.reload(null, false); // Reload without resetting paging
-            } else {
-                const errorData = await response.json();
-                alert(`Error: ${errorData.error}`);
+                render: data => new Date(data).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
             }
-        } catch (error) {
-            console.error(error);
-            alert('An error occurred while adding the division.');
-        }
+        ]
     });
+};
 
-    // Handle edit button click
-    $('#divisionTable').on('click', '.edit-btn', function (event) {
-        const row = table.row(event.target.closest("tr")).data();
-        document.getElementById("division_id").value = row.id;
-        document.getElementById("division_name").value = row.division_name;
+// Event Handlers
+const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    const divisionName = domElements.divisionInput.value.trim();
 
-        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
-        editModal.show();
-    });
+    if (!divisionName) {
+        showMessage('กรุณากรอกชื่อหน่วยงาน', 'warning');
+        return;
+    }
 
-    window.saveEdit = async function () {
-        const id = document.getElementById("division_id").value;
-        const updatedData = {
-            division_name: document.getElementById("division_name").value,
-        };
-
-        await fetch(`/api/v2/divisions/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedData),
+    try {
+        const response = await fetch(config.apiEndpoints.divisions, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ division_name: divisionName })
         });
 
-        table.ajax.reload(null, false); // Reload without resetting paging
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-    };
-
-    // Handle delete button click
-    $('#divisionTable').on("click", ".delete-btn", async function (event) {
-        const divisionId = event.target.dataset.id;
-
-        if (!confirm("คุณต้องการลบข้อมูลนี้ใช่หรือไม่?")) return;
-
-        try {
-            const response = await fetch(`/api/v2/divisions/${divisionId}`, {
-                method: "DELETE",
-            });
-
-            if (response.ok) {
-                table.ajax.reload(null, false); // Reload without resetting paging
-            } else {
-                const errorData = await response.json();
-                alert(`Error: ${errorData.error}`);
-            }
-        } catch (error) {
-            console.error(error);
-            alert("An error occurred while deleting the division.");
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
         }
-    });
-});
 
-const loadUserProfile = async () => {
-    try {
-        const response = await fetch('/auth/profile/admin');
-        const data = await response.json();
-
-        let userAvatarS = document.getElementById('userAvatarS');
-        let userAvatarL = document.getElementById('userAvatarL');
-        let displayName = document.getElementById('displayName');
-        if (!data.success || !data.auth) {
-            console.log('User not logged in');
-            window.location.href = '../dashboard/index.html';
-            userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
-            document.getElementById('userDetail').style.display = "none";
-            document.getElementById('lineLogout').style.display = "none";
-            document.getElementById('userProfile').style.display = "none";
-            return null
-        }
-        document.getElementById('lineLogin').style.display = "none";
-        userAvatarS.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        userAvatarL.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        displayName.innerHTML = `${data.user.displayName}`;
+        domElements.divisionInput.value = '';
+        domElements.divisionTable.DataTable().ajax.reload(null, false);
+        showMessage('เพิ่มหน่วยงานสำเร็จ', 'success');
     } catch (error) {
-        console.error('Error loading profile:', error);
+        showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
     }
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const getTasabanInfo = async () => {
-        try {
-            const response = await fetch('/api/v2/info', { method: 'GET' });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
+const handleEdit = (table) => {
+    domElements.divisionTable.on('click', '.edit-btn', function () {
+        const rowData = table.row($(this).parents('tr')).data();
+        domElements.editDivisionId.value = rowData.id;
+        domElements.editDivisionName.value = rowData.division_name;
+        domElements.editModal.show();
+    });
+};
 
-            // Update text content
-            // document.getElementById('tasabanInfo').textContent = data.name;
+const handleSave = async () => {
+    const id = domElements.editDivisionId.value;
+    const newName = domElements.editDivisionName.value.trim();
 
-            // Update logo image
-            const logoImg1 = document.getElementById('imgLogo1');
-            const logoImg2 = document.getElementById('imgLogo2');
-            if (data.img) {
-                logoImg1.src = data.img;
-                logoImg1.removeAttribute('srcset');
-                logoImg1.onerror = () => {
-                    console.error('Failed to load logo image');
-                    logoImg1.src = './../images/logo-dark2x.png'; // Fallback
-                };
+    if (!newName) {
+        showMessage('กรุณากรอกชื่อหน่วยงาน', 'warning');
+        return;
+    }
 
-                logoImg2.src = data.img;
-                logoImg2.removeAttribute('srcset');
-                logoImg2.onerror = () => {
-                    console.error('Failed to load logo image');
-                    logoImg2.src = './../images/logo-dark2x.png'; // Fallback
-                };
-            }
-
-        } catch (error) {
-            console.error('Error fetching tasaban info:', error);
-            // Optional: Restore original logo on error
-            document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
-        }
-    };
-
-    await loadUserProfile();
-    await getTasabanInfo();
-});
-
-document.getElementById('logout').addEventListener('click', async () => {
     try {
-        const response = await fetch('/auth/logout');
-        const data = await response.json();
-        console.log(data);
+        const response = await fetch(`${config.apiEndpoints.divisions}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ division_name: newName })
+        });
 
-        if (!data.success) {
-            throw new Error('Logout failed');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error);
         }
-        let userAvatarS = document.getElementById('userAvatarS');
-        userAvatarS.innerHTML = '';
-        userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
 
-        document.getElementById('lineLogin').style.display = "block";
-        document.getElementById('userDetail').style.display = "none";
-        document.getElementById('lineLogout').style.display = "none";
-        document.getElementById('userProfile').style.display = "none";
+        domElements.divisionTable.DataTable().ajax.reload(null, false);
+        domElements.editModal.hide();
+        showMessage('อัปเดตข้อมูลสำเร็จ', 'success');
     } catch (error) {
-        console.error('Error logging out:', error);
+        showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+    }
+};
+
+const handleDelete = () => {
+    domElements.divisionTable.on('click', '.delete-btn', async function () {
+        const id = $(this).data('id');
+
+        if (!confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) return;
+
+        try {
+            const response = await fetch(`${config.apiEndpoints.divisions}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error);
+            }
+
+            domElements.divisionTable.DataTable().ajax.reload(null, false);
+            showMessage('ลบข้อมูลสำเร็จ', 'success');
+        } catch (error) {
+            showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+        }
+    });
+};
+
+// User Profile
+const loadUserProfile = async () => {
+    try {
+        const response = await fetch(config.apiEndpoints.profile);
+        const data = await response.json();
+
+        if (!data?.success || !data?.auth) {
+            window.location.href = '../dashboard/index.html';
+            return;
+        }
+
+        const createAvatar = (url) => {
+            const img = document.createElement('img');
+            img.className = 'avatar';
+            img.src = url;
+            img.alt = 'Profile Picture';
+            return img;
+        };
+
+        domElements.userAvatarS.replaceChildren(createAvatar(data.user.pictureUrl));
+        domElements.userAvatarL.replaceChildren(createAvatar(data.user.pictureUrl));
+        domElements.displayName.textContent = data.user.displayName;
+
+        // Update UI states
+        document.getElementById('lineLogin').style.display = 'none';
+        ['userDetail', 'lineLogout', 'userProfile'].forEach(id => {
+            document.getElementById(id).style.display = 'block';
+        });
+
+    } catch (error) {
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
+    }
+};
+
+// Tasaban Info
+const updateLogo = (imgElement, url) => {
+    imgElement.src = url || config.fallbackLogo;
+    imgElement.onerror = () => {
+        imgElement.src = config.fallbackLogo;
+        imgElement.removeAttribute('srcset');
+    };
+};
+
+const loadTasabanInfo = async () => {
+    try {
+        const response = await fetch(config.apiEndpoints.info);
+        if (!response.ok) throw new Error('Failed to load info');
+
+        const data = await response.json() || {};
+        updateLogo(domElements.imgLogo1, data.img);
+        updateLogo(domElements.imgLogo2, data.img);
+
+    } catch (error) {
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลเทศบาล', 'danger');
+        updateLogo(domElements.imgLogo1);
+        updateLogo(domElements.imgLogo2);
+    }
+};
+
+// Logout Handler
+const handleLogout = async () => {
+    try {
+        const response = await fetch(config.apiEndpoints.logout);
+        if (!response.ok) throw new Error('Logout failed');
+
+        domElements.userAvatarS.innerHTML = '<em class="icon ni ni-user-alt"></em>';
+        document.getElementById('lineLogin').style.display = 'block';
+        ['userDetail', 'lineLogout', 'userProfile'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+
+    } catch (error) {
+        showMessage('เกิดข้อผิดพลาดในการออกจากระบบ', 'danger');
+    }
+};
+
+// Message Handling
+const showMessage = (text, type = 'info') => {
+    domElements.message.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${text}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    domElements.message.style.display = 'block';
+};
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const table = initDataTable();
+
+        // Event Listeners
+        domElements.addForm.addEventListener('submit', handleFormSubmit);
+        domElements.saveBtn.addEventListener('click', handleSave);
+        domElements.logoutBtn.addEventListener('click', handleLogout);
+        handleEdit(table);
+        handleDelete();
+
+        // Load initial data
+        await Promise.all([loadUserProfile(), loadTasabanInfo()]);
+
+    } catch (error) {
+        showMessage('เกิดข้อผิดพลาดในการเริ่มต้นแอปพลิเคชัน', 'danger');
     }
 });

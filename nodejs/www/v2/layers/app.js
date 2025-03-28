@@ -1,167 +1,216 @@
-document.addEventListener('DOMContentLoaded', function () {
-    fetch('/api/v2/layer_names')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const table = $('#dataTable').DataTable({
-                data: data,
-                columns: [
-                    {
-                        data: null,
-                        render: function (data, type, row) {
-                            return `
-                                <button class="btn btn-primary btn-edit" data-formid="${row.formid}" data-type="${row.layertype}">เปิด</button>
-                                <button class="btn btn-danger" data-id="${row.gid}">ลบ</button>
-                            `;
-                        },
-                    },
-                    { data: 'gid' },
-                    { data: 'formid' },
-                    { data: 'division' },
-                    { data: 'layername' },
-                    { data: 'layertype' },
-                    {
-                        data: 'ts',
-                        render: function (data) {
-                            const date = new Date(data);
-                            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                            return date.toLocaleDateString('th-TH', options);
-                        },
-                    },
-                ],
-                scrollX: true,
-                responsive: false,
-                autoWidth: true,
-            });
+// DOM Elements Cache
+const domElements = {
+    dataTable: $('#dataTable'),
+    userAvatarS: document.getElementById('userAvatarS'),
+    userAvatarL: document.getElementById('userAvatarL'),
+    displayName: document.getElementById('displayName'),
+    tasabanInfo: document.getElementById('tasabanInfo'),
+    imgLogo1: document.getElementById('imgLogo1'),
+    imgLogo2: document.getElementById('imgLogo2'),
+    logoutBtn: document.getElementById('logout'),
+    userDetail: document.getElementById('userDetail'),
+    lineLogin: document.getElementById('lineLogin'),
+    lineLogout: document.getElementById('lineLogout'),
+    userProfile: document.getElementById('userProfile')
+};
 
-            $('#dataTable').on('click', '.btn-danger', function () {
-                const id = $(this).data('id');
-                if (confirm('ยืนยันการลบรายการนี้?')) {
-                    fetch(`/api/v2/layer_names/${id}`, {
-                        method: 'DELETE'
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Failed to delete entry with id ${id}`);
-                            }
-                            return response.json();
-                        })
-                        .then(result => {
-                            table
-                                .row($(this).closest('tr'))
-                                .remove()
-                                .draw();
-                            console.log(`Entry with id ${id} deleted successfully.`);
-                        })
-                        .catch(error => {
-                            console.error('Error deleting data:', error);
-                        });
-                }
-            });
+// Configuration
+const config = {
+    apiEndpoints: {
+        layers: '/api/v2/layer_names',
+        info: '/api/v2/info',
+        profile: '/auth/profile/editor',
+        logout: '/auth/logout'
+    },
+    fallbackLogo: './../images/logo-dark2x.png'
+};
 
-            $('#dataTable').on('click', '.btn-edit', function () {
-                const formid = this.getAttribute('data-formid');
-                const type = this.getAttribute('data-type');
+// Error Handling
+const handleError = (error, context) => {
+    console.error(`[${context}]`, error);
+    showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+};
 
-                window.location.href = `/v2/input_edit/index.html?formid=${formid}&type=${type}`;
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-        });
-});
+const showMessage = (text, type = 'info') => {
+    domElements.message.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${text}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    domElements.message.style.display = 'block';
+};
 
-const loadUserProfile = async () => {
+// DataTable Handling
+const initializeDataTable = async () => {
     try {
-        const response = await fetch('/auth/profile/editor');
+        const response = await fetch(config.apiEndpoints.layers);
+        if (!response.ok) throw new Error('Failed to load data');
         const data = await response.json();
 
-        let userAvatarS = document.getElementById('userAvatarS');
-        let userAvatarL = document.getElementById('userAvatarL');
-        let displayName = document.getElementById('displayName');
-        if (!data.success || !data.auth) {
-            console.log('User not logged in');
-            window.location.href = '../dashboard/index.html';
-            userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
-            document.getElementById('userDetail').style.display = "none";
-            document.getElementById('lineLogout').style.display = "none";
-            document.getElementById('userProfile').style.display = "none";
-            return null
-        }
-        document.getElementById('lineLogin').style.display = "none";
-        userAvatarS.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        userAvatarL.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        displayName.innerHTML = `${data.user.displayName}`;
+        const table = domElements.dataTable.DataTable({
+            data: data,
+            columns: [
+                {
+                    data: null,
+                    render: (data, type, row) => `
+                        <button class="btn btn-primary btn-edit" 
+                            data-formid="${row.formid}" 
+                            data-type="${row.layertype}">
+                            เปิด
+                        </button>
+                        <button class="btn btn-danger btn-delete" 
+                            data-id="${row.gid}">
+                            ลบ
+                        </button>
+                    `
+                },
+                { data: 'gid' },
+                { data: 'formid' },
+                { data: 'division' },
+                { data: 'layername' },
+                { data: 'layertype' },
+                {
+                    data: 'ts',
+                    render: data => new Date(data).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                }
+            ],
+            scrollX: true,
+            responsive: false,
+            autoWidth: true
+        });
+
+        // Delete handler
+        domElements.dataTable.on('click', '.btn-delete', async function () {
+            const id = $(this).data('id');
+            if (confirm('ยืนยันการลบรายการนี้?')) {
+                try {
+                    const response = await fetch(`${config.apiEndpoints.layers}/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('Delete failed');
+
+                    table.row($(this).parents('tr')).remove().draw();
+                    showMessage('ลบข้อมูลสำเร็จ', 'success');
+                } catch (error) {
+                    handleError(error, 'Delete operation');
+                }
+            }
+        });
+
+        // Edit handler
+        domElements.dataTable.on('click', '.btn-edit', function () {
+            const formid = $(this).data('formid');
+            const type = $(this).data('type');
+            window.location.href = `/v2/input_edit/index.html?formid=${formid}&type=${type}`;
+        });
+
     } catch (error) {
-        console.error('Error loading profile:', error);
+        handleError(error, 'DataTable initialization');
     }
+};
+
+// User Profile
+const loadUserProfile = async () => {
+    try {
+        const response = await fetch(config.apiEndpoints.profile);
+        const data = await response.json();
+
+        if (!data?.success || !data?.auth) {
+            window.location.href = '../dashboard/index.html';
+            return;
+        }
+
+        // Safe DOM manipulation
+        const setImageSafe = (element, url) => {
+            element.innerHTML = '';
+            const img = document.createElement('img');
+            img.className = 'avatar';
+            img.src = url;
+            img.alt = 'Profile Picture';
+            element.appendChild(img);
+        };
+
+        setImageSafe(domElements.userAvatarS, data.user.pictureUrl);
+        setImageSafe(domElements.userAvatarL, data.user.pictureUrl);
+        domElements.displayName.textContent = data.user.displayName;
+
+        // Update UI states
+        domElements.lineLogin.style.display = 'none';
+        [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
+            .forEach(el => el.style.display = 'block');
+
+    } catch (error) {
+        handleError(error, 'Profile loading');
+    }
+};
+
+// Tasaban Info
+const updateLogo = (imgElement, url) => {
+    imgElement.src = url || config.fallbackLogo;
+    imgElement.onerror = () => {
+        imgElement.src = config.fallbackLogo;
+        imgElement.removeAttribute('srcset');
+    };
 };
 
 const getTasabanInfo = async () => {
     try {
-        const response = await fetch('/api/v2/info', { method: 'GET' });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const response = await fetch(config.apiEndpoints.info);
+        if (!response.ok) throw new Error('Failed to load info');
 
-        // Update text content
-        document.getElementById('tasabanInfo').textContent = data.name;
+        const data = await response.json() || {};
+        domElements.tasabanInfo.textContent = data.name || 'เทศบาลไม่ระบุชื่อ';
 
-        // Update logo image
-        const logoImg1 = document.getElementById('imgLogo1');
-        const logoImg2 = document.getElementById('imgLogo2');
-        if (data.img) {
-            logoImg1.src = data.img;
-            logoImg1.removeAttribute('srcset');
-            logoImg1.onerror = () => {
-                console.error('Failed to load logo image');
-                logoImg1.src = './../images/logo-dark2x.png'; // Fallback
-            };
-
-            logoImg2.src = data.img;
-            logoImg2.removeAttribute('srcset');
-            logoImg2.onerror = () => {
-                console.error('Failed to load logo image');
-                logoImg2.src = './../images/logo-dark2x.png'; // Fallback
-            };
-        }
+        // Update logos
+        updateLogo(domElements.imgLogo1, data.img);
+        updateLogo(domElements.imgLogo2, data.img);
 
     } catch (error) {
-        console.error('Error fetching tasaban info:', error);
-        // Optional: Restore original logo on error
-        document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
+        handleError(error, 'Info loading');
+        updateLogo(domElements.imgLogo1);
+        updateLogo(domElements.imgLogo2);
     }
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-
-    await loadUserProfile();
-    await getTasabanInfo();
-});
-
-document.getElementById('logout').addEventListener('click', async () => {
+// Logout Handler
+const handleLogout = async () => {
     try {
-        const response = await fetch('/auth/logout');
-        const data = await response.json();
-        console.log(data);
+        const response = await fetch(config.apiEndpoints.logout);
+        if (!response.ok) throw new Error('Logout failed');
 
-        if (!data.success) {
-            throw new Error('Logout failed');
-        }
-        let userAvatarS = document.getElementById('userAvatarS');
-        userAvatarS.innerHTML = '';
-        userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
+        // Reset UI
+        domElements.userAvatarS.innerHTML = '<em class="icon ni ni-user-alt"></em>';
+        domElements.lineLogin.style.display = 'block';
+        [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
+            .forEach(el => el.style.display = 'none');
 
-        document.getElementById('lineLogin').style.display = "block";
-        document.getElementById('userDetail').style.display = "none";
-        document.getElementById('lineLogout').style.display = "none";
-        document.getElementById('userProfile').style.display = "none";
     } catch (error) {
-        console.error('Error logging out:', error);
+        handleError(error, 'Logout');
     }
-});
+};
+
+// Event Listeners
+const setupEventListeners = () => {
+    domElements.logoutBtn.addEventListener('click', handleLogout);
+};
+
+// Initialization
+const initializeApp = async () => {
+    try {
+        await loadUserProfile();
+        await getTasabanInfo();
+        await initializeDataTable();
+        setupEventListeners();
+    } catch (error) {
+        handleError(error, 'Application initialization');
+    }
+};
+
+// Start Application
+document.addEventListener('DOMContentLoaded', initializeApp);

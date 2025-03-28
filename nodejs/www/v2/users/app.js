@@ -1,192 +1,243 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const table = $('#userTable').DataTable({
+// DOM Elements Cache
+const domElements = {
+    userTable: $('#userTable'),
+    editModal: new bootstrap.Modal('#editModal'),
+    editUserId: document.getElementById('editUserId'),
+    editUsername: document.getElementById('editUsername'),
+    editEmail: document.getElementById('editEmail'),
+    editAuth: document.getElementById('editAuth'),
+    editDivision: document.getElementById('editDivision'),
+    logoutBtn: document.getElementById('logout'),
+    userAvatarS: document.getElementById('userAvatarS'),
+    userAvatarL: document.getElementById('userAvatarL'),
+    displayName: document.getElementById('displayName'),
+    tasabanInfo: document.getElementById('tasabanInfo'),
+    imgLogo1: document.getElementById('imgLogo1'),
+    imgLogo2: document.getElementById('imgLogo2'),
+    lineLogin: document.getElementById('lineLogin'),
+    userDetail: document.getElementById('userDetail'),
+    lineLogout: document.getElementById('lineLogout'),
+    userProfile: document.getElementById('userProfile'),
+    message: document.getElementById('message')
+};
+
+// Configuration
+const config = {
+    apiEndpoints: {
+        users: '/api/v2/users',
+        info: '/api/v2/info',
+        profile: '/auth/profile/admin',
+        logout: '/auth/logout'
+    },
+    fallbackLogo: './../images/logo-dark2x.png'
+};
+
+// Initialize DataTable
+const initDataTable = () => {
+    return domElements.userTable.DataTable({
         ajax: {
-            url: "/api/v2/users",
-            dataSrc: "",
+            url: config.apiEndpoints.users,
+            dataSrc: '',
+            error: (error) => showMessage('Failed to load user data', 'danger')
         },
         columns: [
             {
-                data: "id",
-                render: function (data, type, row) {
-                    return `
-                        <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
-                        <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
-                    `;
-                },
+                data: 'id',
+                render: (data) => `
+                    <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
+                    <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
+                `
             },
-            { data: "id" },
-            { data: "username" },
-            { data: "displayname" },
-            { data: "email" },
+            { data: 'id' },
+            { data: 'username' },
+            { data: 'displayname' },
+            { data: 'email' },
             {
-                data: "ts",
-                render: function (data) {
-                    const date = new Date(data);
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    return date.toLocaleDateString('th-TH', options);
-                },
+                data: 'ts',
+                render: data => new Date(data).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
             },
-            { data: "auth" },
-            { data: "division" }
+            { data: 'auth' },
+            { data: 'division' }
         ],
-        scrollX: true,
+        scrollX: true
     });
+};
 
-    $('#userTable').on('click', '.delete-btn', function () {
+// Event Handlers
+const handleDelete = (table) => {
+    domElements.userTable.on('click', '.delete-btn', async function () {
         const id = $(this).data('id');
-        if (confirm('ยืนยันการลบรายการนี้?')) {
-            fetch(`/api/v2/users/${id}`, {
+
+        if (!confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) return;
+
+        try {
+            const response = await fetch(`${config.apiEndpoints.users}/${id}`, {
                 method: 'DELETE'
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Failed to delete entry with id ${id}`);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    table
-                        .row($(this).closest('tr'))
-                        .remove()
-                        .draw();
-                    console.log(`Entry with id ${id} deleted successfully.`);
-                })
-                .catch(error => {
-                    console.error('Error deleting data:', error);
-                });
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error);
+            }
+
+            table.row($(this).parents('tr')).remove().draw();
+            showMessage('ลบข้อมูลสำเร็จ', 'success');
+        } catch (error) {
+            showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
         }
     });
+};
 
-    $('#userTable').on('click', '.edit-btn', function (event) {
-        const row = table.row(event.target.closest("tr")).data();
-        document.getElementById("editUserId").value = row.id;
-        document.getElementById("editUsername").value = row.username;
-        document.getElementById("editEmail").value = row.email;
-        document.getElementById("editAuth").value = row.auth;
-        document.getElementById("editDivision").value = row.division;
-
-        const editModal = new bootstrap.Modal(document.getElementById("editModal"));
-        editModal.show();
-
-        document.addEventListener('hide.bs.modal', function (event) {
-            if (document.activeElement) {
-                document.activeElement.blur();
-            }
-        });
+const handleEdit = (table) => {
+    domElements.userTable.on('click', '.edit-btn', function () {
+        const rowData = table.row($(this).parents('tr')).data();
+        domElements.editUserId.value = rowData.id;
+        domElements.editUsername.value = rowData.username;
+        domElements.editEmail.value = rowData.email;
+        domElements.editAuth.value = rowData.auth;
+        domElements.editDivision.value = rowData.division;
+        domElements.editModal.show();
     });
+};
 
-    window.saveEdit = async function () {
-        const id = document.getElementById("editUserId").value;
+const handleSave = async () => {
+    try {
         const updatedData = {
-            username: document.getElementById("editUsername").value,
-            email: document.getElementById("editEmail").value,
-            auth: document.getElementById("editAuth").value,
-            division: document.getElementById("editDivision").value,
+            username: domElements.editUsername.value.trim(),
+            email: domElements.editEmail.value.trim(),
+            auth: domElements.editAuth.value,
+            division: domElements.editDivision.value
         };
 
-        const response = await fetch(`/api/v2/users/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedData),
+        const id = domElements.editUserId.value;
+        const response = await fetch(`${config.apiEndpoints.users}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedData)
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || 'Failed to update profile');
+            throw new Error(error.error);
         }
 
-        const result = await response.json();
+        domElements.userTable.DataTable().ajax.reload();
+        domElements.editModal.hide();
+        showMessage('อัปเดตข้อมูลสำเร็จ', 'success');
+    } catch (error) {
+        showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+    }
+};
 
-        table.ajax.reload();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-    };
-});
-
+// User Profile
 const loadUserProfile = async () => {
     try {
-        const response = await fetch('/auth/profile/admin');
+        const response = await fetch(config.apiEndpoints.profile);
         const data = await response.json();
 
-        let userAvatarS = document.getElementById('userAvatarS');
-        let userAvatarL = document.getElementById('userAvatarL');
-        let displayName = document.getElementById('displayName');
-        if (!data.success || !data.auth) {
-            console.log('User not logged in');
+        if (!data?.success || !data?.auth) {
             window.location.href = '../dashboard/index.html';
-            userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
-            document.getElementById('userDetail').style.display = "none";
-            document.getElementById('lineLogout').style.display = "none";
-            document.getElementById('userProfile').style.display = "none";
-            return null
+            return;
         }
-        document.getElementById('lineLogin').style.display = "none";
-        userAvatarS.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        userAvatarL.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
-        displayName.innerHTML = `${data.user.displayName}`;
+
+        const createAvatar = (url) => {
+            const img = document.createElement('img');
+            img.className = 'avatar';
+            img.src = url;
+            img.alt = 'Profile Picture';
+            return img;
+        };
+
+        domElements.userAvatarS.replaceChildren(createAvatar(data.user.pictureUrl));
+        domElements.userAvatarL.replaceChildren(createAvatar(data.user.pictureUrl));
+        domElements.displayName.textContent = data.user.displayName;
+
+        // Update UI states
+        domElements.lineLogin.style.display = 'none';
+        [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
+            .forEach(el => el.style.display = 'block');
+
     } catch (error) {
-        console.error('Error loading profile:', error);
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
     }
 };
-const getTasabanInfo = async () => {
+
+// Tasaban Info
+const updateLogo = (imgElement, url) => {
+    imgElement.src = url || config.fallbackLogo;
+    imgElement.onerror = () => {
+        imgElement.src = config.fallbackLogo;
+        imgElement.removeAttribute('srcset');
+    };
+};
+
+const loadTasabanInfo = async () => {
     try {
-        const response = await fetch('/api/v2/info', { method: 'GET' });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const response = await fetch(config.apiEndpoints.info);
+        if (!response.ok) throw new Error('Failed to load info');
 
-        // Update text content
-        document.getElementById('tasabanInfo').textContent = data.name;
-
-        // Update logo image
-        const logoImg1 = document.getElementById('imgLogo1');
-        const logoImg2 = document.getElementById('imgLogo2');
-        if (data.img) {
-            logoImg1.src = data.img;
-            logoImg1.removeAttribute('srcset');
-            logoImg1.onerror = () => {
-                console.error('Failed to load logo image');
-                logoImg1.src = './../images/logo-dark2x.png'; // Fallback
-            };
-
-            logoImg2.src = data.img;
-            logoImg2.removeAttribute('srcset');
-            logoImg2.onerror = () => {
-                console.error('Failed to load logo image');
-                logoImg2.src = './../images/logo-dark2x.png'; // Fallback
-            };
-        }
+        const data = await response.json() || {};
+        domElements.tasabanInfo.textContent = data.name || 'เทศบาลไม่ระบุชื่อ';
+        updateLogo(domElements.imgLogo1, data.img);
+        updateLogo(domElements.imgLogo2, data.img);
 
     } catch (error) {
-        console.error('Error fetching tasaban info:', error);
-        // Optional: Restore original logo on error
-        document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลเทศบาล', 'danger');
+        updateLogo(domElements.imgLogo1);
+        updateLogo(domElements.imgLogo2);
     }
 };
 
+// Logout Handler
+const handleLogout = async () => {
+    try {
+        const response = await fetch(config.apiEndpoints.logout);
+        if (!response.ok) throw new Error('Logout failed');
+
+        domElements.userAvatarS.innerHTML = '<em class="icon ni ni-user-alt"></em>';
+        domElements.lineLogin.style.display = 'block';
+        [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
+            .forEach(el => el.style.display = 'none');
+
+    } catch (error) {
+        showMessage('เกิดข้อผิดพลาดในการออกจากระบบ', 'danger');
+    }
+};
+
+const showMessage = (text, type = 'info') => {
+    domElements.message.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${text}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    domElements.message.style.display = 'block';
+};
+
+// Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadUserProfile();
-    await getTasabanInfo();
-});
-
-document.getElementById('logout').addEventListener('click', async () => {
     try {
-        const response = await fetch('/auth/logout');
-        const data = await response.json();
-        console.log(data);
+        const table = initDataTable();
 
-        if (!data.success) {
-            throw new Error('Logout failed');
-        }
-        let userAvatarS = document.getElementById('userAvatarS');
-        userAvatarS.innerHTML = '';
-        userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
+        // Event Listeners
+        document.getElementById('editModal').addEventListener('hide.bs.modal', () => {
+            if (document.activeElement) document.activeElement.blur();
+        });
 
-        document.getElementById('lineLogin').style.display = "block";
-        document.getElementById('userDetail').style.display = "none";
-        document.getElementById('lineLogout').style.display = "none";
-        document.getElementById('userProfile').style.display = "none";
+        document.querySelector('#editModal .btn-primary').addEventListener('click', handleSave);
+        domElements.logoutBtn.addEventListener('click', handleLogout);
+
+        handleDelete(table);
+        handleEdit(table);
+
+        // Load initial data
+        await Promise.all([loadUserProfile(), loadTasabanInfo()]);
+
     } catch (error) {
-        console.error('Error logging out:', error);
+        showMessage('เกิดข้อผิดพลาดในการเริ่มต้นแอปพลิเคชัน', 'danger');
     }
 });
