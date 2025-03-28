@@ -39,7 +39,7 @@ app.get('/api/v2/auth/:code', async (req, res) => {
     const data = qs.stringify({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'http://localhost:3000/v5/dashboard/index.html',
+        redirect_uri: 'http://119.59.103.175:3000/v5/dashboard/index.html',
         client_id: process.env.LINE_CHANNEL_ID,
         client_secret: process.env.LINE_CHANNEL_SECRET,
     });
@@ -93,7 +93,7 @@ app.get('/api/v2/auth/:code', async (req, res) => {
         const token = jwt.sign({ userId, displayName, pictureUrl }, process.env.JWT_SECRET, { expiresIn: '5m' });
 
         res.cookie('jwt', token, { httpOnly: true, secure: false });
-        res.redirect('https://7552-1-10-132-142.ngrok-free.app/dashboard');
+        res.redirect('http://119.59.103.175:3000/dashboard');
         res.status(200).json({ message: 'User logged in successfully', user: { userId, displayName, pictureUrl } });
 
     } catch (error) {

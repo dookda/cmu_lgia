@@ -9,7 +9,7 @@ const app = express();
 const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
-    callbackUrl: 'http://localhost:3000/auth/line/callback',
+    callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
     scope: 'profile openid email'
 };
 
@@ -27,7 +27,6 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
-
 
 function ensureAuthenticated(req, res, next) {
     if (!req.session.user) {
