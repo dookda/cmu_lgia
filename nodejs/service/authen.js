@@ -9,7 +9,7 @@ const app = express();
 const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
-    callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
+    callbackUrl: 'http://localhost:3000/auth/line/callback',
     scope: 'profile openid email'
 };
 
@@ -193,19 +193,6 @@ app.get('/auth/profiledetail', ensureAuthenticated, async (req, res) => {
             message: 'Error loading profile'
         });
     }
-});
-
-// Products API endpoint (example data)
-app.get('/auth/products', ensureAuthenticated, (req, res) => {
-    const products = [
-        { id: 1, name: 'Product A', price: 10.99 },
-        { id: 2, name: 'Product B', price: 20.49 },
-        { id: 3, name: 'Product C', price: 15.00 }
-    ];
-    res.json({
-        success: true,
-        products: products
-    });
 });
 
 // Logout route

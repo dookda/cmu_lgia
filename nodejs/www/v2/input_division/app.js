@@ -1,15 +1,15 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const response_division = await fetch('/api/v2/divisions', { method: 'GET' });
-    if (!response_division.ok) {
-        throw new Error('Network response was not ok');
-    }
-    const data_division = await response_division.json();
-
-    document.getElementById('divisionCount').textContent = data_division.length + ' หน่วยงาน';
-
+    // Initialize DataTable with AJAX sourcing
     const table = $('#divisionTable').DataTable({
-        data: data_division,
+        ajax: {
+            url: '/api/v2/divisions',
+            dataSrc: function (data) {
+                // Update division count each time data is loaded
+                document.getElementById('divisionCount').textContent = data.length + ' หน่วยงาน';
+                return data;
+            }
+        },
         columns: [
             {
                 data: 'id',
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (response.ok) {
                 $('#division').val('');
-                table.ajax.reload();
+                table.ajax.reload(null, false); // Reload without resetting paging
             } else {
                 const errorData = await response.json();
                 alert(`Error: ${errorData.error}`);
@@ -72,12 +72,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const editModal = new bootstrap.Modal(document.getElementById("editModal"));
         editModal.show();
-
-        document.addEventListener('hide.bs.modal', function (event) {
-            if (document.activeElement) {
-                document.activeElement.blur();
-            }
-        });
     });
 
     window.saveEdit = async function () {
@@ -92,36 +86,33 @@ document.addEventListener("DOMContentLoaded", async () => {
             body: JSON.stringify(updatedData),
         });
 
-        table.ajax.reload();
+        table.ajax.reload(null, false); // Reload without resetting paging
         bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
     };
 
     // Handle delete button click
-    document.querySelector("#divisionTable tbody").addEventListener("click", async function (event) {
-        if (event.target.classList.contains("delete-btn")) {
-            const divisionId = event.target.dataset.id;
+    $('#divisionTable').on("click", ".delete-btn", async function (event) {
+        const divisionId = event.target.dataset.id;
 
-            if (!confirm("คุณต้องการลบข้อมูลนี้ใช่หรือไม่?")) return;
+        if (!confirm("คุณต้องการลบข้อมูลนี้ใช่หรือไม่?")) return;
 
-            try {
-                const response = await fetch(`/api/v2/divisions/${divisionId}`, {
-                    method: "DELETE",
-                });
+        try {
+            const response = await fetch(`/api/v2/divisions/${divisionId}`, {
+                method: "DELETE",
+            });
 
-                if (response.ok) {
-                    table.ajax.reload();
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.error}`);
-                }
-            } catch (error) {
-                console.error(error);
-                alert("An error occurred while deleting the division.");
+            if (response.ok) {
+                table.ajax.reload(null, false); // Reload without resetting paging
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error}`);
             }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred while deleting the division.");
         }
     });
 });
-
 
 const loadUserProfile = async () => {
     try {
