@@ -452,11 +452,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const initializeDataTable = (data, columnsData) => {
             try {
-                if (!data || !Array.isArray(data)) {
-                    console.error('Invalid data for DataTable initialization');
-                    return null;
-                }
-
                 const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
 
                 const columns = [{
@@ -616,10 +611,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const errorText = await response.text();
                     throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
                 }
-                return await response.json();
+                return response.json();
             } catch (error) {
                 console.error('Fetch error:', error);
-                return null; // Explicitly return null
+                return { error: true, message: error.message };
             }
         };
 
@@ -633,77 +628,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const refidCreate = () => {
-            const d = new Date();
-            const n = d.getTime();
-            return 'ref' + n;
-        };
-
-        document.getElementById('newFeature').addEventListener('click', async (e) => {
-            const ref = refidCreate();
-            console.log(ref);
-
-            try {
-                const response = await fetch('/api/v2/insert_row', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ formid, refid: ref })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log(result);
-                window.open(`/v2/detail/index.html?formid=${formid}&refid=${ref}&type=${featureType}`, '_blank');
-            } catch (error) {
-                console.error('Error in detail-btn click event:', error);
-            }
-        });
-
         try {
             const [columnsData, featuresData] = await Promise.all([
                 fetchAPI(`/api/v2/load_layer_description/${formid}`),
                 fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
             ]);
 
-            // if (columnsData.error || featuresData.error) {
-            //     console.error('API fetch failed:', columnsData.message || featuresData.message);
-            //     return;
-            // }
-
-            // const table = initializeDataTable(featuresData, columnsData);
-            // features = table.rows().data().toArray();
-
-            if (!columnsData || columnsData.error || !featuresData || featuresData.error) {
-                console.error('API fetch failed:',
-                    columnsData?.message || featuresData?.message || 'No data received');
+            if (columnsData.error || featuresData.error) {
+                console.error('API fetch failed:', columnsData.message || featuresData.message);
                 return;
             }
 
-            const safeFeaturesData = Array.isArray(featuresData) ? featuresData : [];
-
-            if (safeFeaturesData.length === 0) {
-                document.getElementById('dataWarning').style.display = 'block';
-                return null;
-            } else {
-                document.getElementById('dataWarning').style.display = 'none';
-            }
-
-            const table = initializeDataTable(safeFeaturesData, columnsData);
-
-            if (!table) {
-                console.error('Failed to initialize DataTable');
-                return;
-            }
-
+            const table = initializeDataTable(featuresData, columnsData);
             features = table.rows().data().toArray();
-            if (features.length === 0) {
-                console.warn('No features found');
-                // Optionally show a UI message
-            }
-
 
             addLayerToMap(features, featureType);
             zoomToLayerExtent(features);
@@ -713,6 +650,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                     updateBaseMap(e.target.value);
                 } catch (error) {
                     console.error('Error in baseMapSelector change event:', error);
+                }
+            });
+
+            const refidCreate = () => {
+                const d = new Date();
+                const n = d.getTime();
+                return 'ref' + n;
+            };
+
+            document.getElementById('newFeature').addEventListener('click', async (e) => {
+                const ref = refidCreate();
+                console.log(ref);
+
+                try {
+                    const response = await fetch('/api/v2/insert_row', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ formid, refid: ref })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log(result);
+                    window.open(`/v2/detail/index.html?formid=${formid}&refid=${ref}&type=${featureType}`, '_blank');
+                } catch (error) {
+                    console.error('Error in detail-btn click event:', error);
                 }
             });
 
