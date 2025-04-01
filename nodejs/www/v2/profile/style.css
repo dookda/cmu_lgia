@@ -40,17 +40,18 @@ h5,
     margin: 1px;
 }
 
-.error-message {
-    color: #dc3545;
-    margin-top: 0.5rem;
-    display: none;
-}
-
-.error .error-message {
-    display: block;
+#message {
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
 }
 
 #message.success {
     background: #d4edda;
     color: #155724;
+}
+
+#message.error {
+    background: #f8d7da;
+    color: #721c24;
 }

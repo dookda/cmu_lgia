@@ -11,7 +11,8 @@ const domElements = {
     userDetail: document.getElementById('userDetail'),
     lineLogin: document.getElementById('lineLogin'),
     lineLogout: document.getElementById('lineLogout'),
-    userProfile: document.getElementById('userProfile')
+    userProfile: document.getElementById('userProfile'),
+    message: document.getElementById('message')
 };
 
 // Configuration
@@ -31,14 +32,16 @@ const handleError = (error, context) => {
     showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
 };
 
-const showMessage = (text, type = 'info') => {
-    domElements.message.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${text}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
+
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
 };
 
 // DataTable Handling

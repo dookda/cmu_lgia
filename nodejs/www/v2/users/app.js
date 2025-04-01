@@ -208,14 +208,16 @@ const handleLogout = async () => {
     }
 };
 
-const showMessage = (text, type = 'info') => {
-    domElements.message.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${text}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
+
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
 };
 
 // Initialize Application

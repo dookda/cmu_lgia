@@ -367,6 +367,8 @@ const generateFormFields = (columnsData, rowData, formid, refid) => {
             }
         } else {
             const input = document.createElement('input');
+            console.log('column.col_type', column);
+
             input.id = column.col_id;
             input.name = column.col_id;
             input.className = 'form-control';

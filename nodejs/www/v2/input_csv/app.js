@@ -5,7 +5,6 @@ const domElements = {
     layername: document.getElementById('layername'),
     layertype: document.getElementById('layertype'),
     fileInput: document.getElementById('file'),
-    message: document.getElementById('message'),
     userAvatarS: document.getElementById('userAvatarS'),
     userAvatarL: document.getElementById('userAvatarL'),
     displayName: document.getElementById('displayName'),
@@ -16,14 +15,40 @@ const domElements = {
     userDetail: document.getElementById('userDetail'),
     lineLogin: document.getElementById('lineLogin'),
     lineLogout: document.getElementById('lineLogout'),
-    userProfile: document.getElementById('userProfile')
+    userProfile: document.getElementById('userProfile'),
+    message: document.getElementById('message')
 };
 
-// Error Handler
+
 const handleError = (error, message) => {
     console.error(`${message}:`, error);
     domElements.message.textContent = `${message}. Please try again.`;
     domElements.message.classList.add('error');
+};
+
+const resetMessage = () => {
+    domElements.message.style.display = 'none';
+    domElements.message.classList.remove(type);
+    domElements.message.textContent = '';
+};
+
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
+    domElements.message.style.display = 'block';
+
+    const showMessage = (text, type) => {
+        domElements.message.textContent = text;
+        domElements.message.classList.add(type);
+        domElements.message.style.display = 'block'; // make sure the message is visible
+
+        // Automatically remove the message after 200ms
+        setTimeout(() => {
+            domElements.message.style.display = 'none';
+            domElements.message.classList.remove(type);
+            domElements.message.textContent = ''; // clear the content if needed
+        }, 1000);
+    };
 };
 
 // Initialize Application
@@ -125,17 +150,6 @@ const getTasabanInfo = async () => {
         handleError(error, 'Tasaban info load failed');
         updateLogos();
     }
-};
-
-// Helper Functions
-const resetMessage = () => {
-    domElements.message.textContent = '';
-    domElements.message.className = '';
-};
-
-const showMessage = (text, type) => {
-    domElements.message.textContent = text;
-    domElements.message.classList.add(type);
 };
 
 const handleUnauthenticated = () => {

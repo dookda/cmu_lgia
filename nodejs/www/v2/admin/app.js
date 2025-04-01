@@ -24,19 +24,23 @@ const handleError = (error, message) => {
     alert(`${message}. Please try again.`);
 };
 
-const showMessage = (text, type = 'info') => {
-    domElements.message.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${text}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
-};
 
-const clearMessage = () => {
-    domElements.message.innerHTML = '';
-    domElements.message.style.display = 'none';
+    const showMessage = (text, type) => {
+        domElements.message.textContent = text;
+        domElements.message.classList.add(type);
+        domElements.message.style.display = 'block'; // make sure the message is visible
+
+        // Automatically remove the message after 200ms
+        setTimeout(() => {
+            domElements.message.style.display = 'none';
+            domElements.message.classList.remove(type);
+            domElements.message.textContent = ''; // clear the content if needed
+        }, 1000);
+    };
 };
 
 // Image Handling
@@ -131,7 +135,6 @@ const getTasabanInfo = async () => {
 // Form Handling
 const handleFormSubmit = async (e) => {
     e.preventDefault();
-    // clearMessage();
 
     const formData = {
         id: domElements.idInput.value || undefined,

@@ -228,15 +228,29 @@ const handleLogout = async () => {
     }
 };
 
-// Message Handling
-const showMessage = (text, type = 'info') => {
-    domElements.message.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${text}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
+const resetMessage = () => {
+    domElements.message.style.display = 'none';
+    domElements.message.classList.remove(type);
+    domElements.message.textContent = '';
+};
+
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
+
+    const showMessage = (text, type) => {
+        domElements.message.textContent = text;
+        domElements.message.classList.add(type);
+        domElements.message.style.display = 'block'; // make sure the message is visible
+
+        // Automatically remove the message after 200ms
+        setTimeout(() => {
+            domElements.message.style.display = 'none';
+            domElements.message.classList.remove(type);
+            domElements.message.textContent = ''; // clear the content if needed
+        }, 1000);
+    };
 };
 
 // Initialize Application

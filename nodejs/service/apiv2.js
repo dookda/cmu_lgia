@@ -221,8 +221,8 @@ app.post('/api/v2/create_table', async (req, res) => {
         const alterTable = [];
         columns.forEach((column, index) => {
             const colId = `${formid}_${index}`;
-            const colType = column.column_type === 'file' ? 'TEXT' : column.column_type.toUpperCase();
-            const validColumnTypes = ['TEXT', 'NUMERIC', 'FLOAT', 'BOOLEAN', 'DATE', 'TIMESTAMP'];
+            const colType = column.column_type === 'file' ? 'text' : column.column_type;
+            const validColumnTypes = ['text', 'numeric', 'date'];
             if (!validColumnTypes.includes(colType)) {
                 throw new Error(`Invalid column type: ${colType}`);
             }
@@ -230,7 +230,7 @@ app.post('/api/v2/create_table', async (req, res) => {
                 queryAsync(
                     `INSERT INTO layer_column (formid, col_id, col_name, col_type, col_desc) 
                     VALUES ($1, $2, $3, $4, $5)`,
-                    [formid, colId, column.column_name, colType, column.column_desc]
+                    [formid, colId, column.column_name, column.column_type, column.column_desc]
                 )
             );
             alterTable.push(`ADD COLUMN "${colId}" ${colType}`);
@@ -519,29 +519,17 @@ app.post('/api/v2/info', async (req, res) => {
         }
 
         // For new entries, require image
-        if (!id && !img) {
+        if (!img) {
             return res.status(400).json({ error: 'Image is required for new entries' });
         }
 
-        let result;
-        if (id) {
-            // Update existing record (preserve image if not provided)
-            result = await pool.query(
-                `UPDATE tb_info 
+        let result = await pool.query(
+            `UPDATE tb_info 
                 SET name = $1, img = COALESCE($2, img) 
-                WHERE id = $3 
+                WHERE id = 1 
                 RETURNING *`,
-                [name, img, id]
-            );
-        } else {
-            // Insert new record
-            result = await pool.query(
-                `INSERT INTO tb_info (name, img) 
-                VALUES ($1, $2) 
-                RETURNING *`,
-                [name, img]
-            );
-        }
+            [name, img]
+        );
 
         res.status(200).json(result.rows[0]);
 
