@@ -1,6 +1,6 @@
 // DOM Elements Cache
 const domElements = {
-    userTable: $('#userTable'),
+    dataTable: $('#dataTable'),
     editModal: new bootstrap.Modal('#editModal'),
     editUserId: document.getElementById('editUserId'),
     editUsername: document.getElementById('editUsername'),
@@ -18,7 +18,20 @@ const domElements = {
     userDetail: document.getElementById('userDetail'),
     lineLogout: document.getElementById('lineLogout'),
     userProfile: document.getElementById('userProfile'),
+    saveBtn: document.getElementById('btn-save'),
+    userCount: document.getElementById('userCount'),
     message: document.getElementById('message')
+};
+
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
+    domElements.message.style.display = 'block';
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
 };
 
 // Configuration
@@ -32,88 +45,109 @@ const config = {
     fallbackLogo: './../images/logo-dark2x.png'
 };
 
-// Initialize DataTable
+const updateRowCount = () => {
+    const table = $(domElements.dataTable).DataTable();
+    domElements.userCount.textContent = `${table.rows().count()} คน`;
+};
+
+let dataTable;
 const initDataTable = () => {
-    return domElements.userTable.DataTable({
-        ajax: {
-            url: config.apiEndpoints.users,
-            dataSrc: '',
-            error: (error) => showMessage('Failed to load user data', 'danger')
-        },
-        columns: [
-            {
-                data: 'id',
-                render: (data) => `
-                    <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
-                    <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
-                `
-            },
-            { data: 'id' },
-            { data: 'username' },
-            { data: 'displayname' },
-            { data: 'email' },
-            {
-                data: 'ts',
-                render: data => new Date(data).toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                })
-            },
-            { data: 'auth' },
-            { data: 'division' }
-        ],
-        scrollX: true
-    });
-};
-
-// Event Handlers
-const handleDelete = (table) => {
-    domElements.userTable.on('click', '.delete-btn', async function () {
-        const id = $(this).data('id');
-
-        if (!confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) return;
-
-        try {
-            const response = await fetch(`${config.apiEndpoints.users}/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error);
-            }
-
-            table.row($(this).parents('tr')).remove().draw();
-            showMessage('ลบข้อมูลสำเร็จ', 'success');
-        } catch (error) {
-            showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+    try {
+        if (dataTable) {
+            dataTable.destroy();
+            domElements.dataTable.innerHTML = '';
         }
-    });
-};
 
-const handleEdit = (table) => {
-    domElements.userTable.on('click', '.edit-btn', function () {
-        const rowData = table.row($(this).parents('tr')).data();
-        domElements.editUserId.value = rowData.id;
-        domElements.editUsername.value = rowData.username;
-        domElements.editEmail.value = rowData.email;
-        domElements.editAuth.value = rowData.auth;
-        domElements.editDivision.value = rowData.division;
-        domElements.editModal.show();
-    });
+        dataTable = $(domElements.dataTable).DataTable({
+            ajax: {
+                url: config.apiEndpoints.users,
+                dataSrc: '',
+            },
+            columns: [
+                {
+                    data: 'id',
+                    render: (data, type, row) => `
+                        <button class="btn btn-primary btn-edit" 
+                            data-id="${data}">
+                            แก้ไข
+                        </button>
+                        <button class="btn btn-danger btn-delete" 
+                            data-id="${row.id}">
+                            ลบ
+                        </button>
+                    `
+                },
+                { data: 'id' },
+                { data: 'username' },
+                { data: 'displayname' },
+                { data: 'email' },
+                {
+                    data: 'ts',
+                    render: data => new Date(data).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                },
+                { data: 'auth' },
+                { data: 'division' }
+            ],
+            scrollX: true,
+            responsive: false,
+            autoWidth: true
+        });
+
+        dataTable.on('xhr', function () {
+            const data = dataTable.ajax.json();
+            domElements.userCount.textContent = `${data.length} คน`;
+        });
+
+        domElements.dataTable.on('click', '.btn-delete', async function () {
+            const id = $(this).data('id');
+            if (confirm('ยืนยันการลบรายการนี้?')) {
+                try {
+                    const response = await fetch(`${config.apiEndpoints.users}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) throw new Error('Delete failed');
+
+                    const table = $(domElements.dataTable).DataTable();
+                    table.row($(this).parents('tr')).remove().draw();
+                    updateRowCount();
+                    showMessage('ลบข้อมูลสำเร็จ', 'success');
+                } catch (error) {
+                    handleError(error, 'Delete operation');
+                }
+            }
+        });
+
+        domElements.dataTable.on('click', '.btn-edit', function () {
+            const rowData = dataTable.row($(this).parents('tr')).data();
+            console.log(rowData);
+
+            domElements.editUserId.value = rowData.id;
+            domElements.editUsername.value = rowData.username;
+            domElements.editEmail.value = rowData.email;
+            domElements.editAuth.value = rowData.auth;
+            domElements.editDivision.value = rowData.division;
+            domElements.editModal.show();
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'danger');
+    }
 };
 
 const handleSave = async () => {
-    try {
-        const updatedData = {
-            username: domElements.editUsername.value.trim(),
-            email: domElements.editEmail.value.trim(),
-            auth: domElements.editAuth.value,
-            division: domElements.editDivision.value
-        };
+    const id = domElements.editUserId.value;
+    const updatedData = {
+        username: domElements.editUsername.value.trim(),
+        email: domElements.editEmail.value.trim(),
+        auth: domElements.editAuth.value,
+        division: domElements.editDivision.value
+    };
 
-        const id = domElements.editUserId.value;
+    try {
         const response = await fetch(`${config.apiEndpoints.users}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -125,7 +159,18 @@ const handleSave = async () => {
             throw new Error(error.error);
         }
 
-        domElements.userTable.DataTable().ajax.reload();
+        const table = $(domElements.dataTable).DataTable();
+        table.rows().every(function () {
+            const rowData = this.data();
+            if (rowData.id == id) {
+                rowData.username = updatedData.username;
+                rowData.email = updatedData.email;
+                rowData.auth = updatedData.auth;
+                rowData.division = updatedData.division;
+                this.data(rowData).draw(false);
+            }
+        });
+
         domElements.editModal.hide();
         showMessage('อัปเดตข้อมูลสำเร็จ', 'success');
     } catch (error) {
@@ -208,33 +253,16 @@ const handleLogout = async () => {
     }
 };
 
-const showMessage = (text, type) => {
-    domElements.message.textContent = text;
-    domElements.message.classList.add(type);
-    domElements.message.style.display = 'block';
-
-    setTimeout(() => {
-        domElements.message.style.display = 'none';
-        domElements.message.classList.remove(type);
-        domElements.message.textContent = '';
-    }, 1000);
-};
-
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const table = initDataTable();
+        initDataTable();
 
-        // Event Listeners
+        domElements.saveBtn.addEventListener('click', handleSave);
+        domElements.logoutBtn.addEventListener('click', handleLogout);
         document.getElementById('editModal').addEventListener('hide.bs.modal', () => {
             if (document.activeElement) document.activeElement.blur();
         });
-
-        document.querySelector('#editModal .btn-primary').addEventListener('click', handleSave);
-        domElements.logoutBtn.addEventListener('click', handleLogout);
-
-        handleDelete(table);
-        handleEdit(table);
 
         // Load initial data
         await Promise.all([loadUserProfile(), loadTasabanInfo()]);

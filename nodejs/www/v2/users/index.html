@@ -249,24 +249,41 @@
                         <div class="nk-content-body">
                             <div class="nk-block">
                                 <div class="row g-gs">
-                                    <div class="col-xxl-12 col-lg-12">
+                                    <div class="col-xxl-8 col-lg-7">
                                         <div class="card card-full">
                                             <div class="card-inner">
                                                 <div class="card-title-group">
                                                     <div class="card-title ">
+                                                        <label class="f">Local Geo-Info Application: LGIA</label>
                                                         <h5 class="title f">ระบบภูมิสารสนเทศชุมชน - <span
                                                                 id="tasabanInfo"></span></h5>
-                                                        <label class="f">Local Geo-Info Application: LGIA</label>
+
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="col-xxl-4 col-lg-5">
+                                        <div class="card card-full">
+                                            <div class="card-inner">
+                                                <div class="card-title-group">
+                                                    <div class="card-title">
+                                                        <label class="form-label">จำนวนสมาชิก</label>
+                                                        <h5 class="title f" id="userCount"></h5>
+                                                    </div>
+                                                    <div class="card-tools">
+                                                        <!-- <a href="#" class="link">View All</a> -->
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div><!-- .card -->
+                                    </div>
                                     <div class="col-xxl-12 col-lg-12">
                                         <div class="card card-full">
                                             <div class="card-inner">
                                                 <div id="message" class="mb-3" style="display: none;"></div>
-                                                <table id="userTable" class="display nowrap" data-export-title="Export">
+                                                <table id="dataTable" class="display nowrap" data-export-title="Export">
                                                     <thead>
                                                         <tr>
                                                             <th></th>
@@ -339,7 +356,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary">บันทึก</button>
+                    <button type="button" class="btn btn-primary" id="btn-save">บันทึก</button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
                 </div>
             </div>

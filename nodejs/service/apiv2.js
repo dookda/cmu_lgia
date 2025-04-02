@@ -331,23 +331,24 @@ app.put('/api/v2/divisions/:id', async (req, res) => {
 });
 
 // Delete a division by ID
-app.delete("/api/v2/divisions/:id", async (req, res) => {
-    const { id } = req.params;
-
+app.delete('/api/v2/divisions/:id', async (req, res) => {
     try {
-        const result = await pool.query("DELETE FROM layer_division WHERE id = $1 RETURNING *", [id]);
+        const id = parseInt(req.params.id, 10);
+        const { rowCount } = await pool.query(
+            'DELETE FROM layer_division WHERE id = $1',
+            [id]
+        );
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: "Division not found" });
+        if (rowCount === 0) {
+            return res.status(404).json({ error: 'Entry not found' });
         }
 
-        res.json({ message: "Division deleted successfully" });
+        res.json({ success: true });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 // Fetch all users
 app.get("/api/v2/users", async (req, res) => {

@@ -1,4 +1,3 @@
-// DOM Elements Cache
 const domElements = {
     dataTable: $('#dataTable'),
     userAvatarS: document.getElementById('userAvatarS'),
@@ -12,10 +11,10 @@ const domElements = {
     lineLogin: document.getElementById('lineLogin'),
     lineLogout: document.getElementById('lineLogout'),
     userProfile: document.getElementById('userProfile'),
-    message: document.getElementById('message')
+    message: document.getElementById('message'),
+    layerCount: document.getElementById('layerCount'),
 };
 
-// Configuration
 const config = {
     apiEndpoints: {
         layers: '/api/v2/layer_names',
@@ -36,7 +35,6 @@ const showMessage = (text, type) => {
     domElements.message.textContent = text;
     domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
-
     setTimeout(() => {
         domElements.message.style.display = 'none';
         domElements.message.classList.remove(type);
@@ -44,15 +42,24 @@ const showMessage = (text, type) => {
     }, 1000);
 };
 
-// DataTable Handling
+const updateRowCount = () => {
+    const table = $(domElements.dataTable).DataTable();
+    domElements.layerCount.textContent = `${table.rows().count()} ชั้นข้อมูล`;
+};
+
+let dataTable;
 const initializeDataTable = async () => {
     try {
-        const response = await fetch(config.apiEndpoints.layers);
-        if (!response.ok) throw new Error('Failed to load data');
-        const data = await response.json();
+        if (dataTable) {
+            dataTable.destroy();
+            domElements.dataTable.innerHTML = '';
+        }
 
-        const table = domElements.dataTable.DataTable({
-            data: data,
+        dataTable = $(domElements.dataTable).DataTable({
+            ajax: {
+                url: config.apiEndpoints.layers,
+                dataSrc: ''
+            },
             columns: [
                 {
                     data: null,
@@ -87,7 +94,11 @@ const initializeDataTable = async () => {
             autoWidth: true
         });
 
-        // Delete handler
+        dataTable.on('xhr', function () {
+            const data = dataTable.ajax.json();
+            domElements.layerCount.textContent = `${data.length} หน่วยงาน`;
+        });
+
         domElements.dataTable.on('click', '.btn-delete', async function () {
             const id = $(this).data('id');
             if (confirm('ยืนยันการลบรายการนี้?')) {
@@ -98,7 +109,9 @@ const initializeDataTable = async () => {
 
                     if (!response.ok) throw new Error('Delete failed');
 
+                    const table = $(domElements.dataTable).DataTable();
                     table.row($(this).parents('tr')).remove().draw();
+                    updateRowCount();
                     showMessage('ลบข้อมูลสำเร็จ', 'success');
                 } catch (error) {
                     handleError(error, 'Delete operation');
@@ -106,7 +119,6 @@ const initializeDataTable = async () => {
             }
         });
 
-        // Edit handler
         domElements.dataTable.on('click', '.btn-edit', function () {
             const formid = $(this).data('formid');
             const type = $(this).data('type');
@@ -114,11 +126,11 @@ const initializeDataTable = async () => {
         });
 
     } catch (error) {
-        handleError(error, 'DataTable initialization');
+        console.error('Error initializing DataTable:', error);
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'danger');
     }
 };
 
-// User Profile
 const loadUserProfile = async () => {
     try {
         const response = await fetch(config.apiEndpoints.profile);
@@ -129,7 +141,6 @@ const loadUserProfile = async () => {
             return;
         }
 
-        // Safe DOM manipulation
         const setImageSafe = (element, url) => {
             element.innerHTML = '';
             const img = document.createElement('img');
@@ -143,7 +154,6 @@ const loadUserProfile = async () => {
         setImageSafe(domElements.userAvatarL, data.user.pictureUrl);
         domElements.displayName.textContent = data.user.displayName;
 
-        // Update UI states
         domElements.lineLogin.style.display = 'none';
         [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
             .forEach(el => el.style.display = 'block');
@@ -153,7 +163,6 @@ const loadUserProfile = async () => {
     }
 };
 
-// Tasaban Info
 const updateLogo = (imgElement, url) => {
     imgElement.src = url || config.fallbackLogo;
     imgElement.onerror = () => {
@@ -170,7 +179,6 @@ const getTasabanInfo = async () => {
         const data = await response.json() || {};
         domElements.tasabanInfo.textContent = data.name || 'เทศบาลไม่ระบุชื่อ';
 
-        // Update logos
         updateLogo(domElements.imgLogo1, data.img);
         updateLogo(domElements.imgLogo2, data.img);
 
@@ -181,13 +189,11 @@ const getTasabanInfo = async () => {
     }
 };
 
-// Logout Handler
 const handleLogout = async () => {
     try {
         const response = await fetch(config.apiEndpoints.logout);
         if (!response.ok) throw new Error('Logout failed');
 
-        // Reset UI
         domElements.userAvatarS.innerHTML = '<em class="icon ni ni-user-alt"></em>';
         domElements.lineLogin.style.display = 'block';
         [domElements.userDetail, domElements.lineLogout, domElements.userProfile]
@@ -198,12 +204,10 @@ const handleLogout = async () => {
     }
 };
 
-// Event Listeners
 const setupEventListeners = () => {
     domElements.logoutBtn.addEventListener('click', handleLogout);
 };
 
-// Initialization
 const initializeApp = async () => {
     try {
         await loadUserProfile();
@@ -215,5 +219,4 @@ const initializeApp = async () => {
     }
 };
 
-// Start Application
 document.addEventListener('DOMContentLoaded', initializeApp);

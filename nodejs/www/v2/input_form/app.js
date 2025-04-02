@@ -38,7 +38,6 @@ const showMessage = (text, type) => {
     domElements.message.textContent = text;
     domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
-
     setTimeout(() => {
         domElements.message.style.display = 'none';
         domElements.message.classList.remove(type);

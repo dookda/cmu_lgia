@@ -1,13 +1,13 @@
 // DOM Elements Cache
 const domElements = {
-    divisionTable: $('#divisionTable'),
+    dataTable: $('#dataTable'),
     addForm: document.getElementById('addDivisionName'),
     divisionInput: document.getElementById('division'),
     divisionCount: document.getElementById('divisionCount'),
     editModal: new bootstrap.Modal('#editModal'),
     editDivisionId: document.getElementById('division_id'),
     editDivisionName: document.getElementById('division_name'),
-    saveBtn: document.querySelector('#editModal .btn-primary'),
+    saveBtn: document.getElementById('btn-save'),
     logoutBtn: document.getElementById('logout'),
     userAvatarS: document.getElementById('userAvatarS'),
     userAvatarL: document.getElementById('userAvatarL'),
@@ -15,6 +15,28 @@ const domElements = {
     imgLogo1: document.getElementById('imgLogo1'),
     imgLogo2: document.getElementById('imgLogo2'),
     message: document.getElementById('message')
+};
+
+const handleError = (error, context) => {
+    console.error(`[${context}]`, error);
+    showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
+};
+
+const resetMessage = () => {
+    domElements.message.style.display = 'none';
+    domElements.message.classList.remove(type);
+    domElements.message.textContent = '';
+};
+
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
+    domElements.message.style.display = 'block';
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
 };
 
 // Configuration
@@ -28,39 +50,91 @@ const config = {
     fallbackLogo: './../images/logo-dark2x.png'
 };
 
-// Initialize DataTable
-const initDataTable = () => {
-    return domElements.divisionTable.DataTable({
-        ajax: {
-            url: config.apiEndpoints.divisions,
-            dataSrc: data => {
-                domElements.divisionCount.textContent = `${data.length} หน่วยงาน`;
-                return data;
-            }
-        },
-        columns: [
-            {
-                data: 'id',
-                render: (data) => `
-                    <button class="btn btn-primary edit-btn" data-id="${data}">แก้ไข</button>
-                    <button class="btn btn-danger delete-btn" data-id="${data}">ลบ</button>
-                `
-            },
-            { data: 'id' },
-            { data: 'division_name' },
-            {
-                data: 'created_at',
-                render: data => new Date(data).toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                })
-            }
-        ]
-    });
+const updateRowCount = () => {
+    const table = $(domElements.dataTable).DataTable();
+    domElements.divisionCount.textContent = `${table.rows().count()} หน่วยงาน`;
 };
 
-// Event Handlers
+let dataTable;
+const initDataTable = async () => {
+    try {
+        if (dataTable) {
+            dataTable.destroy();
+            domElements.dataTable.innerHTML = '';
+        }
+
+        dataTable = $(domElements.dataTable).DataTable({
+            ajax: {
+                url: config.apiEndpoints.divisions,
+                dataSrc: ''
+            },
+            columns: [
+                {
+                    data: null,
+                    render: (data, type, row) => `
+                        <button class="btn btn-primary btn-edit" 
+                            data-id="${row.id}" 
+                            data-division_name="${row.division_name}">
+                            แก้ไข
+                        </button>
+                        <button class="btn btn-danger btn-delete" 
+                            data-id="${row.id}">
+                            ลบ
+                        </button>
+                    `
+                },
+                { data: 'id' },
+                { data: 'division_name' },
+                {
+                    data: 'created_at',
+                    render: data => new Date(data).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                }
+            ],
+            scrollX: true,
+            responsive: false,
+            autoWidth: true
+        });
+
+        dataTable.on('xhr', function () {
+            const data = dataTable.ajax.json();
+            domElements.divisionCount.textContent = `${data.length} หน่วยงาน`;
+        });
+
+        domElements.dataTable.on('click', '.btn-delete', async function () {
+            const id = $(this).data('id');
+            if (confirm('ยืนยันการลบรายการนี้?')) {
+                try {
+                    const response = await fetch(`${config.apiEndpoints.divisions}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) throw new Error('Delete failed');
+
+                    const table = $(domElements.dataTable).DataTable();
+                    table.row($(this).parents('tr')).remove().draw();
+                    updateRowCount();
+                    showMessage('ลบข้อมูลสำเร็จ', 'success');
+                } catch (error) {
+                    handleError(error, 'Delete operation');
+                }
+            }
+        });
+
+        domElements.dataTable.on('click', '.btn-edit', function () {
+            domElements.editDivisionId.value = $(this).data('id');
+            domElements.editDivisionName.value = $(this).data('division_name');
+            domElements.editModal.show();
+        });
+
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        showMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'danger');
+    }
+};
+
 const handleFormSubmit = async (e) => {
     e.preventDefault();
     const divisionName = domElements.divisionInput.value.trim();
@@ -83,20 +157,16 @@ const handleFormSubmit = async (e) => {
         }
 
         domElements.divisionInput.value = '';
-        domElements.divisionTable.DataTable().ajax.reload(null, false);
+
+        const table = $(domElements.dataTable).DataTable();
+        table.ajax.reload(() => {
+            updateRowCount();
+        }, false);
+
         showMessage('เพิ่มหน่วยงานสำเร็จ', 'success');
     } catch (error) {
         showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
     }
-};
-
-const handleEdit = (table) => {
-    domElements.divisionTable.on('click', '.edit-btn', function () {
-        const rowData = table.row($(this).parents('tr')).data();
-        domElements.editDivisionId.value = rowData.id;
-        domElements.editDivisionName.value = rowData.division_name;
-        domElements.editModal.show();
-    });
 };
 
 const handleSave = async () => {
@@ -120,7 +190,15 @@ const handleSave = async () => {
             throw new Error(error.error);
         }
 
-        domElements.divisionTable.DataTable().ajax.reload(null, false);
+        const table = $(domElements.dataTable).DataTable();
+        table.rows().every(function () {
+            const rowData = this.data();
+            if (rowData.id == id) {
+                rowData.division_name = newName;
+                this.data(rowData).draw(false);
+            }
+        });
+
         domElements.editModal.hide();
         showMessage('อัปเดตข้อมูลสำเร็จ', 'success');
     } catch (error) {
@@ -128,29 +206,6 @@ const handleSave = async () => {
     }
 };
 
-const handleDelete = () => {
-    domElements.divisionTable.on('click', '.delete-btn', async function () {
-        const id = $(this).data('id');
-
-        if (!confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) return;
-
-        try {
-            const response = await fetch(`${config.apiEndpoints.divisions}/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error);
-            }
-
-            domElements.divisionTable.DataTable().ajax.reload(null, false);
-            showMessage('ลบข้อมูลสำเร็จ', 'success');
-        } catch (error) {
-            showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'danger');
-        }
-    });
-};
 
 // User Profile
 const loadUserProfile = async () => {
@@ -228,44 +283,13 @@ const handleLogout = async () => {
     }
 };
 
-const resetMessage = () => {
-    domElements.message.style.display = 'none';
-    domElements.message.classList.remove(type);
-    domElements.message.textContent = '';
-};
-
-const showMessage = (text, type) => {
-    domElements.message.textContent = text;
-    domElements.message.classList.add(type);
-    domElements.message.style.display = 'block';
-
-    const showMessage = (text, type) => {
-        domElements.message.textContent = text;
-        domElements.message.classList.add(type);
-        domElements.message.style.display = 'block'; // make sure the message is visible
-
-        // Automatically remove the message after 200ms
-        setTimeout(() => {
-            domElements.message.style.display = 'none';
-            domElements.message.classList.remove(type);
-            domElements.message.textContent = ''; // clear the content if needed
-        }, 1000);
-    };
-};
-
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const table = initDataTable();
-
-        // Event Listeners
+        initDataTable();
         domElements.addForm.addEventListener('submit', handleFormSubmit);
         domElements.saveBtn.addEventListener('click', handleSave);
         domElements.logoutBtn.addEventListener('click', handleLogout);
-        handleEdit(table);
-        handleDelete();
-
-        // Load initial data
         await Promise.all([loadUserProfile(), loadTasabanInfo()]);
 
     } catch (error) {

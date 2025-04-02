@@ -36,21 +36,12 @@ const showMessage = (text, type) => {
     domElements.message.textContent = text;
     domElements.message.classList.add(type);
     domElements.message.style.display = 'block';
-
-    const showMessage = (text, type) => {
-        domElements.message.textContent = text;
-        domElements.message.classList.add(type);
-        domElements.message.style.display = 'block'; // make sure the message is visible
-
-        // Automatically remove the message after 200ms
-        setTimeout(() => {
-            domElements.message.style.display = 'none';
-            domElements.message.classList.remove(type);
-            domElements.message.textContent = ''; // clear the content if needed
-        }, 1000);
-    };
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
 };
-
 // Initialize Application
 const initApp = async () => {
     try {

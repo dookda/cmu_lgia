@@ -60,6 +60,17 @@ const getTasabanInfo = async () => {
     }
 };
 
+const showMessage = (text, type) => {
+    domElements.message.textContent = text;
+    domElements.message.classList.add(type);
+    domElements.message.style.display = 'block';
+    setTimeout(() => {
+        domElements.message.style.display = 'none';
+        domElements.message.classList.remove(type);
+        domElements.message.textContent = '';
+    }, 1000);
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadUserProfile();
