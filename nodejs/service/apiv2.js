@@ -258,24 +258,39 @@ app.get('/api/v2/layer_names', async (req, res) => {
 });
 
 app.delete('/api/v2/layer_names/:gid', async (req, res) => {
+    const client = await pool.connect();
     try {
+        await client.query('BEGIN');
+
         const gid = parseInt(req.params.gid, 10);
-        const { rowCount } = await pool.query(
-            'DELETE FROM layer_name WHERE gid = $1',
+        // Delete the row and return the associated table name (assumes a column "table_name" exists)
+        const deleteResult = await client.query(
+            'DELETE FROM layer_name WHERE gid = $1 RETURNING formid AS table_name',
             [gid]
         );
 
-        if (rowCount === 0) {
+        if (deleteResult.rowCount === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Entry not found' });
         }
 
+        const { table_name } = deleteResult.rows[0];
+
+        // Build the DROP TABLE query.
+        // WARNING: Ensure table_name is a safe value (only contains valid characters).
+        const dropTableQuery = `DROP TABLE IF EXISTS "${table_name}"`;
+        await client.query(dropTableQuery);
+
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+        client.release();
     }
 });
-
 
 // Get all divisions
 app.get("/api/v2/divisions", async (req, res) => {
