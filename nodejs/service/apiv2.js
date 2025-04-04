@@ -543,13 +543,11 @@ app.post('/api/v2/info', async (req, res) => {
 app.get('/api/v2/load_layer/:formid', async (req, res) => {
     const formid = req.params.formid;
 
-    // Validate the table name to ensure it only contains safe characters
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
         return res.status(400).json({ error: 'Invalid table name.' });
     }
 
     try {
-        // 1. Retrieve the column definitions (metadata) from the layer_column table.
         const structureQuery = `
       SELECT col_id, col_name, col_type, col_desc 
       FROM layer_column 
@@ -562,7 +560,6 @@ app.get('/api/v2/load_layer/:formid', async (req, res) => {
             return res.status(404).json({ error: 'No metadata found for this form.' });
         }
 
-        // 2. Retrieve column names from the target table (excluding the "geom" column).
         const columnsQuery = `
       SELECT column_name 
       FROM information_schema.columns 
@@ -570,17 +567,14 @@ app.get('/api/v2/load_layer/:formid', async (req, res) => {
     `;
         const columnsRes = await pool.query(columnsQuery, [formid]);
 
-        // Quote each column name to avoid SQL syntax issues.
         const columnsList = columnsRes.rows
             .map(row => `"${row.column_name}"`)
             .join(', ');
 
-        // 3. Build the SELECT clause, including ST_AsGeoJSON for the geom column.
         const selectColumns = columnsList
             ? `${columnsList}, ST_AsGeoJSON(geom) as geojson`
             : `ST_AsGeoJSON(geom) as geojson`;
 
-        // 4. Build and execute the dynamic SQL query.
         const sql = `
       SELECT ${selectColumns}
       FROM "${formid}"
@@ -589,7 +583,6 @@ app.get('/api/v2/load_layer/:formid', async (req, res) => {
         const dataResult = await pool.query(sql);
         const data = dataResult.rows;
 
-        // 5. Return both the structure and the data.
         res.json({
             structure,
             data,
@@ -607,7 +600,6 @@ app.post('/api/v2/load_layer', async (req, res) => {
             return res.status(400).send('Invalid formid.');
         }
 
-        // Fetch non-geom column names from the table
         const columnsQuery = `
             SELECT column_name 
             FROM information_schema.columns 
@@ -615,17 +607,14 @@ app.post('/api/v2/load_layer', async (req, res) => {
         `;
         const columnsRes = await pool.query(columnsQuery, [formid]);
 
-        // Quote each column name to avoid SQL syntax issues
         const columns = columnsRes.rows
             .map(row => `"${row.column_name}"`)
             .join(', ');
 
-        // Build the SELECT clause without a leading comma if no columns found
         const selectColumns = columns
             ? `${columns}, ST_AsGeoJSON(geom) as geojson`
             : `ST_AsGeoJSON(geom) as geojson`;
 
-        // Quote the table name to prevent syntax errors (ensure formid is safe!)
         const sql = `
             SELECT ${selectColumns}
             FROM "${formid}"
@@ -869,43 +858,6 @@ app.delete('/api/v2/delete_feature', async (req, res) => {
     }
 });
 
-// create new feature
-// app.post('/api/v2/create_feature', async (req, res) => {
-//     const { formid, geojson, style } = req.body;
-//     const refid = `ref${Date.now()}${Math.random()}`;
-
-//     if (!formid || !refid || !geojson) {
-//         return res.status(400).json({ error: 'Missing required fields: formid, refid, or geojson' });
-//     }
-
-//     if (!isValidTableName(formid)) {
-//         return res.status(400).json({ error: 'Invalid formid (table name)' });
-//     }
-
-//     try {
-//         const query = `
-//       INSERT INTO ${formid} (refid, geom, style)
-//       VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), $3)
-//       RETURNING *
-//     `;
-//         const values = [refid, geojson, style];
-
-//         const result = await pool.query(query, values);
-
-//         if (result.rowCount === 0) {
-//             return res.status(500).json({ error: 'Failed to insert feature' });
-//         }
-
-//         res.json({
-//             message: 'Feature inserted successfully',
-//             feature: result.rows[0]
-//         });
-//     } catch (error) {
-//         console.error('Error inserting feature:', error);
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// });
-
 app.post('/api/v2/insert_row', async (req, res) => {
     const { formid, refid } = req.body;
 
@@ -997,14 +949,12 @@ app.delete('/api/v2/delete_column/:formid/:colid', async (req, res) => {
     try {
         const { formid, colid } = req.params;
 
-        // Validate table name to prevent SQL injection
         if (!/^[a-zA-Z0-9_]+$/.test(formid)) {
             return res.status(400).json({ error: 'Invalid form ID format' });
         }
 
         await client.query('BEGIN');
 
-        // 1. Delete from layer_column
         const deleteResult = await client.query(
             `DELETE FROM layer_column 
             WHERE formid = $1 AND col_id = $2 
@@ -1017,7 +967,6 @@ app.delete('/api/v2/delete_column/:formid/:colid', async (req, res) => {
             return res.status(404).json({ error: 'Column not found' });
         }
 
-        // 2. Drop column from dynamic table
         await client.query(
             `ALTER TABLE ${formid} 
             DROP COLUMN IF EXISTS ${client.escapeIdentifier(colid)}`
@@ -1109,8 +1058,5 @@ app.post('/api/v2/create_column/:formid', async (req, res) => {
         client.release();
     }
 });
-
-// testing
-
 
 module.exports = app;

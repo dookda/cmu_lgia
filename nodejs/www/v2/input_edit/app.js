@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const generateFormFields = (columnsData, rowData) => {
             const formContainer = document.getElementById('formContainer');
             formContainer.innerHTML = '';
-            console.log('columnsData', columnsData);
+            // console.log('columnsData', columnsData);
 
             columnsData.forEach(column => {
                 const formGroup = document.createElement('div');
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('newFeature').addEventListener('click', async (e) => {
             const ref = refidCreate();
-            console.log(ref);
+            // console.log(ref);
 
             try {
                 const response = await fetch('/api/v2/insert_row', {
@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 const result = await response.json();
-                console.log(result);
+                // console.log(result);
                 window.open(`/v2/detail/index.html?formid=${formid}&refid=${ref}&type=${featureType}`, '_blank');
             } catch (error) {
                 console.error('Error in detail-btn click event:', error);
@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             features = table.rows().data().toArray();
-            console.log(features);
+            // console.log(features);
 
             if (features.length === 0) {
                 console.warn('No features found');
