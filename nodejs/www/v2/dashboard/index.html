@@ -341,12 +341,8 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <table id="table" class="display nowrap">
-                                                    <thead></thead>
-                                                    <tbody></tbody>
+                                                <table id="dataTable" class="display nowrap" data-export-title="Export">
                                                 </table>
-                                                <div id="tableError" class="alert alert-danger" style="display: none;">
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -366,6 +362,29 @@
                 <!-- footer @e -->
             </div>
             <!-- wrap @e -->
+        </div>
+    </div>
+
+    <div class="modal fade" id="attrModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">รายละเอียดข้อมูล</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-container" id="formContainer"></div>
+                    <input type="hidden" id="refid">
+                    <input type="hidden" id="formid">
+                    <input type="hidden" id="type">
+                </div>
+                <div class="modal-footer">
+                    <!-- <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        id="submitButton">ตกลง</button> -->
+                    <!-- <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="editButton">แก้ไข</button> -->
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                </div>
+            </div>
         </div>
     </div>
     <!-- boostrap -->

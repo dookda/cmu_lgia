@@ -27,29 +27,6 @@ h1 h2 h3 h4 h5 h6 {
     font-family: "Noto Sans Thai", serif !important;
 }
 
-#dataTable {
-    width: 100% !important;
-}
-
-.dataTables_wrapper {
-    overflow-x: auto;
-}
-
-#table {
-    width: 100%;
-    table-layout: auto;
-}
-
-/* Allow long header text to wrap onto multiple lines if needed */
-#table thead th {
-    white-space: normal;
-    word-wrap: break-word;
-}
-
-.buttons-excel:before {
-    content: "" !important;
-}
-
 .nk-menu-text {
     font-family: "Noto Sans Thai", serif !important;
 }

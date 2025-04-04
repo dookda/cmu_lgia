@@ -34,7 +34,6 @@ const showMessage = (text, type) => {
     }, 1000);
 };
 
-// Configuration
 const config = {
     apiEndpoints: {
         users: '/api/v2/users',
@@ -123,8 +122,6 @@ const initDataTable = () => {
 
         domElements.dataTable.on('click', '.btn-edit', function () {
             const rowData = dataTable.row($(this).parents('tr')).data();
-            console.log(rowData);
-
             domElements.editUserId.value = rowData.id;
             domElements.editUsername.value = rowData.username;
             domElements.editEmail.value = rowData.email;

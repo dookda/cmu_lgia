@@ -96,7 +96,7 @@ const initializeDataTable = async () => {
 
         dataTable.on('xhr', function () {
             const data = dataTable.ajax.json();
-            domElements.layerCount.textContent = `${data.length} หน่วยงาน`;
+            domElements.layerCount.textContent = `${data.length} ชั้นข้อมูล`;
         });
 
         domElements.dataTable.on('click', '.btn-delete', async function () {

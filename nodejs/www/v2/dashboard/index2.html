@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Dynamic DataTable Example</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+</head>
+
+<body>
+    <table id="datatable" class="display" style="width:100%"></table>
+
+    <script>
+        $(document).ready(async () => {
+            try {
+                const response = await fetch('/api/v2/test/fid_1709611155681');
+                const responseData = await response.json();
+                const structure = responseData.structure;
+                const data = responseData.data;
+                const columns = structure.map(col => ({
+                    data: col.col_id,
+                    title: col.col_name
+                }));
+
+                $('#datatable').DataTable({
+                    data: data,
+                    columns: columns
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

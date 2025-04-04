@@ -514,15 +514,15 @@ app.get('/api/v2/info/:id', async (req, res) => {
 app.post('/api/v2/info', async (req, res) => {
     try {
         const { id, name, img } = req.body;
+        console.log(id, name, img);
 
         if (!name) {
             return res.status(400).json({ error: 'Name is required' });
         }
 
-        // For new entries, require image
-        if (!img) {
-            return res.status(400).json({ error: 'Image is required for new entries' });
-        }
+        // if (img && !img.startsWith('data:image/')) {
+        //     return res.status(400).json({ error: 'Invalid image format' });
+        // }
 
         let result = await pool.query(
             `UPDATE tb_info 
@@ -537,6 +537,66 @@ app.post('/api/v2/info', async (req, res) => {
     } catch (error) {
         console.error('Error saving data:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/v2/load_layer/:formid', async (req, res) => {
+    const formid = req.params.formid;
+
+    // Validate the table name to ensure it only contains safe characters
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(formid)) {
+        return res.status(400).json({ error: 'Invalid table name.' });
+    }
+
+    try {
+        // 1. Retrieve the column definitions (metadata) from the layer_column table.
+        const structureQuery = `
+      SELECT col_id, col_name, col_type, col_desc 
+      FROM layer_column 
+      WHERE formid = $1
+    `;
+        const structureResult = await pool.query(structureQuery, [formid]);
+        const structure = structureResult.rows;
+
+        if (structure.length === 0) {
+            return res.status(404).json({ error: 'No metadata found for this form.' });
+        }
+
+        // 2. Retrieve column names from the target table (excluding the "geom" column).
+        const columnsQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = $1 AND column_name != 'geom'
+    `;
+        const columnsRes = await pool.query(columnsQuery, [formid]);
+
+        // Quote each column name to avoid SQL syntax issues.
+        const columnsList = columnsRes.rows
+            .map(row => `"${row.column_name}"`)
+            .join(', ');
+
+        // 3. Build the SELECT clause, including ST_AsGeoJSON for the geom column.
+        const selectColumns = columnsList
+            ? `${columnsList}, ST_AsGeoJSON(geom) as geojson`
+            : `ST_AsGeoJSON(geom) as geojson`;
+
+        // 4. Build and execute the dynamic SQL query.
+        const sql = `
+      SELECT ${selectColumns}
+      FROM "${formid}"
+      ORDER BY ts DESC
+    `;
+        const dataResult = await pool.query(sql);
+        const data = dataResult.rows;
+
+        // 5. Return both the structure and the data.
+        res.json({
+            structure,
+            data,
+        });
+    } catch (error) {
+        console.error('Error executing query:', error);
+        res.status(500).json({ error: 'Internal server error.' });
     }
 });
 
@@ -1049,5 +1109,8 @@ app.post('/api/v2/create_column/:formid', async (req, res) => {
         client.release();
     }
 });
+
+// testing
+
 
 module.exports = app;

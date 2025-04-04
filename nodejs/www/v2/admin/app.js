@@ -139,8 +139,7 @@ const handleFormSubmit = async (e) => {
     try {
         if (!formData.name) throw new Error('กรุณากรอกชื่อเทศบาล');
         if (!formData.id && !formData.img) throw new Error('กรุณาเลือกรูปภาพโลโก้');
-
-        // console.log(formData);
+        console.log(formData);
 
         const response = await fetch('/api/v2/info', {
             method: 'POST',

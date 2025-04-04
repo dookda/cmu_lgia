@@ -378,6 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const generateFormFields = (columnsData, rowData) => {
             const formContainer = document.getElementById('formContainer');
             formContainer.innerHTML = '';
+            console.log('columnsData', columnsData);
 
             columnsData.forEach(column => {
                 const formGroup = document.createElement('div');
@@ -404,6 +405,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         input.type = 'date';
                         input.className = 'form-control';
                         break;
+                    case 'file':
+                        input = document.createElement('image');
+                        input.className = 'img-fluid';
+                        break;
                     default:
                         input = document.createElement('input');
                         input.type = 'text';
@@ -415,13 +420,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 input.name = column.col_id;
                 input.placeholder = column.col_desc;
 
-                if (rowData && rowData[column.col_id] !== undefined) {
-                    input.value = rowData[column.col_id];
-                }
+                if (rowData && rowData[column.col_id] !== undefined && column.col_type !== 'file') {
+                    if (column.col_type === 'date' && isISODate(rowData[column.col_id])) {
+                        input.value = formatThaiDate(rowData[column.col_id]);
+                    } else {
+                        input.value = rowData[column.col_id];
+                    }
 
-                formGroup.appendChild(label);
-                formGroup.appendChild(input);
-                formContainer.appendChild(formGroup);
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    formContainer.appendChild(formGroup);
+                } else if (column.col_type === 'file') {
+                    formGroup.appendChild(label);
+                    const fileUrl = rowData[column.col_id];
+                    if (fileUrl) {
+                        const img = document.createElement('img');
+                        img.src = fileUrl;
+                        img.alt = 'File';
+                        img.className = 'img-fluid';
+                        formGroup.appendChild(img);
+                    } else {
+                        const noFileText = document.createElement('p');
+                        noFileText.textContent = 'ไม่มีไฟล์แนบ';
+                        formGroup.appendChild(noFileText);
+                    }
+
+                    formGroup.appendChild(input);
+                    formContainer.appendChild(formGroup);
+                }
             });
         };
 
@@ -450,20 +476,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        const initializeDataTable = (data, columnsData) => {
+        const loadColumnList = async (formid) => {
             try {
-                if (!data || !Array.isArray(data)) {
-                    console.error('Invalid data for DataTable initialization');
-                    return null;
+                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                    $('#dataTable').DataTable().destroy();
+                    document.getElementById('table').innerHTML = '';
                 }
 
-                const nonEditableColumns = ['refid', 'id', 'ts', 'geojson', 'style', 'type'];
+                const response = await fetch('/api/v2/load_layer/' + formid);
+                const responseData = await response.json();
+                const structure = responseData.structure;
+                const data = responseData.data;
 
-                const columns = [{
-                    title: '',
+                const buttonColumn = {
                     data: null,
-                    orderable: false,
-                    searchable: false,
+                    title: 'Actions',
+                    orderable: true,
                     render: (data, type, row) => {
                         try {
                             let geojson;
@@ -495,45 +523,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             return '';
                         }
                     }
-                }, ...Object.keys(data[0]).filter(key => !['geojson', 'style'].includes(key)).map(key => {
-                    const isHidden = key === 'refid' || key === 'ts';
-                    return {
-                        title: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
-                        data: key,
-                        className: nonEditableColumns.includes(key) ? '' : 'editable',
-                        visible: !isHidden,
-                        render: (data, type, row) => {
-                            try {
-                                if (isISODate(data)) {
-                                    if (type === 'display') return formatThaiDate(data);
-                                    return data;
-                                }
-                                if (type === 'display' && !nonEditableColumns.includes(key)) {
-                                    return `<div class="editable-cell">${data !== null && data !== undefined ? data : ''}</div>`;
-                                }
-                                return data;
-                            } catch (error) {
-                                console.error('Error in render function:', error);
-                                return data;
-                            }
-                        }
-                    };
-                })];
+                };
 
-                if ($.fn.DataTable.isDataTable('#dataTable')) $('#dataTable').DataTable().destroy();
-                $('#dataTable').empty();
+                const dynamicColumns = structure.map(col => ({
+                    data: col.col_id,
+                    title: col.col_name
+                }));
 
-                columns.forEach(col => {
-                    if (col.data === null) return;
-                    const match = columnsData.find(i => col.data === i.col_id);
-                    if (match) {
-                        col.title = match.col_name;
-                        col.type = match.col_type;
-                    }
-                });
-
-                const headerHtml = columns.map(col => `<th>${col.title}</th>`).join('');
-                $('#dataTable').html(`<thead><tr>${headerHtml}</tr></thead><tbody></tbody>`);
+                const columns = [buttonColumn, ...dynamicColumns];
 
                 const table = $('#dataTable').DataTable({
                     data: data,
@@ -568,10 +565,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 $('#dataTable').on('click', '.attr-btn', function (e) {
                     e.stopPropagation();
+
                     const refid = $(this).data('refid');
                     const row = table.row($(this).closest('tr')).data();
                     if (row) {
-                        generateFormFields(columnsData, row);
+                        generateFormFields(structure, row);
                         openAttrModal(refid);
                     } else {
                         console.error('Row data not found for refid:', refid);
@@ -599,27 +597,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                return table;
+                return { table, structure };
             } catch (error) {
-                console.error('Error in initializeDataTable:', error);
-                return null;
-            }
-        };
-
-        const fetchAPI = async (url, options = {}) => {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: { 'Content-Type': 'application/json', ...options.headers }
-                });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
-                }
-                return await response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                return null; // Explicitly return null
+                console.error('Error fetching data:', error);
             }
         };
 
@@ -663,35 +643,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const [columnsData, featuresData] = await Promise.all([
-                fetchAPI(`/api/v2/load_layer_description/${formid}`),
-                fetchAPI(`/api/v2/load_layer/`, { method: 'POST', body: JSON.stringify({ formid }) })
-            ]);
-
-            // if (columnsData.error || featuresData.error) {
-            //     console.error('API fetch failed:', columnsData.message || featuresData.message);
-            //     return;
-            // }
-
-            // const table = initializeDataTable(featuresData, columnsData);
-            // features = table.rows().data().toArray();
-
-            if (!columnsData || columnsData.error || !featuresData || featuresData.error) {
-                console.error('API fetch failed:',
-                    columnsData?.message || featuresData?.message || 'No data received');
-                return;
-            }
-
-            const safeFeaturesData = Array.isArray(featuresData) ? featuresData : [];
-
-            if (safeFeaturesData.length === 0) {
-                document.getElementById('dataWarning').style.display = 'block';
-                return null;
-            } else {
-                document.getElementById('dataWarning').style.display = 'none';
-            }
-
-            const table = initializeDataTable(safeFeaturesData, columnsData);
+            const { table, structure } = await loadColumnList(formid);
 
             if (!table) {
                 console.error('Failed to initialize DataTable');
@@ -699,6 +651,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             features = table.rows().data().toArray();
+            console.log(features);
+
             if (features.length === 0) {
                 console.warn('No features found');
                 // Optionally show a UI message
@@ -730,7 +684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.log(refid);
 
                         if (row) {
-                            generateFormFields(columnsData, row);
+                            generateFormFields(structure, row);
                             openAttrModal(refid);
                         } else {
                             console.error('Row data not found for refid:', refid);

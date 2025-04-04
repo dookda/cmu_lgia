@@ -995,7 +995,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             form.reset();
-            alert('Column created successfully!');
+            alert('สร้างคอลัมน์ สำเร็จ!');
             initForm();
         } catch (error) {
             console.error('Creation error:', error);

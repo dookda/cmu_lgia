@@ -395,65 +395,202 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (option) layerSelect.removeChild(option);
         }
 
-        const loadColumnList = async (formid) => {
+        const isISODate = (str) => {
             try {
-                if ($.fn.DataTable.isDataTable('#table')) {
-                    $('#table').DataTable().destroy();
-                    document.getElementById('table').innerHTML = '';
+                const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+                if (!isoDatePattern.test(str)) return false;
+                const date = new Date(str);
+                return date instanceof Date && !isNaN(date);
+            } catch (error) {
+                console.error('Error in isISODate:', error);
+                return false;
+            }
+        }
+
+        const formatThaiDate = (dateString) => {
+            try {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                const day = date.getDate();
+                const month = THAI_MONTHS[date.getMonth()];
+                const year = date.getFullYear() + 543;
+                return `${day} ${month} ${year}`;
+            } catch (error) {
+                console.error('Error in formatThaiDate:', error);
+                return dateString;
+            }
+        };
+
+        const generateFormFields = (columnsData, rowData) => {
+            const formContainer = document.getElementById('formContainer');
+            formContainer.innerHTML = '';
+            console.log('columnsData', columnsData);
+
+            columnsData.forEach(column => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.textContent = column.col_name;
+                label.setAttribute('for', column.col_id);
+
+                let input;
+                switch (column.col_type) {
+                    case 'text':
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        break;
+                    case 'numeric':
+                        input = document.createElement('input');
+                        input.type = 'number';
+                        input.className = 'form-control';
+                        break;
+                    case 'date':
+                        input = document.createElement('input');
+                        input.type = 'date';
+                        input.className = 'form-control';
+                        break;
+                    case 'file':
+                        input = document.createElement('image');
+                        input.className = 'img-fluid';
+                        break;
+                    default:
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        break;
                 }
 
-                const columnsResponse = await fetch('/api/load_column_description', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ formid }),
-                });
-                const columnsData = await columnsResponse.json();
+                input.id = column.col_id;
+                input.name = column.col_id;
+                input.placeholder = column.col_desc;
 
-                const tb = `<th>Zoom</th>` + columnsData.map(i => `<th>${i.col_name}</th>`).join('');
-                const col = [{
-                    "data": "refid",
-                    "title": "Zoom", // Set the column header name to "Zoom"
-                    "render": function (data, type, row) {
-                        return `<button class="btn btn-sm btn-primary zoom-btn" data-refid="${data}">Zoom</button>`;
-                    },
-                    "className": "text-center"
-                }].concat(columnsData.map(i => ({ 'data': i.col_id, })));
+                if (rowData && rowData[column.col_id] !== undefined && column.col_type !== 'file') {
+                    if (column.col_type === 'date' && isISODate(rowData[column.col_id])) {
+                        input.value = formatThaiDate(rowData[column.col_id]);
+                    } else {
+                        input.value = rowData[column.col_id];
+                    }
 
-                document.getElementById('table').innerHTML = `<thead><tr>${tb}</tr></thead><tbody></tbody>`;
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    formContainer.appendChild(formGroup);
+                } else if (column.col_type === 'file') {
+                    formGroup.appendChild(label);
+                    const fileUrl = rowData[column.col_id];
+                    if (fileUrl) {
+                        const img = document.createElement('img');
+                        img.src = fileUrl;
+                        img.alt = 'File';
+                        img.className = 'img-fluid';
+                        formGroup.appendChild(img);
+                    } else {
+                        const noFileText = document.createElement('p');
+                        noFileText.textContent = 'ไม่มีไฟล์แนบ';
+                        formGroup.appendChild(noFileText);
+                    }
 
-                const layerResponse = await fetch('/api/load_layer', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ formid }),
-                });
-                const layerData = await layerResponse.json();
+                    formGroup.appendChild(input);
+                    formContainer.appendChild(formGroup);
+                }
 
-                const table = $('#table').DataTable({
-                    data: layerData,
-                    columns: col,
+
+            });
+        };
+
+        const openAttrModal = (refid) => {
+            document.getElementById('refid').value = refid;
+            const modalEl = document.getElementById('attrModal');
+            const attrModal = new bootstrap.Modal(modalEl);
+            attrModal.show();
+        };
+
+        const loadColumnList = async (formid) => {
+            try {
+                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                    $('#dataTable').DataTable().destroy();
+                    document.getElementById('dataTable').innerHTML = '';
+                }
+
+                const response = await fetch('/api/v2/load_layer/' + formid);
+                const responseData = await response.json();
+                const structure = responseData.structure;
+                const data = responseData.data;
+
+                const buttonColumn = {
+                    data: null,
+                    title: 'Actions',
+                    orderable: true,
+                    render: (data, type, row) => {
+                        try {
+                            let geojson;
+                            try {
+                                geojson = row.geojson ? JSON.parse(row.geojson) : { type: 'Point', coordinates: [0, 0] };
+                            } catch (error) {
+                                console.error(`Invalid GeoJSON for refid ${row.refid}:`, error);
+                                geojson = { type: 'Point', coordinates: [0, 0] };
+                            }
+                            const _geojson = JSON.stringify(geojson);
+                            const _type = geojson.type || '';
+
+                            return `<div class="btn-group">
+                                <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                                    <em class="icon ni ni-zoom-in"></em>
+                                </button>
+                                <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type='${_type}'>
+                                    <em class="icon ni ni-chat"></em>
+                                </button>
+                            </div>`;
+                        } catch (error) {
+                            console.error('Error in render function:', error);
+                            return '';
+                        }
+                    }
+                };
+
+                const dynamicColumns = structure.map(col => ({
+                    data: col.col_id,
+                    title: col.col_name
+                }));
+
+                const columns = [buttonColumn, ...dynamicColumns];
+
+                const table = $('#dataTable').DataTable({
+                    data: data,
+                    columns: columns,
                     scrollX: true,
                     autoWidth: true,
                 });
 
-                $('#table tbody').on('click', '.zoom-btn', function () {
+                $('#dataTable tbody').on('click', '.map-btn', function () {
                     const refid = $(this).data('refid');
-                    zoomToFeature(refid, formid, layerData);
+                    zoomToFeature(refid, formid, data);
+                });
+
+                $('#dataTable').on('click', '.attr-btn', function (e) {
+                    e.stopPropagation();
+
+                    const refid = $(this).data('refid');
+                    const row = table.row($(this).closest('tr')).data();
+                    if (row) {
+                        generateFormFields(structure, row);
+                        openAttrModal(refid);
+                    } else {
+                        console.error('Row data not found for refid:', refid);
+                    }
                 });
 
                 currentFormId = formid;
             } catch (error) {
-                console.error('Failed to load column list:', error);
+                console.error('Error fetching data:', error);
             }
         };
 
-        let popup = null; // Store the popup instance globally
+        let popup = null;
 
         const togglePopup = (data, popupContent) => {
-            // If a popup already exists, remove it and set the variable to null
             if (popup) {
                 popup.remove();
                 popup = null;
@@ -487,6 +624,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         const zoomToFeature = (refid, formid, featureData) => {
+
             const feature = featureData.find(f => f.refid === refid);
             if (!feature || !feature.geojson) return;
 
