@@ -18,11 +18,15 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+
+    <link rel="stylesheet" href="./../assets/css/dashlite.css?ver=3.2.4">
+    <link rel="stylesheet" href="./../assets/css/theme.css?ver=3.2.4" id="skin-default">
+
     <!-- DataTable -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
 
     <!-- StyleSheets  -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -31,8 +35,6 @@
     <!-- <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css'
         type='text/css' /> -->
 
-    <link rel="stylesheet" href="./../assets/css/dashlite.css?ver=3.2.4">
-    <link rel="stylesheet" href="./../assets/css/theme.css?ver=3.2.4" id="skin-default">
 
     <link rel="stylesheet" href="./style.css">
 </head>
@@ -342,7 +344,10 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <table id="dataTable" class="display nowrap" data-export-title="Export">
+
+                                                <hr>
+
+                                                <table id="dataTable" class="display nowrap">
                                                 </table>
                                             </div>
                                         </div>
@@ -370,7 +375,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">รายละเอียดข้อมูล</h5>
+                    <h5 class="modal-title f" id="exampleModalLabel">รายละเอียดข้อมูล</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -383,42 +388,35 @@
                     <!-- <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
                         id="submitButton"><em class="icon ni ni-save"></em>&nbsp;ตกลง</button> -->
                     <!-- <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="editButton">แก้ไข</button> -->
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    <button type="button" class="btn btn-light f" data-bs-dismiss="modal">ปิด</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- boostrap -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script> -->
-
-    <!-- datatable -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <!-- <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script> -->
-    <!-- <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script> -->
-    <!-- <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script> -->
-
-    <!-- map -->
-
-    <script src="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.js"></script>
-    <!-- <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script> -->
-    <!-- <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
     <!-- JavaScript -->
     <script src="./../assets/js/bundle.js?ver=3.2.4"></script>
     <script src="./../assets/js/scripts.js?ver=3.2.4"></script>
     <!-- <script src="./assets/js/charts/gd-campaign.js?ver=3.2.4"></script> -->
+
+    <!-- datatable -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <!-- <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.js"></script> -->
+
+    <script src="https://cdn.datatables.net/searchpanes/2.1.2/js/dataTables.searchPanes.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.6.2/js/dataTables.select.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+
+    <!-- map -->
+    <script src="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.js"></script>
+    <!-- <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script> -->
+    <!-- <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js'></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+
     <!-- <script type="module" src="./app.js"></script> -->
     <script src="./app.js"></script>
 

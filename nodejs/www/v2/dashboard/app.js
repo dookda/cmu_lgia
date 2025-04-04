@@ -425,7 +425,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const generateFormFields = (columnsData, rowData) => {
             const formContainer = document.getElementById('formContainer');
             formContainer.innerHTML = '';
-            console.log('columnsData', columnsData);
 
             columnsData.forEach(column => {
                 const formGroup = document.createElement('div');
@@ -495,8 +494,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     formGroup.appendChild(input);
                     formContainer.appendChild(formGroup);
                 }
-
-
             });
         };
 
@@ -559,6 +556,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const table = $('#dataTable').DataTable({
                     data: data,
                     columns: columns,
+                    dom: 'BPrtip',
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Export to Excel',
+                            titleAttr: 'Export table data to Excel'
+                        }
+                    ],
+                    searchPanes: {
+                        cascadePanes: true,
+                        initCollapsed: true
+                    },
                     scrollX: true,
                     autoWidth: true,
                 });
