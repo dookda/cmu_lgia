@@ -222,7 +222,7 @@ const handleColumnItem = async (columnsData, formid, refid) => {
         formGroup.appendChild(inputDiv);
 
         const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'ลบ';
+        deleteButton.innerHTML = '<em class="icon ni ni-trash-alt"></em>&nbsp;ลบ';
         deleteButton.className = 'btn btn-danger';
 
         deleteButton.addEventListener('click', async () => {
@@ -389,7 +389,7 @@ const generateFormFields = (columnsData, rowData, formid, refid) => {
     });
 
     const saveButton = document.createElement('button');
-    saveButton.textContent = 'บันทึก';
+    saveButton.innerHTML = '<em class="icon ni ni-save"></em>&nbsp;บันทึก';
     saveButton.className = 'btn btn-primary';
     let isSaving = false;
 

@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const buttonColumn = {
                     data: null,
-                    title: 'Actions',
+                    title: 'จัดการข้อมูล',
                     orderable: true,
                     render: (data, type, row) => {
                         try {
@@ -535,14 +535,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const _geojson = JSON.stringify(geojson);
                             const _type = geojson.type || '';
 
-                            return `<div class="btn-group">
-                                <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-                                    <em class="icon ni ni-zoom-in"></em>
+                            return `
+                                <button class="btn btn-success map-btn f" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                                    <em class="icon ni ni-zoom-in"></em>&nbsp;ซูม
                                 </button>
-                                <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type='${_type}'>
-                                    <em class="icon ni ni-chat"></em>
-                                </button>
-                            </div>`;
+                                <button class="btn btn-primary attr-btn f" data-refid="${row.refid}" data-type='${_type}'>
+                                    <em class="icon ni ni-chat"></em>&nbsp;รายละเอียด
+                                </button>`;
                         } catch (error) {
                             console.error('Error in render function:', error);
                             return '';

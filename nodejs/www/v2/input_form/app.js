@@ -156,11 +156,7 @@ const loadDivisions = async () => {
         domElements.division.innerHTML = defaultOption ? defaultOption.outerHTML : '';
 
         divisions.forEach(division => {
-            console.log(division);
-
             const option = new Option(division.division_name, division.division_name);
-            console.log(option);
-
             domElements.division.add(option);
         });
     } catch (error) {

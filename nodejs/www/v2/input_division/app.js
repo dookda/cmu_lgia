@@ -75,11 +75,11 @@ const initDataTable = async () => {
                         <button class="btn btn-primary btn-edit" 
                             data-id="${row.id}" 
                             data-division_name="${row.division_name}">
-                            แก้ไข
+                            <em class="icon ni ni-text-rich"></em>&nbsp;แก้ไข
                         </button>
                         <button class="btn btn-danger btn-delete" 
                             data-id="${row.id}">
-                            ลบ
+                            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
                         </button>
                     `
                 },

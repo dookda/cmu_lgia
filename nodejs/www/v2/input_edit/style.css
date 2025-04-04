@@ -27,18 +27,6 @@ h1 h2 h3 h4 h5 {
     font-family: "Noto Sans Thai", serif !important;
 }
 
-#dataTable {
-    width: 100% !important;
-}
-
-.dataTables_wrapper {
-    overflow-x: auto;
-}
-
-.buttons-excel:before {
-    content: "" !important;
-}
-
 .nk-menu-text {
     font-family: "Noto Sans Thai", serif !important;
 }

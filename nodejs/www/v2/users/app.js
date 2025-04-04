@@ -68,11 +68,11 @@ const initDataTable = () => {
                     render: (data, type, row) => `
                         <button class="btn btn-primary btn-edit" 
                             data-id="${data}">
-                            แก้ไข
+                            <em class="icon ni ni-text-rich"></em>&nbsp;แก้ไข
                         </button>
                         <button class="btn btn-danger btn-delete" 
                             data-id="${row.id}">
-                            ลบ
+                            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
                         </button>
                     `
                 },

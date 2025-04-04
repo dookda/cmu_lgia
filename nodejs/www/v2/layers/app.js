@@ -67,11 +67,11 @@ const initializeDataTable = async () => {
                         <button class="btn btn-primary btn-edit" 
                             data-formid="${row.formid}" 
                             data-type="${row.layertype}">
-                            เปิด
+                            <em class="icon ni ni-text-rich"></em>&nbsp;เปิดชั้นข้อมูล
                         </button>
                         <button class="btn btn-danger btn-delete" 
                             data-id="${row.gid}">
-                            ลบ
+                            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
                         </button>
                     `
                 },

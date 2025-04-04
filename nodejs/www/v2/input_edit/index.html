@@ -18,9 +18,10 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <!-- DataTable -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css">
-    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css"> -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 
     <!-- StyleSheets  -->
@@ -299,15 +300,13 @@
                                     <div class="col-xxl-12 col-lg-12">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <button class="btn btn-primary" id="newFeature">เพิ่มข้อมูลใหม่</button>
+                                                <button class="btn btn-primary" id="newFeature"><em
+                                                        class="icon ni ni-property-add"></em>&nbsp;เพิ่มข้อมูลใหม่</button>
                                                 <div id="dataWarning" class="alert alert-warning mt-3"
                                                     style="display: none;">
-                                                    No spatial features found in this layer
                                                 </div>
                                                 <table id="dataTable" class="display nowrap" data-export-title="Export">
                                                 </table>
-                                                <div id="tableError" class="alert alert-danger" style="display: none;">
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -342,8 +341,8 @@
                     <input type="hidden" id="type">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                        id="submitButton">ตกลง</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="submitButton"><em
+                            class="icon ni ni-save"></em>&nbsp;ตกลง</button>
                     <!-- <button type="button" class="btn btn-warning" data-bs-dismiss="modal" id="editButton">แก้ไข</button> -->
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal"
                         id="btn_reload">ปิดหน้าต่าง</button>

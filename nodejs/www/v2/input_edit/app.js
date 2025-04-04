@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const buttonColumn = {
                     data: null,
-                    title: 'Actions',
+                    title: 'จัดการข้อมูล',
                     orderable: true,
                     render: (data, type, row) => {
                         try {
@@ -504,20 +504,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const _geojson = JSON.stringify(geojson);
                             const _type = geojson.type || '';
 
-                            return `<div class="btn-group">
-                                <button class="btn btn-success center map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
-                                    <em class="icon ni ni-zoom-in"></em>
+                            return `
+                                <button class="btn btn-success map-btn" data-refid="${row.refid}" data-geojson='${_geojson}'>
+                                    <em class="icon ni ni-zoom-in"></em>&nbsp;ซูม
                                 </button>
-                                <button class="btn btn-info center attr-btn" data-refid="${row.refid}" data-type='${_type}'>
-                                    <em class="icon ni ni-chat"></em>
+                                <button class="btn btn-primary attr-btn" data-refid="${row.refid}" data-type='${_type}'>
+                                    <em class="icon ni ni-chat"></em>&nbsp;รายละเอียด
                                 </button>
-                                <button class="btn btn-info center detail-btn" data-refid="${row.refid}" data-type='${_type}'>
-                                    <em class="icon ni ni-text-rich"></em>
+                                <button class="btn btn-info detail-btn" data-refid="${row.refid}" data-type='${_type}'>
+                                    <em class="icon ni ni-text-rich"></em>&nbsp;แก้ไข
                                 </button>
-                                <button class="btn btn-danger center delete-btn" data-refid="${row.refid}">
-                                    <em class="icon ni ni-trash-alt"></em>
+                                <button class="btn btn-danger delete-btn" data-refid="${row.refid}">
+                                    <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
                                 </button>
-                            </div>`;
+                           `;
                         } catch (error) {
                             console.error('Error in render function:', error);
                             return '';
