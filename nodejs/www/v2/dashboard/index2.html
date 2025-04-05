@@ -3,80 +3,232 @@
 
 <head>
     <meta charset="utf-8">
-    <title>DataTable with SearchPanes & Excel Export</title>
-    <!-- DataTables CSS -->
+    <title>DataTable with SearchPanes & Dual Charts</title>
+    <link rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <!-- SearchPanes CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
-    <!-- DataTables Buttons CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
 
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <!-- SearchPanes JS -->
     <script src="https://cdn.datatables.net/searchpanes/2.1.2/js/dataTables.searchPanes.min.js"></script>
-    <!-- DataTables Select extension -->
     <script src="https://cdn.datatables.net/select/1.6.2/js/dataTables.select.min.js"></script>
-
-    <!-- JSZip for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <!-- DataTables Buttons JS -->
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
 </head>
 
 <body>
-    <table id="dataTable" class="display nowrap" style="width:100%"></table>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Example: Fetch data and structure (modify according to your API)
-                const response = await fetch('/api/v2/load_layer/fid_1709611155681', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                const responseData = await response.json();
-                const structure = responseData.structure;
-                const data = responseData.data;
+    <div class="controls" style="margin: 20px;">
+        <h3>Column Chart</h3>
+        <div id="columnControls">
+            <label for="xAxisSelect">X-Axis:</label>
+            <select id="xAxisSelect" class="column-control"></select>
+            <label for="yAxisSelect">Y-Axis:</label>
+            <select id="yAxisSelect" class="column-control"></select>
+        </div>
 
-                // Map the structure to column definitions
-                const columns = structure.map(col => ({
+        <h3>Pie Chart</h3>
+        <div id="pieControls">
+            <label for="pieCategory">Category:</label>
+            <select id="pieCategory" class="pie-control"></select>
+            <label for="pieOperation">Operation:</label>
+            <select id="pieOperation" class="pie-control">
+                <option value="count">Count</option>
+                <option value="sum">Sum</option>
+            </select>
+            <label for="pieValue" id="pieValueLabel" style="display: none;">Value:</label>
+            <select id="pieValue" class="pie-control" style="display: none;"></select>
+        </div>
+    </div>
+
+    <div id="columnChartContainer" style="height: 400px; margin: 20px 0;"></div>
+    <div id="pieChartContainer" style="height: 400px; margin: 20px 0;"></div>
+    <table id="dataTable" class="display nowrap" style="width:100%"></table>
+
+    <script>
+        (async function () {
+            try {
+                let dataTable, columns, columnChart, pieChart;
+
+                const response = await fetch('/api/v2/load_layer/fid_1709611155681');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const { structure, data } = await response.json();
+
+                columns = structure.map(col => ({
                     data: col.col_id,
-                    title: col.col_name
+                    title: col.col_name,
+                    type: col.data_type
                 }));
 
-                // Initialize DataTable with SearchPanes and Excel export button
-                $('#dataTable').DataTable({
+                dataTable = $('#dataTable').DataTable({
                     data: data,
                     columns: columns,
-                    // Configure DOM: B - Buttons, P - SearchPanes, r - processing, t - table, i - info, p - pagination
-                    dom: 'BPrtip',
-                    buttons: [
-                        {
-                            extend: 'excelHtml5',
-                            text: 'Export to Excel',
-                            titleAttr: 'Export table data to Excel'
-                        }
-                    ],
+                    dom: 'Pfrtip',
+                    pageLength: 25,
+                    deferRender: true,
                     searchPanes: {
                         cascadePanes: true,
-                        initCollapsed: true
+                        initCollapsed: true,
+                        threshold: 0.5
                     },
-                    scrollX: true,
-                    autoWidth: true,
+                    buttons: [{
+                        extend: 'excelHtml5',
+                        text: 'Export to Excel',
+                        exportOptions: { columns: ':visible' }
+                    }],
+                    scrollX: true
                 });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        });
 
+                function populateSelects() {
+                    const selectIds = ['xAxisSelect', 'yAxisSelect', 'pieCategory', 'pieValue'];
+                    selectIds.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        select.innerHTML = columns.map(col =>
+                            `<option value="${col.data}">${col.title}</option>`
+                        ).join('');
+                    });
+                    document.getElementById('xAxisSelect').value = columns[0]?.data || '';
+                    document.getElementById('yAxisSelect').value = columns[1]?.data || '';
+                    document.getElementById('pieCategory').value = columns[0]?.data || '';
+                    document.getElementById('pieValue').value = columns[1]?.data || '';
+                }
+
+                function togglePieControls() {
+                    const operation = document.getElementById('pieOperation').value;
+                    document.getElementById('pieValueLabel').style.display = operation === 'sum' ? 'inline' : 'none';
+                    document.getElementById('pieValue').style.display = operation === 'sum' ? 'inline' : 'none';
+                }
+
+                function updateColumnChart() {
+                    const xCol = document.getElementById('xAxisSelect').value;
+                    const yCol = document.getElementById('yAxisSelect').value;
+                    if (!xCol || !yCol) return;
+
+                    const filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
+                    const aggregatedData = filteredData.reduce((acc, row) => {
+                        const xVal = row[xCol]?.toString() || 'Unknown';
+                        const yVal = parseFloat(row[yCol]) || 0;
+                        acc[xVal] = (acc[xVal] || 0) + yVal;
+                        return acc;
+                    }, {});
+
+                    const xColumn = columns.find(c => c.data === xCol);
+                    const yColumn = columns.find(c => c.data === yCol);
+
+                    if (columnChart) columnChart.destroy();
+                    columnChart = Highcharts.chart('columnChartContainer', {
+                        chart: { type: 'column' },
+                        title: { text: `${yColumn.title} by ${xColumn.title}` },
+                        xAxis: {
+                            categories: Object.keys(aggregatedData),
+                            title: { text: xColumn.title },
+                            labels: { rotation: -45 }
+                        },
+                        yAxis: { title: { text: yColumn.title } },
+                        series: [{
+                            name: yColumn.title,
+                            data: Object.values(aggregatedData)
+                        }],
+                        plotOptions: {
+                            column: { dataLabels: { enabled: true, format: '{y:,.2f}' } }
+                        },
+                        tooltip: { pointFormat: '{series.name}: <b>{point.y:,.2f}</b>' }
+                    });
+                }
+
+                function updatePieChart() {
+                    const categoryCol = document.getElementById('pieCategory').value;
+                    const operation = document.getElementById('pieOperation').value;
+                    const valueCol = document.getElementById('pieValue').value;
+                    const filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
+                    const categoryColumn = columns.find(c => c.data === categoryCol);
+
+                    let pieData;
+                    if (operation === 'count') {
+                        pieData = filteredData.reduce((acc, row) => {
+                            const category = row[categoryCol]?.toString() || 'Unknown';
+                            acc[category] = (acc[category] || 0) + 1;
+                            return acc;
+                        }, {});
+                    } else {
+                        pieData = filteredData.reduce((acc, row) => {
+                            const category = row[categoryCol]?.toString() || 'Unknown';
+                            const value = parseFloat(row[valueCol]) || 0;
+                            acc[category] = (acc[category] || 0) + value;
+                            return acc;
+                        }, {});
+                    }
+
+                    if (pieChart) pieChart.destroy();
+                    pieChart = Highcharts.chart('pieChartContainer', {
+                        chart: { type: 'pie' },
+                        title: {
+                            text: `${operation === 'count' ? 'Count' : 'Sum'} of ${categoryColumn.title}`
+                        },
+                        series: [{
+                            name: operation === 'count' ? 'Count' : columns.find(c => c.data === valueCol).title,
+                            data: Object.entries(pieData).map(([name, y]) => ({ name, y }))
+                        }],
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: true,
+                                    format: '<b>{point.name}</b>: {point.y:,.2f}',
+                                    distance: 20
+                                },
+                                showInLegend: true
+                            }
+                        },
+                        tooltip: { pointFormat: '{series.name}: <b>{point.y:,.2f}</b>' }
+                    });
+                }
+
+                // Initialize
+                populateSelects();
+                togglePieControls();
+
+                // Event listeners
+                document.querySelectorAll('.column-control').forEach(select => {
+                    select.addEventListener('change', updateColumnChart);
+                });
+
+                document.querySelectorAll('.pie-control').forEach(select => {
+                    select.addEventListener('change', () => {
+                        togglePieControls();
+                        updatePieChart();
+                    });
+                });
+
+                dataTable.on('draw search', debounce(() => {
+                    updateColumnChart();
+                    updatePieChart();
+                }, 250));
+
+                // Initial render
+                updateColumnChart();
+                updatePieChart();
+
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                alert('Failed to load data. Please try again later.');
+            }
+        })();
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
     </script>
 </body>
 

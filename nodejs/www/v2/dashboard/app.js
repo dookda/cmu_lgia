@@ -504,7 +504,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             attrModal.show();
         };
 
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         const loadColumnList = async (formid) => {
+            let dataTable, columns, chart;
             try {
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     $('#dataTable').DataTable().destroy();
@@ -546,31 +559,179 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 };
 
-                const dynamicColumns = structure.map(col => ({
+                const columns = structure.map(col => ({
                     data: col.col_id,
-                    title: col.col_name
+                    title: col.col_name,
+                    type: col.data_type
                 }));
 
-                const columns = [buttonColumn, ...dynamicColumns];
+                const columnsWithBtn = [buttonColumn, ...columns];
 
-                const table = $('#dataTable').DataTable({
+                dataTable = $('#dataTable').DataTable({
                     data: data,
-                    columns: columns,
-                    dom: 'BPrtip',
+                    columns: columnsWithBtn,
+                    dom: '<"export-title">B<"pane-title">Prtip',
+                    pageLength: 25,
+                    deferRender: true,
+                    searchPanes: {
+                        cascadePanes: true,
+                        initCollapsed: true,
+                        threshold: 0.5
+                    },
                     buttons: [
                         {
                             extend: 'excelHtml5',
-                            text: 'Export to Excel',
-                            titleAttr: 'Export table data to Excel'
+                            text: '<i class="bi bi-file-earmark-excel"></i> Excel',
+                            titleAttr: 'Export to Excel',
+                            className: 'btn btn-primary'
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV',
+                            titleAttr: 'Export to CSV',
+                            className: 'btn btn-success'
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
+                            titleAttr: 'Export to PDF',
+                            className: 'btn btn-danger'
                         }
                     ],
-                    searchPanes: {
-                        cascadePanes: true,
-                        initCollapsed: true
-                    },
-                    scrollX: true,
-                    autoWidth: true,
+                    scrollX: true
                 });
+
+                function populateSelects() {
+                    const selectIds = ['xAxisSelect', 'yAxisSelect', 'pieCategory', 'pieValue'];
+                    selectIds.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        select.innerHTML = columns.map(col =>
+                            `<option value="${col.data}">${col.title}</option>`
+                        ).join('');
+                    });
+                    document.getElementById('xAxisSelect').value = columns[0]?.data || '';
+                    document.getElementById('yAxisSelect').value = columns[1]?.data || '';
+                    document.getElementById('pieCategory').value = columns[0]?.data || '';
+                    document.getElementById('pieValue').value = columns[1]?.data || '';
+                }
+
+                function toggleControls() {
+                    const chartType = document.getElementById('chartType').value;
+                    document.getElementById('columnControls').style.display = chartType === 'column' ? 'inline' : 'none';
+                    document.getElementById('pieControls').style.display = chartType === 'pie' ? 'inline' : 'none';
+                    const operation = document.getElementById('pieOperation').value;
+                    document.getElementById('pieValueLabel').style.display = operation === 'sum' ? 'inline' : 'none';
+                    document.getElementById('pieValue').style.display = operation === 'sum' ? 'inline' : 'none';
+                }
+
+                function updateChart() {
+                    const chartType = document.getElementById('chartType').value;
+                    const filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
+
+                    if (chart) chart.destroy();
+
+                    if (chartType === 'column') {
+                        const xCol = document.getElementById('xAxisSelect').value;
+                        const yCol = document.getElementById('yAxisSelect').value;
+                        if (!xCol || !yCol) return;
+
+                        const aggregatedData = filteredData.reduce((acc, row) => {
+                            const xVal = row[xCol]?.toString() || 'Unknown';
+                            const yVal = parseFloat(row[yCol]) || 0;
+                            acc[xVal] = (acc[xVal] || 0) + yVal;
+                            return acc;
+                        }, {});
+
+                        const xColumn = columns.find(c => c.data === xCol);
+                        const yColumn = columns.find(c => c.data === yCol);
+
+                        chart = Highcharts.chart('chartContainer', {
+                            chart: { type: 'column' },
+                            title: { text: `${yColumn.title} by ${xColumn.title}` },
+                            xAxis: {
+                                categories: Object.keys(aggregatedData),
+                                title: { text: xColumn.title },
+                                labels: { rotation: -45 }
+                            },
+                            yAxis: { title: { text: yColumn.title } },
+                            series: [{
+                                name: yColumn.title,
+                                data: Object.values(aggregatedData)
+                            }],
+                            plotOptions: {
+                                column: { dataLabels: { enabled: true, format: '{y:,.2f}' } }
+                            },
+                            tooltip: { pointFormat: '{series.name}: <b>{point.y:,.2f}</b>' }
+                        });
+                    } else if (chartType === 'pie') {
+                        const categoryCol = document.getElementById('pieCategory').value;
+                        const operation = document.getElementById('pieOperation').value;
+                        const valueCol = document.getElementById('pieValue').value;
+                        const categoryColumn = columns.find(c => c.data === categoryCol);
+
+                        let pieData;
+                        if (operation === 'count') {
+                            pieData = filteredData.reduce((acc, row) => {
+                                const category = row[categoryCol]?.toString() || 'Unknown';
+                                acc[category] = (acc[category] || 0) + 1;
+                                return acc;
+                            }, {});
+                        } else { // sum
+                            pieData = filteredData.reduce((acc, row) => {
+                                const category = row[categoryCol]?.toString() || 'Unknown';
+                                const value = parseFloat(row[valueCol]) || 0;
+                                acc[category] = (acc[category] || 0) + value;
+                                return acc;
+                            }, {});
+                        }
+
+                        chart = Highcharts.chart('chartContainer', {
+                            chart: { type: 'pie' },
+                            title: {
+                                text: `${operation === 'count' ? 'Count' : 'Sum'} of ${categoryColumn.title}`
+                            },
+                            series: [{
+                                name: operation === 'count' ? 'Count' : columns.find(c => c.data === valueCol).title,
+                                data: Object.entries(pieData).map(([name, y]) => ({ name, y }))
+                            }],
+                            plotOptions: {
+                                pie: {
+                                    allowPointSelect: true,
+                                    cursor: 'pointer',
+                                    dataLabels: {
+                                        enabled: true,
+                                        format: '<b>{point.name}</b>: {point.y:,.2f}',
+                                        distance: 20
+                                    },
+                                    showInLegend: true
+                                }
+                            },
+                            tooltip: {
+                                pointFormat: '{series.name}: <b>{point.y:,.2f}</b>'
+                            }
+                        });
+                    }
+                }
+
+                // Initialize
+                populateSelects();
+                toggleControls();
+
+                // Event listeners
+                document.querySelectorAll('.chart-control').forEach(select => {
+                    select.addEventListener('change', () => {
+                        toggleControls();
+                        updateChart();
+                    });
+                });
+
+                dataTable.on('draw search', debounce(updateChart, 250));
+                updateChart();
+
+
+
+                $('div.export-title').html('<h6 class="f">ส่งออกข้อมูล</h6>');
+                $('div.pane-title').html('<h6 class="mt-4 f">สืบค้นข้อมูล</h6>');
 
                 $('#dataTable tbody').on('click', '.map-btn', function () {
                     const refid = $(this).data('refid');
@@ -581,7 +742,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     e.stopPropagation();
 
                     const refid = $(this).data('refid');
-                    const row = table.row($(this).closest('tr')).data();
+                    const row = dataTable.row($(this).closest('tr')).data();
                     if (row) {
                         generateFormFields(structure, row);
                         openAttrModal(refid);
