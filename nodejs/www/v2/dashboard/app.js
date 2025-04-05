@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let selectedOption = layerSelect.value;
             if (selectedOption === 'เลือกชั้นข้อมูล') {
                 document.getElementById('chartArea').style.display = 'none';
-                document.getElementById('tableArea').style.display = 'none';
+                document.getElementById('dataTable').style.display = 'none';
             }
         }
 
@@ -523,10 +523,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const loadColumnList = async (formid) => {
-            document.getElementById('chartArea').style.display = 'block';
-            document.getElementById('tableArea').style.display = 'block';
 
             let dataTable, chart;
+
             try {
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     $('#dataTable').DataTable().destroy();
@@ -585,7 +584,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     searchPanes: {
                         cascadePanes: true,
                         initCollapsed: true,
-                        threshold: 0.5
+                        // threshold: 0.5
                     },
                     buttons: [
                         {
@@ -593,14 +592,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             text: '<i class="bi bi-file-earmark-excel"></i> Excel',
                             titleAttr: 'Export to Excel',
                             className: 'btn btn-primary'
-                        },
-                        {
+                        }, {
                             extend: 'csvHtml5',
                             text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV',
                             titleAttr: 'Export to CSV',
                             className: 'btn btn-success'
-                        },
-                        {
+                        }, {
                             extend: 'pdfHtml5',
                             text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
                             titleAttr: 'Export to PDF',
@@ -637,7 +634,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const chartType = document.getElementById('chartType').value;
                     const filteredData = dataTable.rows({ search: 'applied' }).data().toArray();
 
-                    if (chart) chart.destroy();
+                    if (chart && typeof chart.destroy === 'function') {
+                        chart.destroy();
+                        chart = null;
+                    }
 
                     if (chartType === 'column') {
                         const xCol = document.getElementById('xAxisSelect').value;
@@ -734,6 +734,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 dataTable.on('draw search', debounce(updateChart, 250));
                 updateChart();
+
+                document.getElementById('chartArea').style.display = 'block';
+                document.getElementById('dataTable').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
 
                 $('div.export-title').html('<h6 class="f">ส่งออกข้อมูล</h6>');
                 $('div.pane-title').html('<h6 class="mt-4 f">สืบค้นข้อมูล</h6>');
@@ -906,6 +910,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('layerSelect').addEventListener('change', event => {
             loadColumnList(event.target.value);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('chartArea').style.display = 'none';
+            document.getElementById('dataTable').style.display = 'none';
         });
 
         document.getElementById('layerList').addEventListener('change', event => {
