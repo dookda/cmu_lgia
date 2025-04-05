@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const yColumn = columns.find(c => c.data === yCol);
 
                         chart = Highcharts.chart('chartContainer', {
-                            chart: { type: 'column' },
+                            chart: { type: 'column', style: { fontFamily: 'Noto Sans Thai' } },
                             title: { text: null, },
                             xAxis: {
                                 categories: Object.keys(aggregatedData),
@@ -688,9 +688,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
 
                         chart = Highcharts.chart('chartContainer', {
-                            chart: { type: 'pie' },
+                            chart: { type: 'pie', style: { fontFamily: 'Noto Sans Thai' } },
                             title: {
-                                text: `${operation === 'count' ? 'จำนวน' : 'ผลรวม'} ของ ${categoryColumn.title}`
+                                text: `${operation === 'count' ? 'จำนวน' : 'ผลรวม'} ของ ${categoryColumn.title}`,
+                                style: { fontFamily: 'Noto Sans Thai' }
                             },
                             series: [{
                                 name: operation === 'count' ? 'Count' : columns.find(c => c.data === valueCol).title,
@@ -715,11 +716,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
 
-                // Initialize
                 populateSelects();
                 toggleControls();
-
-                // Event listeners
                 document.querySelectorAll('.chart-control').forEach(select => {
                     select.addEventListener('change', () => {
                         toggleControls();
@@ -729,8 +727,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 dataTable.on('draw search', debounce(updateChart, 250));
                 updateChart();
-
-
 
                 $('div.export-title').html('<h6 class="f">ส่งออกข้อมูล</h6>');
                 $('div.pane-title').html('<h6 class="mt-4 f">สืบค้นข้อมูล</h6>');
@@ -845,10 +841,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 const data = await response.json();
 
-                // Update text content
                 document.getElementById('tasabanInfo').textContent = data.name;
 
-                // Update logo image
                 const logoImg1 = document.getElementById('imgLogo1');
                 const logoImg2 = document.getElementById('imgLogo2');
                 if (data.img) {
@@ -856,20 +850,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     logoImg1.removeAttribute('srcset');
                     logoImg1.onerror = () => {
                         console.error('Failed to load logo image');
-                        logoImg1.src = './../images/logo-dark2x.png'; // Fallback
+                        logoImg1.src = './../images/logo-dark2x.png';
                     };
 
                     logoImg2.src = data.img;
                     logoImg2.removeAttribute('srcset');
                     logoImg2.onerror = () => {
                         console.error('Failed to load logo image');
-                        logoImg2.src = './../images/logo-dark2x.png'; // Fallback
+                        logoImg2.src = './../images/logo-dark2x.png';
                     };
                 }
 
             } catch (error) {
                 console.error('Error fetching tasaban info:', error);
-                // Optional: Restore original logo on error
                 document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
             }
         };
@@ -910,7 +903,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('layerList').addEventListener('change', event => {
             const checkbox = event.target;
-            if (!checkbox.matches('.checkbox')) return; // Ensure event is from checkbox
+            if (!checkbox.matches('.checkbox')) return;
 
             const inputElement = document.getElementById(checkbox.id);
             const layerName = inputElement.getAttribute('layername');
