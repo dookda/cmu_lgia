@@ -397,7 +397,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             let selectedOption = layerSelect.value;
             if (selectedOption === 'เลือกชั้นข้อมูล') {
                 document.getElementById('chartArea').style.display = 'none';
-                document.getElementById('dataTable').style.display = 'none';
             }
         }
 
@@ -524,7 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const loadColumnList = async (formid) => {
 
-            let dataTable, chart;
+            let dataTable, columns, chart;
 
             try {
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
@@ -533,9 +532,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 const response = await fetch('/api/v2/load_layer/' + formid);
-                const responseData = await response.json();
-                const structure = responseData.structure;
-                const data = responseData.data;
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const { structure, data } = await response.json();
 
                 const buttonColumn = {
                     data: null,
@@ -567,7 +565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 };
 
-                const columns = structure.map(col => ({
+                columns = structure.map(col => ({
                     data: col.col_id,
                     title: col.col_name,
                     type: col.data_type
@@ -584,7 +582,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     searchPanes: {
                         cascadePanes: true,
                         initCollapsed: true,
-                        // threshold: 0.5
+                        threshold: 0.5
                     },
                     buttons: [
                         {
@@ -736,7 +734,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateChart();
 
                 document.getElementById('chartArea').style.display = 'block';
-                document.getElementById('dataTable').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
 
                 $('div.export-title').html('<h6 class="f">ส่งออกข้อมูล</h6>');
@@ -913,7 +910,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('chartArea').style.display = 'none';
-            document.getElementById('dataTable').style.display = 'none';
         });
 
         document.getElementById('layerList').addEventListener('change', event => {
