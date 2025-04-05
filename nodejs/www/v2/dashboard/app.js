@@ -517,7 +517,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const loadColumnList = async (formid) => {
-            let dataTable, columns, chart;
+            document.getElementById('chartArea').style.display = 'block';
+
+            let dataTable, chart;
             try {
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     $('#dataTable').DataTable().destroy();
@@ -647,7 +649,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         chart = Highcharts.chart('chartContainer', {
                             chart: { type: 'column' },
-                            title: { text: `${yColumn.title} by ${xColumn.title}` },
+                            title: { text: null, },
                             xAxis: {
                                 categories: Object.keys(aggregatedData),
                                 title: { text: xColumn.title },
@@ -688,7 +690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         chart = Highcharts.chart('chartContainer', {
                             chart: { type: 'pie' },
                             title: {
-                                text: `${operation === 'count' ? 'Count' : 'Sum'} of ${categoryColumn.title}`
+                                text: `${operation === 'count' ? 'จำนวน' : 'ผลรวม'} ของ ${categoryColumn.title}`
                             },
                             series: [{
                                 name: operation === 'count' ? 'Count' : columns.find(c => c.data === valueCol).title,

@@ -344,41 +344,48 @@
                                                 </div>
 
                                                 <hr>
-                                                <h6 class="f">แสดงกราฟ</h6>
-                                                <div class="controls" style="margin: 20px;">
-                                                    <label for="chartType">ประเภท:</label>
-                                                    <select id="chartType" class="chart-control">
-                                                        <option value="column">กราฟแท่ง</option>
-                                                        <option value="pie">กราฟวงกลม</option>
-                                                    </select>
 
-                                                    <!-- Column Chart Controls -->
-                                                    <div id="columnControls" class="chart-controls">
-                                                        <label for="xAxisSelect">ข้อมูลแกน X:</label>
-                                                        <select id="xAxisSelect" class="chart-control"></select>
-                                                        <label for="yAxisSelect">ข้อมูลแกน Y:</label>
-                                                        <select id="yAxisSelect" class="chart-control"></select>
-                                                    </div>
-
-                                                    <!-- Pie Chart Controls -->
-                                                    <div id="pieControls" class="chart-controls" style="display: none;">
-                                                        <label for="pieCategory">Category:</label>
-                                                        <select id="pieCategory" class="chart-control"></select>
-                                                        <label for="pieOperation">Operation:</label>
-                                                        <select id="pieOperation" class="chart-control">
-                                                            <option value="count">Count</option>
-                                                            <option value="sum">Sum</option>
+                                                <div id="chartArea" style="display: none;">
+                                                    <h6 class="f">แสดงกราฟ</h6>
+                                                    <div class="controls" style="margin: 20px;">
+                                                        <label for="chartType">ประเภท:</label>
+                                                        <select id="chartType" class="chart-control">
+                                                            <option value="column">กราฟแท่ง</option>
+                                                            <option value="pie">กราฟวงกลม</option>
                                                         </select>
-                                                        <label for="pieValue" id="pieValueLabel"
-                                                            style="display: none;">Value:</label>
-                                                        <select id="pieValue" class="chart-control"
-                                                            style="display: none;"></select>
+
+                                                        <!-- Column Chart Controls -->
+                                                        <div id="columnControls" class="chart-controls">
+                                                            <label for="xAxisSelect">ข้อมูลแกน X:</label>
+                                                            <select id="xAxisSelect" class="chart-control"></select>
+                                                            <label for="yAxisSelect">ข้อมูลแกน Y:</label>
+                                                            <select id="yAxisSelect" class="chart-control"></select>
+                                                        </div>
+
+                                                        <!-- Pie Chart Controls -->
+                                                        <div id="pieControls" class="chart-controls"
+                                                            style="display: none;">
+                                                            <label for="pieCategory">Category:</label>
+                                                            <select id="pieCategory" class="chart-control"></select>
+                                                            <label for="pieOperation">Operation:</label>
+                                                            <select id="pieOperation" class="chart-control">
+                                                                <option value="count">Count</option>
+                                                                <option value="sum">Sum</option>
+                                                            </select>
+                                                            <label for="pieValue" id="pieValueLabel"
+                                                                style="display: none;">Value:</label>
+                                                            <select id="pieValue" class="chart-control"
+                                                                style="display: none;"></select>
+                                                        </div>
+                                                    </div>
+                                                    <div id="chartContainer" style="height: 400px; margin: 20px 0;">
                                                     </div>
                                                 </div>
-                                                <div id="chartContainer" style="height: 400px; margin: 20px 0;"></div>
 
-                                                <table id="dataTable" class="display nowrap" style="width:100%"></table>
-                                                </table>
+                                                <div id="tableArea">
+                                                    <table id="dataTable" class="display nowrap" style="width:100%">
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
