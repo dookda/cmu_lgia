@@ -393,6 +393,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const layerSelect = document.getElementById('layerSelect');
             const option = [...layerSelect.options].find(opt => opt.value === checkboxId);
             if (option) layerSelect.removeChild(option);
+
+            let selectedOption = layerSelect.value;
+            if (selectedOption === 'เลือกชั้นข้อมูล') {
+                document.getElementById('chartArea').style.display = 'none';
+                document.getElementById('tableArea').style.display = 'none';
+            }
         }
 
         const isISODate = (str) => {
@@ -518,6 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const loadColumnList = async (formid) => {
             document.getElementById('chartArea').style.display = 'block';
+            document.getElementById('tableArea').style.display = 'block';
 
             let dataTable, chart;
             try {
