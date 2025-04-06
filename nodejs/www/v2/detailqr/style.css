@@ -43,3 +43,24 @@ a {
 .inner-flex {
     gap: 10px;
 }
+
+.gap-10 {
+    gap: 10px;
+}
+
+@media print {
+
+    .no-print,
+    .no-print * {
+        display: none !important;
+    }
+
+    #qrcode-container {
+        text-align: center;
+        margin-top: 2cm;
+    }
+
+    #qrcode-container img {
+        max-width: 70% !important;
+    }
+}

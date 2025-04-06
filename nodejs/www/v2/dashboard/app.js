@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <button class="btn btn-primary attr-btn f" data-refid="${row.refid}" data-type='${_type}'>
                                     <em class="icon ni ni-chat"></em>&nbsp;รายละเอียด
                                 </button>
-                                <button class="btn btn-primary print-btn f" data-refid="${row.refid}" data-type='${_type}'>
+                                <button class="btn btn-info print-btn f" data-refid="${row.refid}" data-type='${_type}'>
                                     <em class="icon ni ni-printer"></em>&nbsp;รายงาน
                                 </button>`;
                         } catch (error) {

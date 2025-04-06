@@ -460,8 +460,7 @@ const initForm = async () => {
 };
 
 const loadQRCode = async (layerInfo) => {
-    console.log('layerInfo', layerInfo);
-
+    let qrDataURL = null;
     const currentUrl = window.location.href;
     document.getElementById('current-url').textContent = currentUrl;
     try {
@@ -471,6 +470,7 @@ const loadQRCode = async (layerInfo) => {
         }
         const data = await response.json();
         const img = document.createElement('img');
+        qrDataURL = data.qrCode;
         img.src = data.qrCode;
         img.alt = 'QR Code for current page';
         img.className = 'img-fluid rounded';
@@ -478,11 +478,31 @@ const loadQRCode = async (layerInfo) => {
         document.getElementById('layername').textContent = layerInfo[0].layername;
         document.getElementById('layertype').textContent = layerInfo[0].layertype;
         document.getElementById('division').textContent = layerInfo[0].division;
-        // thai date format
+
         const createdate = new Date(layerInfo[0].ts);
         const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Bangkok' };
         const thaiDate = createdate.toLocaleDateString('th-TH', options);
         document.getElementById('createdate').textContent = thaiDate;
+
+        document.getElementById('downloadBtn').disabled = false;
+        document.getElementById('printBtn').disabled = false;
+
+        // Download button handler
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = qrDataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Print button handler
+        document.getElementById('printBtn').addEventListener('click', () => {
+            window.print();
+        });
+
+
     } catch (error) {
         console.error('Error loading QR code:', error);
     }
@@ -536,7 +556,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('casePoint').style.display = 'none';
         document.getElementById('caseLine').style.display = 'none';
         document.getElementById('casePolygon').style.display = 'none';
-
     } catch (error) {
         console.error('Error loading default features:', error);
     }
