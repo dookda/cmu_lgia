@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            togglePopup(data, "popupContent")
+            togglePopup(data, "ตำแหน่งที่เลือก")
         };
 
         const loadUserProfile = async () => {
