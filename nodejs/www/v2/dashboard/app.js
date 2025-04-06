@@ -542,6 +542,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     render: (data, type, row) => {
                         try {
                             let geojson;
+
                             try {
                                 geojson = row.geojson ? JSON.parse(row.geojson) : { type: 'Point', coordinates: [0, 0] };
                             } catch (error) {
@@ -557,6 +558,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 </button>
                                 <button class="btn btn-primary attr-btn f" data-refid="${row.refid}" data-type='${_type}'>
                                     <em class="icon ni ni-chat"></em>&nbsp;รายละเอียด
+                                </button>
+                                <button class="btn btn-primary print-btn f" data-refid="${row.refid}" data-type='${_type}'>
+                                    <em class="icon ni ni-printer"></em>&nbsp;รายงาน
                                 </button>`;
                         } catch (error) {
                             console.error('Error in render function:', error);
@@ -754,6 +758,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         openAttrModal(refid);
                     } else {
                         console.error('Row data not found for refid:', refid);
+                    }
+                });
+
+                $('#dataTable').on('click', '.print-btn', function (e) {
+                    try {
+                        e.stopPropagation();
+                        const refid = $(this).data('refid');
+                        const type = $(this).data('type');
+                        window.open(`/v2/detailqr/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_self');
+                    } catch (error) {
+                        console.error('Error in detail-btn click event:', error);
                     }
                 });
 

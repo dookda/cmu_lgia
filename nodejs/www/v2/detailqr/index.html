@@ -194,10 +194,10 @@
                                                             href="#tabSearchLatLng"><em
                                                                 class="icon ni ni-search"></em><span>ค้นหา</span></a>
                                                     </li>
-                                                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
+                                                    <!-- <li class="nav-item"><a class="nav-link" data-bs-toggle="tab"
                                                             href="#tabStyleForm"><em
                                                                 class="icon ni ni-color-palette"></em><span>แก้ไขสัญลักษณ์</span></a>
-                                                    </li>
+                                                    </li> -->
                                                 </ul>
                                                 <div class="tab-content">
                                                     <div class="tab-pane active" id="tabBasemap">
@@ -354,55 +354,7 @@
                                     <div class="col-xxl-5 col-lg-5">
                                         <div class="card card-full">
                                             <div class="card-inner">
-                                                <ul class="nav nav-tabs">
-                                                    <li class="nav-item">
-                                                        <a class="nav-link active" data-bs-toggle="tab"
-                                                            href="#tabAddColumnItem">เพิ่มคอลัมน์</a>
-                                                    </li>
-                                                    <li class="nav-item">
-                                                        <a class="nav-link" data-bs-toggle="tab"
-                                                            href="#tabDeleteColumnItem">ลบคอลัมน์</a>
-                                                    </li>
-                                                    <li class="nav-item">
-                                                        <a class="nav-link" data-bs-toggle="tab"
-                                                            href="#tabColumnName">แก้ไขชื่อคอลัมน์</a>
-                                                    </li>
-                                                </ul>
-                                                <div class="tab-content">
-                                                    <div class="tab-pane active" id="tabAddColumnItem">
-                                                        <input type="hidden" id="refid">
-                                                        <form id="createColumnForm" class="mb-4 p-3 border rounded">
-                                                            <div class="col-md-12">
-                                                                <label class="form-label">ชื่อคอลัมน์</label>
-                                                                <input type="text" class="form-control" id="newColName"
-                                                                    required="">
-                                                            </div>
-                                                            <div class="col-md-12">
-                                                                <label class="form-label">ประเภทของข้อมูล</label>
-                                                                <select class="form-select" id="newColType" required="">
-                                                                    <option value="text">ตัวหนังสือ</option>
-                                                                    <option value="numeric">ตัวเลข</option>
-                                                                    <option value="date">วันที่</option>
-                                                                    <option value="file">รูปภาพ</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-12">
-                                                                <label class="form-label">คำอธิบาย</label>
-                                                                <input type="text" class="form-control" id="newColDesc">
-                                                            </div>
-                                                            <div class="col-md-12 mt-3">
-                                                                <button class="btn btn-primary"><em
-                                                                        class="icon ni ni-property-add"></em>&nbsp;สร้างคอลัมน์</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                    <div class="tab-pane" id="tabDeleteColumnItem">
-                                                        <div id="formDeleteColumnItem"></div>
-                                                    </div>
-                                                    <div class="tab-pane" id="tabColumnName">
-                                                        <div id="formColumnName"></div>
-                                                    </div>
-                                                </div>
+
                                             </div>
                                         </div>
                                     </div>

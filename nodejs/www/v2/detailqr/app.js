@@ -183,142 +183,6 @@ const getCustomStyles = () => {
     return style;
 };
 
-const handleColumnItem = async (columnsData, formid, refid) => {
-    const formColumn = document.getElementById('formDeleteColumnItem');
-    formColumn.innerHTML = '';
-
-    const deleteColumn = async (colId) => {
-        try {
-            const response = await fetch(`/api/v2/delete_column/${formid}/${colId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to delete column: ${response.statusText}`);
-            }
-
-            const responseData = await response.json();
-            return responseData;
-        } catch (error) {
-            console.error('Delete error:', error);
-            throw error;
-        }
-    };
-
-    columnsData.forEach(column => {
-        const formGroup = document.createElement('div');
-        formGroup.className = 'form-group d-flex flex-row inner-flex';
-
-        const inputDiv = document.createElement('input');
-        inputDiv.type = 'text';
-        inputDiv.id = column.col_id;
-        inputDiv.name = column.col_id;
-        inputDiv.value = column.col_name;
-        inputDiv.className = 'form-control flex-grow-1';
-        inputDiv.placeholder = column.col_desc || '';
-        formGroup.appendChild(inputDiv);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.innerHTML = '<em class="icon ni ni-trash-alt"></em>&nbsp;ลบ';
-        deleteButton.className = 'btn btn-danger';
-
-        deleteButton.addEventListener('click', async () => {
-            if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคอลัมน์นี้?')) return;
-
-            const originalText = deleteButton.textContent;
-            deleteButton.disabled = true;
-            deleteButton.textContent = 'กำลังลบ...';
-
-            try {
-                await deleteColumn(column.col_id);
-                formGroup.remove();
-                initForm();
-            } catch (error) {
-                console.error('Error:', error);
-                alert(`การลบล้มเหลว: ${error.message}`);
-                deleteButton.disabled = false;
-                deleteButton.textContent = originalText;
-            }
-        });
-
-        formGroup.appendChild(deleteButton);
-        formColumn.appendChild(formGroup);
-    });
-};
-
-const handleColumnName = async (columnsData, formid, refid) => {
-    const formColumn = document.getElementById('formColumnName');
-    formColumn.innerHTML = '';
-
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
-    };
-
-    columnsData.forEach(column => {
-        const formGroup = document.createElement('div');
-        formGroup.className = 'form-group align-items-center ';
-
-        const inputDiv = document.createElement('input');
-        inputDiv.type = 'text';
-        inputDiv.id = column.col_id;
-        inputDiv.name = column.col_id;
-        inputDiv.value = column.col_name;
-        inputDiv.className = 'form-control';
-        inputDiv.placeholder = column.col_desc || '';
-
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'save-status';
-        statusDiv.style.minWidth = '60px';
-        statusDiv.style.fontSize = '0.8rem';
-
-        inputDiv.addEventListener('input', debounce(async (e) => {
-            try {
-                statusDiv.textContent = 'กำลังบันทึก...';
-                statusDiv.style.color = '#666';
-
-                const updatePayload = {
-                    [e.target.name]: e.target.value
-                };
-
-                await updateColumnName(formid, updatePayload);
-
-                statusDiv.textContent = 'บันทึกแล้ว';
-                statusDiv.style.color = 'green';
-
-                initForm();
-
-                setTimeout(() => {
-                    statusDiv.textContent = '';
-                }, 2000);
-
-            } catch (error) {
-                console.error('Error:', error);
-                statusDiv.textContent = 'ข้อผิดพลาด';
-                statusDiv.style.color = 'red';
-                e.target.value = column.col_name;
-            }
-        }, 500));
-
-        formGroup.appendChild(inputDiv);
-        formGroup.appendChild(statusDiv);
-        formColumn.appendChild(formGroup);
-    });
-
-    // Add global status message
-    const globalStatus = document.createElement('div');
-    globalStatus.className = 'mt-3 text-muted';
-    globalStatus.style.fontSize = '0.9rem';
-    globalStatus.textContent = 'หากมีการเปลี่ยนแปลงชื่อจะถูกบันทึกโดยอัตโนมัติ';
-    formColumn.appendChild(globalStatus);
-};
-
 const generateFormFields = (columnsData, rowData, formid, refid) => {
     const formContainer = document.getElementById('formContainer');
     formContainer.innerHTML = '';
@@ -367,7 +231,7 @@ const generateFormFields = (columnsData, rowData, formid, refid) => {
             }
         } else {
             const input = document.createElement('input');
-            console.log('column.col_type', column);
+            // console.log('column.col_type', column);
 
             input.id = column.col_id;
             input.name = column.col_id;
@@ -388,141 +252,7 @@ const generateFormFields = (columnsData, rowData, formid, refid) => {
         formContainer.appendChild(formGroup);
     });
 
-    const saveButton = document.createElement('button');
-    saveButton.innerHTML = '<em class="icon ni ni-save"></em>&nbsp;บันทึก';
-    saveButton.className = 'btn btn-primary';
-    let isSaving = false;
 
-    saveButton.addEventListener('click', async () => {
-        if (isSaving) return;
-        isSaving = true;
-        saveButton.disabled = true;
-        saveButton.textContent = 'Saving...';
-
-        try {
-            await updateData(formid, refid);
-            alert('Data updated successfully!');
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`Failed to update data: ${error.message}`);
-        } finally {
-            isSaving = false;
-            saveButton.disabled = false;
-            saveButton.textContent = 'บันทึก';
-        }
-    });
-
-    formContainer.appendChild(saveButton);
-};
-
-const resizeImage = (file, maxWidth = 640) => {
-    return new Promise((resolve, reject) => {
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            reject(new Error('File too large. Maximum size is 5MB.'));
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                try {
-                    const canvas = document.createElement('canvas');
-                    const scaleFactor = maxWidth / img.width;
-                    canvas.width = maxWidth;
-                    canvas.height = img.height * scaleFactor;
-
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) throw new Error('Failed to get canvas context');
-
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    canvas.toBlob((blob) => {
-                        if (!blob) reject(new Error('Failed to create blob'));
-                        resolve(new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        }));
-                    }, 'image/jpeg', 0.8); // 80% quality
-                } catch (error) {
-                    reject(error);
-                }
-            };
-            img.onerror = () => reject(new Error('Failed to load image'));
-            img.src = event.target.result;
-        };
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-    });
-};
-
-const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-    });
-};
-
-const updateColumnName = async (formid, refid) => {
-    try {
-        const formInputs = Array.from(document.getElementById('formColumnName').querySelectorAll('input'));
-        const jsonData = {};
-
-        for (const input of formInputs) {
-            if (input.type === 'file' && input.files.length > 0) {
-                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
-                const base64String = await fileToBase64(resizedFile);
-                jsonData[input.name] = base64String; // Send as base64
-            } else if (input.type !== 'file' && input.value) {
-                jsonData[input.name] = input.value;
-            }
-        }
-
-        const response = await fetchAPI(`/api/v2/update_column/${formid}/${refid}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(jsonData)
-        });
-
-        return response;
-    } catch (error) {
-        console.error('Error updating data:', error);
-        throw error;
-    }
-};
-
-const updateData = async (formid, refid) => {
-    try {
-        const formInputs = Array.from(document.getElementById('formContainer').querySelectorAll('input'));
-        const jsonData = {};
-
-        for (const input of formInputs) {
-            if (input.type === 'file' && input.files.length > 0) {
-                const resizedFile = await resizeImage(input.files[0], 640); // Resize to 640px width
-                const base64String = await fileToBase64(resizedFile);
-                jsonData[input.name] = base64String; // Send as base64
-            } else if (input.type !== 'file' && input.value) {
-                jsonData[input.name] = input.value;
-            }
-        }
-
-        const response = await fetchAPI(`/api/v2/update_row/${formid}/${refid}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(jsonData)
-        });
-
-        return response;
-    } catch (error) {
-        console.error('Error updating data:', error);
-        throw error;
-    }
 };
 
 const initDraw = (styles, type) => {
@@ -588,54 +318,10 @@ function handleIconClick(iconName, element) {
 
 const svgCircle = document.getElementById('svg-circle');
 
-function updateSVGCircle() {
-    const fillColor = colorInput.value;
-    const radius = parseInt(radiusInput.value, 10);
-    const strokeColor = strokeColorInput.value;
-    const strokeWidth = parseInt(strokeWidthInput.value, 10);
-
-    svgCircle.setAttribute('fill', fillColor);
-    svgCircle.setAttribute('r', radius);
-    svgCircle.setAttribute('stroke', strokeColor);
-    svgCircle.setAttribute('stroke-width', strokeWidth);
-
-    displayStyle();
-}
-
-function updateStyle(type) {
-    if (type === 'circle') {
-        updateSVGCircle();
-    } else if (type === 'marker') {
-        displayStyle();
-    }
-}
-
 const colorInput = document.getElementById('circle-color');
 const radiusInput = document.getElementById('circle-radius');
 const strokeColorInput = document.getElementById('circle-stroke-color');
 const strokeWidthInput = document.getElementById('circle-stroke-width');
-colorInput.addEventListener('change', updateSVGCircle);
-radiusInput.addEventListener('change', updateSVGCircle);
-strokeColorInput.addEventListener('change', updateSVGCircle);
-strokeWidthInput.addEventListener('change', updateSVGCircle);
-
-function togglePanel() {
-    try {
-        const selectedPanel = document.querySelector('input[name="panel"]:checked').value;
-        if (selectedPanel === 'circle') {
-            document.getElementById('circle-panel').style.display = 'block';
-            document.getElementById('marker-panel').style.display = 'none';
-            document.getElementById('marker-icon').value = 'none';
-            document.getElementById('circle-prop').style.display = 'block';
-        } else if (selectedPanel === 'marker') {
-            document.getElementById('circle-panel').style.display = 'none';
-            document.getElementById('marker-panel').style.display = 'flex';
-            document.getElementById('circle-prop').style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error toggling panel:', error);
-    }
-}
 
 const populateMarkerPanel = () => {
     try {
@@ -740,50 +426,6 @@ const initStyle = async (styleData) => {
     }
 }
 
-const handleDrawUpdate = async (e) => {
-    try {
-        const currentStyles = getCustomStyles();
-        const geojsonJson = JSON.stringify(e.features[0].geometry);
-        await saveGeojson(formid, refid, geojsonJson, JSON.stringify(currentStyles));
-        // if (type === 'Point') updateMarker(e.features[0].geometry.coordinates);
-        if (type === 'point') {
-            let currentMarker = document.getElementById('marker-icon').value;
-            if (currentMarker !== 'none') {
-                updateMarker(e.features[0].geometry.coordinates);
-            } else {
-                updateCircleMarker(e.features[0].geometry.coordinates);
-            }
-        }
-    } catch (error) {
-        console.error('Error updating feature:', error);
-    }
-};
-
-const handleDrawCreate = async (e) => {
-    try {
-        const allFeatures = draw.getAll();
-        allFeatures.features.forEach(feature => {
-            if (!e.features.some(newFeature => newFeature.id === feature.id)) {
-                draw.delete(feature.id);
-            }
-        });
-        await handleDrawUpdate(e);
-    } catch (error) {
-        console.error('Error creating feature:', error);
-    }
-};
-
-const handleDrawDelete = async () => {
-    try {
-        if (type === 'point' && marker) {
-            marker.remove();
-            marker = null;
-        }
-    } catch (error) {
-        console.error('Error deleting feature:', error);
-    }
-};
-
 const displayStyle = async () => {
     const currentStyles = getCustomStyles();
     const currentFeatures = draw.getAll();
@@ -812,8 +454,8 @@ const initForm = async () => {
             fetchAPI(`/api/v2/load_layer/${formid}/${refid}`)
         ]);
         generateFormFields(columnsData, featuresData[0], formid, refid);
-        handleColumnName(columnsData, formid, refid);
-        handleColumnItem(columnsData, formid, refid);
+        // handleColumnName(columnsData, formid, refid);
+        // handleColumnItem(columnsData, formid, refid);
     } catch (error) {
         console.error('Error reloading form:', error);
     }
@@ -841,13 +483,6 @@ document.getElementById('clear-marker').addEventListener('click', () => {
     ['latitude', 'longitude'].forEach(id => document.getElementById(id).value = '');
 });
 
-document.getElementById('styleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    displayStyle();
-    const currentStyles = getCustomStyles();
-    await saveStyle(formid, refid, JSON.stringify(currentStyles));
-});
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const [featuresData, styleData] = await Promise.all([
@@ -867,25 +502,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         loadFeature(featuresData, draw);
 
-        if (type == 'point') {
-            document.getElementById('casePoint').style.display = 'block';
-            document.getElementById('caseLine').style.display = 'none';
-            document.getElementById('casePolygon').style.display = 'none';
-        } else if (type == 'linestring') {
-            document.getElementById('casePoint').style.display = 'none';
-            document.getElementById('caseLine').style.display = 'block';
-            document.getElementById('casePolygon').style.display = 'none';
-        } else if (type == 'polygon') {
-            document.getElementById('casePoint').style.display = 'none';
-            document.getElementById('caseLine').style.display = 'block';
-            document.getElementById('casePolygon').style.display = 'block';
-        }
+        document.getElementById('casePoint').style.display = 'none';
+        document.getElementById('caseLine').style.display = 'none';
+        document.getElementById('casePolygon').style.display = 'none';
 
-        togglePanel();
-
-        map.on('draw.create', handleDrawCreate);
-        map.on('draw.update', handleDrawUpdate);
-        map.on('draw.delete', handleDrawDelete);
     } catch (error) {
         console.error('Error loading default features:', error);
     }
@@ -893,7 +513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 const loadUserProfile = async () => {
     try {
-        const response = await fetch('/auth/profile/editor');
+        const response = await fetch('/auth/profile/user');
         const data = await response.json();
 
         let userAvatarS = document.getElementById('userAvatarS');
@@ -959,52 +579,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadUserProfile();
     await getTasabanInfo();
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-
-    document.getElementById('createColumnForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const form = e.target;
-        const newColumn = {
-            col_id: formid + '_' + Date.now(),
-            col_name: form.newColName.value.trim(),
-            col_type: form.newColType.value,
-            col_desc: form.newColDesc.value.trim()
-        };
-
-        const submitButton = form.querySelector('button');
-        const originalText = submitButton.textContent;
-
-        try {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Creating...';
-
-            const response = await fetch(`/api/v2/create_column/${formid}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newColumn)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to create column');
-            }
-
-            form.reset();
-            alert('สร้างคอลัมน์ สำเร็จ!');
-            initForm();
-        } catch (error) {
-            console.error('Creation error:', error);
-            alert(`Error: ${error.message}`);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = originalText;
-        }
-    });
 });
 
 document.getElementById('logout').addEventListener('click', async () => {
