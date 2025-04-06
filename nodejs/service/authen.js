@@ -10,7 +10,7 @@ const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
     // callbackUrl: 'http://localhost:3000/auth/line/callback',
-    callbackUrl: 'http://www.muangjeehub-lgia.com/auth/line/callback',
+    callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
     scope: 'profile openid email'
 };
 
