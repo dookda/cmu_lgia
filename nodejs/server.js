@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'www')));
 app.use(require('./service/api'));
 app.use(require('./service/apiv2'));
 app.use(require('./service/authen'));
+app.use(require('./service/qrcode'));
 
 app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000/');

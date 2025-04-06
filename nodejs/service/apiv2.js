@@ -257,6 +257,16 @@ app.get('/api/v2/layer_names', async (req, res) => {
     }
 });
 
+app.get('/api/v2/layer_names/:formid', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM layer_name WHERE formid = $1', [req.params.formid]);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 app.delete('/api/v2/layer_names/:gid', async (req, res) => {
     const client = await pool.connect();
     try {

@@ -454,12 +454,39 @@ const initForm = async () => {
             fetchAPI(`/api/v2/load_layer/${formid}/${refid}`)
         ]);
         generateFormFields(columnsData, featuresData[0], formid, refid);
-        // handleColumnName(columnsData, formid, refid);
-        // handleColumnItem(columnsData, formid, refid);
     } catch (error) {
         console.error('Error reloading form:', error);
     }
 };
+
+const loadQRCode = async (layerInfo) => {
+    console.log('layerInfo', layerInfo);
+
+    const currentUrl = window.location.href;
+    document.getElementById('current-url').textContent = currentUrl;
+    try {
+        const response = await fetch(`/api/qrcode?url=${encodeURIComponent(currentUrl)}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const img = document.createElement('img');
+        img.src = data.qrCode;
+        img.alt = 'QR Code for current page';
+        img.className = 'img-fluid rounded';
+        document.getElementById('qrcode-container').appendChild(img);
+        document.getElementById('layername').textContent = layerInfo[0].layername;
+        document.getElementById('layertype').textContent = layerInfo[0].layertype;
+        document.getElementById('division').textContent = layerInfo[0].division;
+        // thai date format
+        const createdate = new Date(layerInfo[0].ts);
+        const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Bangkok' };
+        const thaiDate = createdate.toLocaleDateString('th-TH', options);
+        document.getElementById('createdate').textContent = thaiDate;
+    } catch (error) {
+        console.error('Error loading QR code:', error);
+    }
+}
 
 document.getElementById('baseMapSelector').addEventListener('change', (e) => {
     updateBaseMap(e.target.value);
@@ -485,14 +512,18 @@ document.getElementById('clear-marker').addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const [featuresData, styleData] = await Promise.all([
+        await loadUserProfile();
+        await getTasabanInfo();
+
+        const [layerInfo, featuresData, styleData] = await Promise.all([
+            fetchAPI(`/api/v2/layer_names/${formid}`),
             fetchAPI(`/api/v2/load_layer/${formid}/${refid}`),
             fetchAPI(`/api/v2/load_feature_style/${formid}/${refid}`)
         ]);
 
-        // generateFormFields(columnsData, featuresData[0], formid, refid);
-        // handleColumnChange(columnsData);
-        initForm();
+        await loadQRCode(layerInfo);
+
+        await initForm();
         populateMarkerPanel();
 
         let json = await initStyle(styleData);
@@ -544,11 +575,6 @@ const getTasabanInfo = async () => {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-
-        // Update text content
-        // document.getElementById('tasabanInfo').textContent = data.name;
-
-        // Update logo image
         const logoImg1 = document.getElementById('imgLogo1');
         const logoImg2 = document.getElementById('imgLogo2');
         if (data.img) {
@@ -573,13 +599,6 @@ const getTasabanInfo = async () => {
         document.getElementById('imgLogo').src = './../images/logo-dark2x.png';
     }
 };
-
-
-document.addEventListener('DOMContentLoaded', async () => {
-
-    await loadUserProfile();
-    await getTasabanInfo();
-});
 
 document.getElementById('logout').addEventListener('click', async () => {
     try {
