@@ -404,10 +404,6 @@ const initStyle = async (styleData) => {
                 svgCircle.setAttribute('stroke', circleStrokeColor);
                 svgCircle.setAttribute('stroke-width', circleStrokeWidth);
 
-                // document.getElementById('circle-color').value = json[0]?.paint['circle-color'] || '#FF0000';
-                // document.getElementById('circle-radius').value = json[0]?.paint['circle-radius'] || 5;
-                // document.getElementById('circle-stroke-color').value = json[0]?.paint['circle-stroke-color'] || '#FFFFFF';
-                // document.getElementById('circle-stroke-width').value = json[0]?.paint['circle-stroke-width'] || 1;
                 document.getElementById('marker-icon').value = json[0]?.metadata?.['marker-icon'] || 'none';
                 document.getElementById('line-color').value = json[1]?.paint['line-color'] || '#00FF00';
                 document.getElementById('line-width').value = json[1]?.paint['line-width'] || 2;
@@ -508,23 +504,58 @@ const loadQRCode = async (layerInfo) => {
     }
 }
 
+const convertUTMToLatLng = async (easting, northing) => {
+    const response = await fetch('/geoapi/latlng2utm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ easting, northing, zone: 47, hemisphere: 'N' })
+    });
+    return response.json();
+}
+
 document.getElementById('baseMapSelector').addEventListener('change', (e) => {
     updateBaseMap(e.target.value);
 });
 
-document.getElementById('searchLatLng').addEventListener('submit', e => {
+document.getElementById('searchLatLng').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const lat = parseFloat(document.getElementById('latitude').value);
-    const lng = parseFloat(document.getElementById('longitude').value);
-    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        return alert('Please enter valid latitude (-90 to 90) and longitude (-180 to 180) values.');
-    }
+    const coords = {
+        lat: parseFloat(document.getElementById('latitude').value),
+        lng: parseFloat(document.getElementById('longitude').value)
+    };
+    map.flyTo({ center: [coords.lng, coords.lat], zoom: 16 });
+    if (marker) marker.remove();
+    marker = new maplibregl.Marker().setLngLat([coords.lng, coords.lat]).addTo(map);
+});
+
+document.getElementById('searchUtm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const easting = parseFloat(document.getElementById('easting').value);
+    const northing = parseFloat(document.getElementById('northing').value);
+    coords = await convertUTMToLatLng(easting, northing);
+    console.log('coords', coords);
+    const lat = parseFloat(coords.latitude);
+    const lng = parseFloat(coords.longitude);
+
     map.flyTo({ center: [lng, lat], zoom: 15 });
     if (marker) marker.remove();
     marker = new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
 });
 
-document.getElementById('clear-marker').addEventListener('click', () => {
+document.getElementById('coordType').addEventListener('change', function (e) {
+    const forms = document.querySelectorAll('.coord-form');
+    forms.forEach(form => form.style.display = 'none');
+    document.getElementById(`search${e.target.value === 'latLng' ? 'LatLng' : 'Utm'}`)
+        .style.display = 'block';
+});
+
+document.getElementById('clearMarker1').addEventListener('click', () => {
+    if (marker) marker.remove();
+    marker = null;
+    ['latitude', 'longitude'].forEach(id => document.getElementById(id).value = '');
+});
+
+document.getElementById('clearMarker2').addEventListener('click', () => {
     if (marker) marker.remove();
     marker = null;
     ['latitude', 'longitude'].forEach(id => document.getElementById(id).value = '');
