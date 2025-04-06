@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         e.stopPropagation();
                         const refid = $(this).data('refid');
                         const type = $(this).data('type');
-                        window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_blank');
+                        window.open(`/v2/detail/index.html?formid=${formid}&refid=${refid}&type=${type}`, '_self');
                     } catch (error) {
                         console.error('Error in detail-btn click event:', error);
                     }
