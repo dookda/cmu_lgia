@@ -12,8 +12,8 @@ const bcrypt = require('bcryptjs');
 const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
-    // callbackUrl: 'http://localhost:3000/auth/line/callback',
-    callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
+    callbackUrl: 'http://localhost:3000/auth/line/callback',
+    // callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
     scope: 'profile openid email'
 };
 
@@ -259,14 +259,16 @@ app.post('/auth/register', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const userid = `fid_${Date.now()}`;
+        const picture_url = './../images/avatar/admin.png'
         const insertQuery = `
             INSERT INTO tb_user 
-            (username, pass, email, provider, auth, created_at, updated_at, ts)
-            VALUES ($1, $2, $3, 'local', 'user', NOW(), NOW(), NOW())
+            (userid, username, displayname, pass, picture_url, email, provider, auth, created_at, updated_at, ts)
+            VALUES ($1, $2, $2, $3, $4, $5, 'local', 'user', NOW(), NOW(), NOW())
             RETURNING *;
         `;
 
-        const result = await pool.query(insertQuery, [username, hashedPassword, email]);
+        const result = await pool.query(insertQuery, [userid, username, hashedPassword, picture_url, email]);
 
         res.status(201).json({
             success: true,
@@ -324,12 +326,10 @@ app.post('/auth/local/login', async (req, res) => {
             });
         }
 
-        console.log(req.session);
-
         req.session.user = {
             userId: user.userid,
-            username: user.username,
-            pictureUrl: './../images/avatar/admin.png',
+            displayName: user.displayname,
+            pictureUrl: user.picture_url,
             auth: user.auth
         };
 
