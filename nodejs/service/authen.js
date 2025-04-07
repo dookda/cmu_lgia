@@ -324,6 +324,8 @@ app.post('/auth/local/login', async (req, res) => {
             });
         }
 
+        console.log(req.session);
+
         req.session.user = {
             userId: user.userid,
             username: user.username,

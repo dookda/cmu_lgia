@@ -847,6 +847,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('userProfile').style.display = "none";
                     return null
                 }
+                document.getElementById('localLogin').style.display = "none";
                 document.getElementById('lineLogin').style.display = "none";
                 userAvatarS.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
                 userAvatarL.innerHTML += `<img src="${data.user.pictureUrl}" class="avatar" alt="Profile Picture">`;
@@ -907,6 +908,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 userAvatarS.innerHTML = '';
                 userAvatarS.innerHTML += '<em class="icon ni ni-user-alt"></em>';
 
+                document.getElementById('localLogin').style.display = "block";
                 document.getElementById('lineLogin').style.display = "block";
                 document.getElementById('userDetail').style.display = "none";
                 document.getElementById('lineLogout').style.display = "none";
