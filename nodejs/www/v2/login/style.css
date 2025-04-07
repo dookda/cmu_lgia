@@ -1,0 +1,62 @@
+body {
+    font-family: "Noto Sans Thai", serif !important;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+.btn {
+    font-family: "Noto Sans Thai", serif !important;
+}
+
+.in-line {
+    display: flex;
+    align-items: center;
+}
+
+.in-line img {
+    margin-right: 8px;
+}
+
+.img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    /* Ensures the image fills the container */
+}
+
+.nk-menu-text {
+    font-family: "Noto Sans Thai", serif !important;
+}
+
+.m {
+    margin: 1px;
+}
+
+#message {
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+#message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+#message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+#message.error {
+    background: #f8d7da;
+    color: #721c24;
+}

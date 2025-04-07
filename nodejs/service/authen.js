@@ -2,15 +2,18 @@ const express = require('express');
 const querystring = require('querystring');
 const session = require('express-session');
 const { Pool } = require('pg');
-
 const app = express();
+
+app.use(express.json());
+
+const bcrypt = require('bcryptjs');
 
 // Configuration
 const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
-    // callbackUrl: 'http://localhost:3000/auth/line/callback',
-    callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
+    callbackUrl: 'http://localhost:3000/auth/line/callback',
+    // callbackUrl: 'http://119.59.103.175:3000/auth/line/callback',
     scope: 'profile openid email'
 };
 
@@ -210,12 +213,135 @@ app.get('/auth/logout', (req, res) => {
             success: false,
             message: 'Error logging out'
         });
-
     }
 });
 
 app.get('/auth/debug-session', (req, res) => {
     res.json(req.session);
+});
+
+app.post('/auth/register', async (req, res) => {
+    const { username, password, email } = req.body;
+
+    if (!username || !password || !email) {
+        return res.status(400).json({
+            success: false,
+            message: 'Missing required fields'
+        });
+    }
+
+    try {
+        const checkQuery = `
+            SELECT username, email 
+            FROM tb_user 
+            WHERE username = $1 OR email = $2
+        `;
+        const checkResult = await pool.query(checkQuery, [username, email]);
+
+        if (checkResult.rows.length > 0) {
+            const existingUser = checkResult.rows[0];
+            if (existingUser.username === username && existingUser.email === email) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Both username and email นี้ถูกใช้แล้ว'
+                });
+            } else if (existingUser.username === username) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Username นี้ถูกใช้แล้ว'
+                });
+            } else if (existingUser.email === email) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email นี้ถูกใช้แล้ว'
+                });
+            }
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const insertQuery = `
+            INSERT INTO tb_user 
+            (username, pass, email, provider, auth, created_at, updated_at, ts)
+            VALUES ($1, $2, $3, 'local', 'user', NOW(), NOW(), NOW())
+            RETURNING *;
+        `;
+
+        const result = await pool.query(insertQuery, [username, hashedPassword, email]);
+
+        res.status(201).json({
+            success: true,
+            user: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Registration failed'
+        });
+    }
+});
+
+app.post('/auth/local/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'Missing credentials'
+        });
+    }
+
+    try {
+        const userResult = await pool.query(
+            `SELECT * FROM tb_user 
+            WHERE username = $1 
+            AND provider = 'local'`,  // ← THIS IS CRUCIAL
+            [username]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        const user = userResult.rows[0];
+
+        if (!user.pass) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid authentication method'
+            });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.pass);
+
+        if (!isValidPassword) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        req.session.user = {
+            userId: user.userid,
+            username: user.username,
+            pictureUrl: './../images/avatar/admin.png',
+            auth: user.auth
+        };
+
+        res.json({
+            success: true,
+            message: 'Logged in successfully'
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Login failed'
+        });
+    }
 });
 
 // Graceful shutdown
