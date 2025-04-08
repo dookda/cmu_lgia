@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --background-color: #f3f4f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            padding: 1rem;
+            position: fixed;
+            height: calc(100vh - 70px);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.75rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #f3f4f6;
+            color: var(--primary-color);
+        }
+
+        .btn-logout {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Dashboard</h1>
+            <div class="user-profile">
+                <img id="profilePicture" class="profile-pic" alt="Profile">
+                <div>
+                    <span id="displayName"></span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <nav>
+            <a href="#overview" class="nav-link">Overview</a>
+            <a href="#profile" class="nav-link">Profile Settings</a>
+            <a href="#security" class="nav-link">Security</a>
+            <a href="#activity" class="nav-link">Recent Activity</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="card">
+                <h2>Welcome, <span id="welcomeName"></span></h2>
+                <p>Email: <span id="userEmail"></span></p>
+                <p>Account Type: <span id="authLevel"></span></p>
+                <p>Registration Date: <span id="createdAt"></span></p>
+            </div>
+
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <button class="btn-logout" onclick="location.href='/auth/profiledetail'">
+                    View Full Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch user data on page load
+        async function loadUserData() {
+            try {
+                const response = await fetch('/auth/profiledetail', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const { user } = await response.json();
+
+                // Populate user data
+                document.getElementById('displayName').textContent = user.displayname;
+                document.getElementById('welcomeName').textContent = user.displayname;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('authLevel').textContent = user.auth;
+                document.getElementById('createdAt').textContent = new Date(user.created_at).toLocaleDateString();
+
+                if (user.picture_url) {
+                    document.getElementById('profilePicture').src = user.picture_url;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+
+        // Initial load
+        loadUserData();
+
+        // Session heartbeat (refresh every 5 minutes)
+        setInterval(() => {
+            fetch('/auth/profile/user', { credentials: 'include' });
+        }, 300000);
+    </script>
+</body>
+
+</html>

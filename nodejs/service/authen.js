@@ -3,6 +3,7 @@ const querystring = require('querystring');
 const session = require('express-session');
 const { Pool } = require('pg');
 const app = express();
+const path = require('path');
 
 app.use(express.json());
 
@@ -32,12 +33,19 @@ app.use(session({
     saveUninitialized: false
 }));
 
-function ensureAuthenticated(req, res, next) {
+const ensureAuthenticated = (req, res, next) => {
     if (!req.session.user) {
         return res.json({
             success: false,
             message: 'Unauthorized'
         });
+    }
+    next();
+}
+
+const ensureAuthenticatedForPage = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect('/v2/dashboard');
     }
     next();
 }
@@ -137,11 +145,28 @@ app.get('/auth/line/callback', async (req, res) => {
 
         const profile = await upsertUser(userProfile);
 
+        const userResult = await pool.query(
+            `SELECT * FROM tb_user 
+            WHERE userid = $1 
+            AND provider = 'line'`,
+            [profile.userid]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        const user = userResult.rows[0];
+
         req.session.user = {
             userId: userProfile.userId,
             displayName: userProfile.displayName,
             pictureUrl: userProfile.pictureUrl,
-            auth: profile.auth
+            auth: profile.auth,
+            devision: user.division,
         };
 
         res.redirect('/v2/dashboard');
@@ -181,10 +206,10 @@ app.get('/auth/profile/:auth', ensureAuthenticated, (req, res) => {
 
 app.get('/auth/profiledetail', ensureAuthenticated, async (req, res) => {
     try {
-        const sql = `SELECT * FROM tb_user WHERE userid = $1;`;
+        const sql = `SELECT userid as userId, displayname as displayName, picture_url as pictureUrl, auth, division FROM tb_user WHERE userid = $1;`;
         const values = [req.session.user.userId];
         const data = await pool.query(sql, values);
-        // console.log(data.rows[0]);
+        console.log(data.rows[0]);
         res.status(200).json({
             success: true,
             user: data.rows[0]
@@ -330,7 +355,8 @@ app.post('/auth/local/login', async (req, res) => {
             userId: user.userid,
             displayName: user.displayname,
             pictureUrl: user.picture_url,
-            auth: user.auth
+            auth: user.auth,
+            division: user.division,
         };
 
         res.json({
@@ -344,6 +370,14 @@ app.post('/auth/local/login', async (req, res) => {
             message: 'Login failed'
         });
     }
+});
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, './../www/v2/register/index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, './../www/v2/login/index.html'));
 });
 
 // Graceful shutdown

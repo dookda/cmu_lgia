@@ -11,21 +11,12 @@ app.use(express.static(path.join(__dirname, 'www')));
 
 console.log('Static files served from:', path.join(__dirname, 'www'));
 
-
 // api
 app.use(require('./service/api'));
 app.use(require('./service/apiv2'));
 app.use(require('./service/authen'));
 app.use(require('./service/qrcode'));
 app.use(require('./service/geoapi'));
-
-app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'www/v2/register/index.html'));
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'www/v2/login/index.html'));
-});
 
 app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000/');
