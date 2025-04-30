@@ -14,7 +14,7 @@ const config = {
     channelId: process.env.LINE_CHANNEL_ID,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
     // callbackUrl: 'http://localhost:3000/auth/line/callback',
-    // callbackUrl: 'http://119.59.103.173:3000/auth/line/callback',
+    // callbackUrl: 'http://119.59.102.173:3000/auth/line/callback',
     callbackUrl: 'https://www.banpaenhub-lgia.com/auth/line/callback',
     scope: 'profile openid email'
 };
