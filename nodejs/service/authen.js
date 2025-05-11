@@ -15,7 +15,7 @@ const config = {
     channelSecret: process.env.LINE_CHANNEL_SECRET,
     // callbackUrl: 'http://localhost:3000/auth/line/callback',
     // callbackUrl: 'http://119.59.103.173:3000/auth/line/callback',
-    callbackUrl: 'https://www.tonthonghub-lgia.com//auth/line/callback',
+    callbackUrl: 'https://www.tonthonghub-lgia.com/auth/line/callback',
     scope: 'profile openid email'
 };
 
