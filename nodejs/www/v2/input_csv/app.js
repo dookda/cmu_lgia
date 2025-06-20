@@ -28,7 +28,7 @@ const handleError = (error, message) => {
 
 const resetMessage = () => {
     domElements.message.style.display = 'none';
-    domElements.message.classList.remove(type);
+    // domElements.message.classList.remove(type);
     domElements.message.textContent = '';
 };
 
