@@ -19,7 +19,6 @@ const domElements = {
     message: document.getElementById('message')
 };
 
-
 const handleError = (error, message) => {
     console.error(`${message}:`, error);
     domElements.message.textContent = `${message}. Please try again.`;
