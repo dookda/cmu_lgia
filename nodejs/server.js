@@ -9,6 +9,12 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // static files
 app.use(express.static(path.join(__dirname, 'www')));
 
+// v3 SPA — serve built assets and fall back to index.html for client-side routing
+app.use('/v3', express.static(path.join(__dirname, 'www/v3/dist')));
+app.get('/v3/*', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'www/v3/dist/index.html'));
+});
+
 console.log('Static files served from:', path.join(__dirname, 'www'));
 
 // api

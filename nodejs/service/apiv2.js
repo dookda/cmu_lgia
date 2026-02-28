@@ -884,7 +884,7 @@ app.delete('/api/v2/delete_feature', async (req, res) => {
 });
 
 app.post('/api/v2/insert_row', async (req, res) => {
-    const { formid, refid } = req.body;
+    const { formid, refid, geojson, properties } = req.body;
 
     console.log('Creating row:', formid, refid);
 
@@ -897,12 +897,28 @@ app.post('/api/v2/insert_row', async (req, res) => {
     }
 
     try {
-        const query = `INSERT INTO ${formid} (refid) VALUES ($1) RETURNING *`;
-        const values = [refid];
+        let query, values;
+        if (geojson) {
+            query = `INSERT INTO ${formid} (refid, geom) VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326)) RETURNING *`;
+            values = [refid, geojson];
+        } else {
+            query = `INSERT INTO ${formid} (refid) VALUES ($1) RETURNING *`;
+            values = [refid];
+        }
         const result = await pool.query(query, values);
 
         if (result.rowCount === 0) {
             return res.status(500).json({ error: 'Failed to insert feature' });
+        }
+
+        // Update properties (dynamic columns) if provided
+        if (properties && typeof properties === 'object') {
+            const validEntries = Object.entries(properties).filter(([key]) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key));
+            if (validEntries.length > 0) {
+                const setClause = validEntries.map(([key], idx) => `"${key}" = $${idx + 1}`).join(', ');
+                const propValues = [...validEntries.map(([, v]) => (v === '' ? null : v)), refid];
+                await pool.query(`UPDATE ${formid} SET ${setClause} WHERE refid = $${propValues.length}`, propValues);
+            }
         }
 
         res.json({

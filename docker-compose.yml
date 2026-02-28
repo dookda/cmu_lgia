@@ -5,15 +5,57 @@ services:
     container_name: lgia_postgis
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=lgia1234
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - 5433:5432
     volumes:
       - ./postgis:/docker-entrypoint-initdb.d
 
+  fastapi:
+    container_name: lgia_fastapi
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./fastapi:/app # hot-reload in dev (--reload flag in CMD)
+    env_file:
+      - ./fastapi/.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  react:
+    container_name: lgia_react
+    build:
+      context: ./react
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - fastapi
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./react:/app # hot-reload: source is live-mounted
+      - /app/node_modules # anonymous volume so host node_modules don't override container's
+    environment:
+      - VITE_API_HOST=http://fastapi:8000 # proxy → FastAPI container
+      - VITE_NODEJS_HOST=http://nodejs:3000 # proxy → Node.js static assets (/v2/)
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5173" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   nodejs:
-    image: node:latest
+    image: node:20
     container_name: lgia_nodejs
     restart: always
     working_dir: /usr/src/app

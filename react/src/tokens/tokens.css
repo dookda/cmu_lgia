@@ -1,0 +1,289 @@
+/* =============================================================================
+   LGIA React — Design Token System
+   Loaded first in main.tsx so every rule here takes precedence over
+   DashLite's dashlite.css and theme.css (which are <link> tags in index.html
+   and therefore lower in specificity when same-weight selectors are used, but
+   since we need to override CSS *custom properties* we must load AFTER them —
+   Vite injects <style> blocks after existing <link> tags ✓).
+   ============================================================================= */
+
+/* ─── 1. App-level Semantic Palette ──────────────────────────────────────────
+   Single source of truth for brand colours. Referenced everywhere below.      */
+:root {
+  /* Brand */
+  --app-primary: #6576ff;
+  /* DashLite accent recoloured for LGIA   */
+  --app-primary-dim: #eff1ff;
+  --app-primary-rgb: 101, 118, 255;
+
+  --app-success: #1ee0ac;
+  --app-success-dim: #e5fbf5;
+  --app-success-rgb: 30, 224, 172;
+
+  --app-warning: #f4bd0e;
+  --app-warning-dim: #fef9e5;
+  --app-warning-rgb: 244, 189, 14;
+
+  --app-danger: #e85347;
+  --app-danger-dim: #fdf3f2;
+  --app-danger-rgb: 232, 83, 71;
+
+  --app-info: #09c2de;
+  --app-info-dim: #e3fafd;
+  --app-info-rgb: 9, 194, 222;
+
+  /* Neutrals (matches DashLite's grey scale) */
+  --app-neutral-0: #ffffff;
+  --app-neutral-50: #f5f6fa;
+  --app-neutral-100: #ebeef2;
+  --app-neutral-200: #dbdfea;
+  --app-neutral-300: #b6c6e3;
+  --app-neutral-500: #8094ae;
+  --app-neutral-600: #526484;
+  /* DashLite body text colour */
+  --app-neutral-700: #364a63;
+  /* DashLite heading colour   */
+  --app-neutral-800: #2b3748;
+  --app-neutral-900: #1f2b3a;
+
+  /* Semantic aliases */
+  --color-primary: var(--app-primary);
+  --color-primary-dim: var(--app-primary-dim);
+  --color-success: var(--app-success);
+  --color-success-dim: var(--app-success-dim);
+  --color-warning: var(--app-warning);
+  --color-warning-dim: var(--app-warning-dim);
+  --color-danger: var(--app-danger);
+  --color-danger-dim: var(--app-danger-dim);
+  --color-info: var(--app-info);
+  --color-info-dim: var(--app-info-dim);
+
+  --color-text: var(--app-neutral-600);
+  --color-text-heading: var(--app-neutral-700);
+  --color-text-muted: var(--app-neutral-500);
+  --color-border: var(--app-neutral-200);
+  --color-bg: var(--app-neutral-50);
+  --color-surface: var(--app-neutral-0);
+}
+
+/* ─── 2. Remap DashLite Bootstrap Variables to App Palette ───────────────────
+   DashLite sets its own colours via --bs-* which Bootstrap components consume.
+   We remap them to our palette so every BS component (cards, badges, alerts,
+   tables, forms) automatically uses LGIA brand colours.                       */
+:root {
+  --bs-primary: var(--app-primary);
+  --bs-primary-rgb: var(--app-primary-rgb);
+  --bs-success: var(--app-success);
+  --bs-success-rgb: var(--app-success-rgb);
+  --bs-warning: var(--app-warning);
+  --bs-warning-rgb: var(--app-warning-rgb);
+  --bs-danger: var(--app-danger);
+  --bs-danger-rgb: var(--app-danger-rgb);
+  --bs-info: var(--app-info);
+  --bs-info-rgb: var(--app-info-rgb);
+
+  --bs-body-color: var(--app-neutral-600);
+  --bs-body-bg: var(--app-neutral-50);
+  --bs-heading-color: var(--app-neutral-700);
+
+  --bs-border-color: var(--app-neutral-200);
+  --bs-link-color: var(--app-primary);
+  --bs-link-hover-color: #4a5eef;
+  /* slightly darker on hover */
+
+  /* Box shadows — harmonise with our design language */
+  --bs-box-shadow: 0 3px 12px 1px rgba(43, 55, 72, 0.10);
+  --bs-box-shadow-sm: 0 1px 4px rgba(43, 55, 72, 0.08);
+  --bs-box-shadow-lg: 0 8px 24px rgba(43, 55, 72, 0.14);
+}
+
+/* ─── 3. Border Radius — Unified Rounding ────────────────────────────────────
+   DashLite defaults to very sharp corners (4 px). We use a softer 8 px across
+   all components while keeping a coherent scale.                              */
+:root {
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Override every Bootstrap radius variable */
+  --bs-border-radius: var(--radius-sm);
+  /* inputs, default elements */
+  --bs-border-radius-sm: var(--radius-sm);
+  --bs-border-radius-lg: var(--radius-md);
+  /* cards, modals */
+  --bs-border-radius-xl: var(--radius-lg);
+  --bs-border-radius-xxl: var(--radius-xl);
+  --bs-border-radius-2xl: var(--radius-xl);
+  --bs-border-radius-pill: var(--radius-full);
+}
+
+/* ─── 4. Typography ──────────────────────────────────────────────────────────
+   DashLite uses Roboto. We prefer Noto Sans Thai (already loaded via Google
+   Fonts in index.html) for Thai-language support, falling back gracefully.    */
+:root {
+  --font-sans: 'Noto Sans Thai', 'Roboto', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', monospace;
+
+  --text-xs: 0.75rem;
+  /* 12 px */
+  --text-sm: 0.875rem;
+  /* 14 px */
+  --text-base: 1rem;
+  /* 16 px */
+  --text-lg: 1.125rem;
+  /* 18 px */
+  --text-xl: 1.25rem;
+  /* 20 px */
+  --text-2xl: 1.5rem;
+  /* 24 px */
+  --text-3xl: 1.875rem;
+  /* 30 px */
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.65;
+  /* DashLite default */
+  --line-height-loose: 2;
+
+  /* Override Bootstrap font variables */
+  --bs-body-font-family: var(--font-sans);
+  --bs-body-font-size: var(--text-sm);
+  /* DashLite default 0.875rem — keep */
+  --bs-body-line-height: var(--line-height-normal);
+  --bs-font-sans-serif: var(--font-sans);
+}
+
+/* Apply font globally — !important needed to beat DashLite's body rule */
+html,
+body,
+* {
+  font-family: var(--font-sans) !important;
+}
+
+/* ─── 5. Spacing Scale ───────────────────────────────────────────────────────
+   Consistent 4-px base, matching Bootstrap's spacer system.                  */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}
+
+/* ─── 6. Elevation / Shadows ─────────────────────────────────────────────────
+   Three-tier shadow scale for cards, dropdowns, modals.                       */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.09);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── 7. Z-index Scale ───────────────────────────────────────────────────────*/
+:root {
+  --z-sidebar: 1020;
+  --z-header: 1030;
+  --z-modal: 1050;
+  --z-toast: 1080;
+}
+
+/* ─── 8. Layout Constants ────────────────────────────────────────────────────*/
+:root {
+  --sidebar-width: 260px;
+  --header-height: 65px;
+}
+
+/* ─── 9. Buttons — Restore Standard Bootstrap md Size ────────────────────────
+   DashLite shrinks ALL buttons to 0.8125rem (13 px). We reset them to the
+   Bootstrap standard 1rem so buttons look the same size everywhere:
+   standalone, inside tables, inside modals.                                   */
+.btn {
+  --bs-btn-font-size: 1rem !important;
+  --bs-btn-padding-y: 0.4375rem !important;
+  --bs-btn-padding-x: 1rem !important;
+  --bs-btn-font-family: var(--font-sans) !important;
+  --bs-btn-font-weight: 600 !important;
+  --bs-btn-line-height: 1.5 !important;
+  --bs-btn-border-radius: var(--radius-sm) !important;
+  font-size: 1rem !important;
+  padding: 0.4375rem 1rem !important;
+  line-height: 1.5 !important;
+}
+
+.btn-sm {
+  --bs-btn-font-size: 0.875rem !important;
+  --bs-btn-padding-y: 0.25rem !important;
+  --bs-btn-padding-x: 0.75rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.25rem 0.75rem !important;
+}
+
+.btn-lg {
+  --bs-btn-font-size: 1.125rem !important;
+  --bs-btn-padding-y: 0.625rem !important;
+  --bs-btn-padding-x: 1.5rem !important;
+  font-size: 1.125rem !important;
+  padding: 0.625rem 1.5rem !important;
+}
+
+
+/* ─── 10. Form Controls ──────────────────────────────────────────────────────
+   Ensure inputs, selects, and textareas share the same height and radius.    */
+.form-control,
+.form-select {
+  --bs-border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── 11. Cards ──────────────────────────────────────────────────────────────*/
+.card {
+  --bs-card-border-radius: var(--radius-md);
+  --bs-card-box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+}
+
+/* ─── 12. Modals ─────────────────────────────────────────────────────────────*/
+.modal-content {
+  --bs-modal-border-radius: var(--radius-md);
+  border-radius: var(--radius-md);
+}
+
+/* ─── 13. Badges ─────────────────────────────────────────────────────────────*/
+.badge {
+  --bs-badge-border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── 14. Alerts ─────────────────────────────────────────────────────────────*/
+.alert {
+  --bs-alert-border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── 15. Nav Tabs / Pills ───────────────────────────────────────────────────*/
+.nav-tabs .nav-link {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.nav-pills .nav-link {
+  border-radius: var(--radius-sm);
+}
+
+/* ─── 16. DataTables Buttons Fix ─────────────────────────────────────────────
+   DataTables Bootstrap 5 CSS is loaded after tokens.css by Vite's module
+   bundler. Ensure action buttons rendered via .render() HTML strings pick up
+   the correct size even inside table cells.                                   */
+.dataTables_wrapper .btn,
+table.dataTable .btn {
+  font-size: var(--text-base) !important;
+}
