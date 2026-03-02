@@ -119,7 +119,7 @@ export const usersApi = {
 
 export const geoApi = {
   utmToLatLng: (easting: number, northing: number, zone = 47, hemisphere = 'N') =>
-    post<{ lon: number; lat: number }>('/geoapi/latlng2utm', { easting, northing, zone, hemisphere }),
+    post<{ longitude: number; latitude: number }>('/geoapi/latlng2utm', { easting, northing, zone, hemisphere }),
 }
 
 // ─── Admin ───────────────────────────────────────────────────────────────────

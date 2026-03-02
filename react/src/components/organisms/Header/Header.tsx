@@ -52,6 +52,28 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           {/* Right tools */}
           <div className="nk-header-tools">
             <ul className="nk-quick-nav">
+              {/* Notification icon */}
+              <li className="dropdown notification-dropdown">
+                <a href="#" className="dropdown-toggle nk-quick-nav-icon" data-bs-toggle="dropdown">
+                  <div className="icon-status icon-status-info"><em className="icon ni ni-bell"></em></div>
+                </a>
+                <div className="dropdown-menu dropdown-menu-xl dropdown-menu-end">
+                  <div className="dropdown-head">
+                    <span className="sub-title nk-dropdown-title">Notifications</span>
+                  </div>
+                  <div className="dropdown-body">
+                    <div className="nk-notification">
+                      <div className="nk-notification-item dropdown-inner">
+                        <div className="nk-notification-content">
+                          <div className="nk-notification-text">ไม่มีการแจ้งเตือนใหม่</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              {/* User Dropdown */}
               <li className="dropdown user-dropdown">
                 <a href="#" className="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                   <UserBadge pictureUrl={user?.pictureUrl} />

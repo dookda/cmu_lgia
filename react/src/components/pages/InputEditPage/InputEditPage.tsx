@@ -381,6 +381,11 @@ export function InputEditPage() {
                                                                     }>
                                                                         <em className="icon ni ni-edit" />
                                                                     </Button>
+                                                                    <Button variant="info" title="QR Code" onClick={() =>
+                                                                        navigate(`/detail-qr?formid=${formid}&refid=${String(feat.refid)}&type=${layertype}`)
+                                                                    }>
+                                                                        <em className="icon ni ni-scan" />
+                                                                    </Button>
                                                                     <Button variant="danger" title="ลบ" onClick={() => {
                                                                         if (confirm('ยืนยันการลบ?')) {
                                                                             layersApi.deleteRow({ formid, refid: String(feat.refid) })

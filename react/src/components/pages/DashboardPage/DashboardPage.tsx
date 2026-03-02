@@ -10,11 +10,9 @@ import { Select } from '../../atoms/Select/Select'
 import { Button } from '../../atoms/Button/Button'
 import { useAuthStore } from '../../../store/authStore'
 import { layersApi, divisionsApi } from '../../../services/api'
-import type { GeoFeature, Layer } from '../../../types/layer'
-import maplibregl from 'maplibre-gl'
+import type { Layer } from '../../../types/layer'
 import * as turf from '@turf/turf'
 
-const GEOAPIFY_KEY = '5c607231c8c24f9b89ff3af7a110185b'
 const BASE_MAP_OPTIONS = [
   { value: 'osm', label: 'OpenStreetMap' },
   { value: 'maptiler', label: 'Maptiler 3D' },
@@ -197,12 +195,17 @@ export function DashboardPage() {
       } else if (lt === 'linestring') {
         mapInstance.addLayer({ id: `${sourceId}-line`, type: 'line', source: sourceId, paint: { 'line-color': '#1ee0ac', 'line-width': 3 } })
       } else {
-        const iconUrl = `https://api.geoapify.com/v1/icon/?type=material&color=%236576ff&icon=location&apiKey=${GEOAPIFY_KEY}`
-        if (!mapInstance.hasImage('custom-marker')) {
-          const img = await loadImage(iconUrl)
-          mapInstance.addImage('custom-marker', img)
-        }
-        mapInstance.addLayer({ id: `${sourceId}-circle`, type: 'symbol', source: sourceId, layout: { 'icon-image': 'custom-marker', 'icon-size': 1 } })
+        mapInstance.addLayer({
+          id: `${sourceId}-circle`,
+          type: 'circle',
+          source: sourceId,
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#6576ff',
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff',
+          },
+        })
 
         // Click popup on features
         mapInstance.on('click', `${sourceId}-circle`, (e) => {
@@ -283,7 +286,7 @@ export function DashboardPage() {
             </div>
           </div>
           <div className="col-xxl-3 col-lg-3">
-            <StatCard label="จำนวนชั้นข้อมูล" value={`${layers.length} ชั้น`} icon="ni-layers" />
+            <StatCard label="จำนวนชั้นข้อมูล" value={`${layers.length} ชั้นข้อมูล`} icon="ni-layers" />
           </div>
           <div className="col-xxl-3 col-lg-3">
             <StatCard label="จำนวนหน่วยงาน" value={`${divisions.length} หน่วยงาน`} icon="ni-tree-structure" />
@@ -308,29 +311,31 @@ export function DashboardPage() {
                     onChange={(e) => setBaseMap(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
+                <div className="form-group mb-2">
                   <label className="form-label">ชั้นข้อมูล</label>
-                  <Select
-                    options={layerOptions}
-                    placeholder="เลือกชั้นข้อมูล"
-                    value={selectedFormid}
-                    onChange={(e) => handleLayerSelect(e.target.value)}
-                  />
                 </div>
                 {/* Layer list (checkbox style like v2) */}
                 {layers.length > 0 && (
-                  <div className="side-panel mt-3" style={{ maxHeight: 200, overflowY: 'auto' }}>
-                    <ul className="list-group" id="layerList">
+                  <div className="side-panel" style={{ maxHeight: 300, overflowY: 'auto' }}>
+                    <ul className="list-group list-group-flush" id="layerList">
                       {layers.map((l: Layer) => (
                         <li
                           key={l.formid}
-                          className={`list-group-item list-group-item-action ${selectedFormid === l.formid ? 'active' : ''}`}
-                          style={{ cursor: 'pointer', fontSize: 13, padding: '6px 12px' }}
-                          onClick={() => handleLayerSelect(l.formid)}
+                          className="list-group-item d-flex align-items-center"
+                          style={{ fontSize: 13, padding: '8px 12px' }}
                         >
-                          <em className="icon ni ni-layers me-2" />
-                          {l.layername}
-                          <small className="ms-1 text-muted">({l.division})</small>
+                          <div className="custom-control custom-control-sm custom-checkbox">
+                            <input
+                              type="checkbox"
+                              className="custom-control-input"
+                              id={`layer-${l.formid}`}
+                              checked={selectedFormid === l.formid}
+                              onChange={() => handleLayerSelect(l.formid)}
+                            />
+                            <label className="custom-control-label fw-bold" htmlFor={`layer-${l.formid}`}>
+                              {l.layername} <small className="text-muted fw-normal ms-1">({l.division})</small>
+                            </label>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -517,12 +522,3 @@ export function DashboardPage() {
   )
 }
 
-function loadImage(url: string): Promise<HTMLImageElement | ImageBitmap> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = url
-  })
-}

@@ -429,7 +429,7 @@ export function DetailPage() {
     setUtmSearching(true)
     try {
       const res = await geoApi.utmToLatLng(e_, n, z)
-      mapInstance.current?.flyTo({ center: [res.lon, res.lat], zoom: 15 })
+      mapInstance.current?.flyTo({ center: [res.longitude, res.latitude], zoom: 15 })
     } catch {
       setMessage({ text: 'เกิดข้อผิดพลาดในการแปลงพิกัด UTM', variant: 'danger' })
     } finally {
@@ -642,8 +642,14 @@ export function DetailPage() {
                 )}
 
                 <hr />
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 flex-wrap">
                   <Button variant="light" onClick={() => navigate(-1)}>← กลับ</Button>
+                  <Button
+                    variant="info"
+                    onClick={() => navigate(`/detail-qr?formid=${formid}&refid=${refid}&type=${layertype}`)}
+                  >
+                    <em className="icon ni ni-qr" />&nbsp;QR Code
+                  </Button>
                   <small className="text-muted align-self-center" style={{ fontSize: 11 }}>
                     {formid} / {refid}
                   </small>

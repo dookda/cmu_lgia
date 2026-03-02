@@ -9,7 +9,7 @@ import { Spinner } from '../../atoms/Spinner/Spinner'
 
 interface AppLayoutProps {
   children: ReactNode
-  requireRole?: 'admin' | 'editor'
+  requireRole?: 'admin' | 'editor' | 'user'
 }
 
 export function AppLayout({ children, requireRole = 'editor' }: AppLayoutProps) {

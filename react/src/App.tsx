@@ -12,6 +12,7 @@ import { ProfilePage } from './components/pages/ProfilePage/ProfilePage'
 import { AdminPage } from './components/pages/AdminPage/AdminPage'
 import { ManualPage } from './components/pages/ManualPage/ManualPage'
 import { DetailPage } from './components/pages/DetailPage/DetailPage'
+import { DetailQRPage } from './components/pages/DetailQRPage/DetailQRPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ export function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/detail" element={<DetailPage />} />
+          <Route path="/detail-qr" element={<DetailQRPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

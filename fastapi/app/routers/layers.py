@@ -211,13 +211,30 @@ async def load_feature_style(formid: str, refid: str, db: AsyncSession = Depends
 
 @router.post("/insert_row")
 async def insert_row(body: InsertRowRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        text(f'INSERT INTO "{body.formid}" (refid) VALUES (:rid) RETURNING *'),
-        {"rid": body.refid},
-    )
+    _assert_safe(body.formid)
+    if body.geojson:
+        result = await db.execute(
+            text(f'INSERT INTO "{body.formid}" (refid, geom) VALUES (:rid, ST_SetSRID(ST_GeomFromGeoJSON(:geojson), 4326)) RETURNING *'),
+            {"rid": body.refid, "geojson": body.geojson},
+        )
+    else:
+        result = await db.execute(
+            text(f'INSERT INTO "{body.formid}" (refid) VALUES (:rid) RETURNING *'),
+            {"rid": body.refid},
+        )
     await db.commit()
     if result.rowcount == 0:
         raise HTTPException(500, "Failed to insert feature")
+
+    # Update dynamic column properties if provided
+    if body.properties:
+        valid = {k: (None if v == "" else v) for k, v in body.properties.items() if _VALID_ID.match(k)}
+        if valid:
+            set_clause = ", ".join(f'"{k}" = :{k}' for k in valid)
+            params = {**valid, "__refid": body.refid}
+            await db.execute(text(f'UPDATE "{body.formid}" SET {set_clause} WHERE refid = :__refid'), params)
+            await db.commit()
+
     return {"message": "Feature inserted successfully", "feature": dict(result.mappings().first())}
 
 

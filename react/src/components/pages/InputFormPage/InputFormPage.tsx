@@ -33,7 +33,6 @@ export function InputFormPage() {
   const [colName, setColName] = useState('')
   const [colType, setColType] = useState('text')
   const [colDesc, setColDesc] = useState('')
-  const [showTable, setShowTable] = useState(false)
   const [createdFormid, setCreatedFormid] = useState<string | null>(null)
   const [message, setMessage] = useState<{ text: string; variant: 'success' | 'danger' } | null>(null)
 
@@ -66,12 +65,6 @@ export function InputFormPage() {
     setColumns((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleLayerSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!division || !layername) return
-    setShowTable(true)
-  }
-
   const handleCreate = () => {
     if (columns.length === 0) {
       setMessage({ text: 'กรุณาเพิ่มคอลัมน์อย่างน้อย 1 คอลัมน์', variant: 'danger' })
@@ -92,116 +85,110 @@ export function InputFormPage() {
             )}
 
             {/* Step 1 — Layer info */}
-            <form onSubmit={handleLayerSubmit}>
-              <div className="row g-3 mb-4">
-                <div className="col-md-4">
-                  <label className="form-label">หน่วยงาน</label>
-                  <Select
-                    options={divisionOptions}
-                    placeholder="เลือกหน่วยงาน"
-                    value={division}
-                    onChange={(e) => setDivision(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">ชื่อชั้นข้อมูล</label>
-                  <Input
-                    value={layername}
-                    onChange={(e) => setLayername(e.target.value)}
-                    placeholder="ชื่อชั้นข้อมูล"
-                    required
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">ประเภทข้อมูล</label>
-                  <Select
-                    options={LAYER_TYPES}
-                    value={layertype}
-                    onChange={(e) => setLayertype(e.target.value as LayerType)}
-                  />
-                </div>
+            <div className="row g-3 mb-4">
+              <div className="col-md-4">
+                <label className="form-label">หน่วยงาน</label>
+                <Select
+                  options={divisionOptions}
+                  placeholder="เลือกหน่วยงาน"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  required
+                />
               </div>
-              <Button type="submit" variant="primary">ถัดไป: เพิ่มคอลัมน์</Button>
-            </form>
+              <div className="col-md-4">
+                <label className="form-label">ชื่อชั้นข้อมูล</label>
+                <Input
+                  value={layername}
+                  onChange={(e) => setLayername(e.target.value)}
+                  placeholder="ชื่อชั้นข้อมูล"
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">ประเภทข้อมูล</label>
+                <Select
+                  options={LAYER_TYPES}
+                  value={layertype}
+                  onChange={(e) => setLayertype(e.target.value as LayerType)}
+                />
+              </div>
+            </div>
 
             {/* Step 2 — Define columns */}
-            {showTable && (
-              <div className="mt-4">
-                <h6 className="title mb-3">
-                  ชั้นข้อมูล: {layername} &nbsp;|&nbsp; {layertype} &nbsp;|&nbsp; {division}
-                </h6>
+            <div className="mt-4">
+              <h6 className="title mb-3">
+                ชั้นข้อมูล: {layername || 'ยังไม่ได้ระบุ'} &nbsp;|&nbsp; {layertype} &nbsp;|&nbsp; {division || 'ยังไม่ได้ระบุ'}
+              </h6>
 
-                {/* Add column row */}
-                <div className="row g-2 mb-3 align-items-end">
-                  <div className="col-md-3">
-                    <label className="form-label">ชื่อคอลัมน์</label>
-                    <Input value={colName} onChange={(e) => setColName(e.target.value)} placeholder="column_name" />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label">ประเภท</label>
-                    <Select options={COLUMN_TYPES} value={colType} onChange={(e) => setColType(e.target.value)} />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">คำอธิบาย</label>
-                    <Input value={colDesc} onChange={(e) => setColDesc(e.target.value)} placeholder="คำอธิบาย" />
-                  </div>
-                  <div className="col-md-2">
-                    <Button onClick={handleAddColumn} variant="success" className="w-100">เพิ่ม</Button>
-                  </div>
+              {/* Add column row */}
+              <div className="row g-2 mb-3 align-items-end">
+                <div className="col-md-3">
+                  <label className="form-label">ชื่อคอลัมน์</label>
+                  <Input value={colName} onChange={(e) => setColName(e.target.value)} placeholder="column_name" />
                 </div>
-
-                {/* Column preview table */}
-                {columns.length > 0 && (
-                  <div className="table-responsive mb-4">
-                    <table className="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th>#</th><th>ชื่อคอลัมน์</th><th>ประเภท</th><th>คำอธิบาย</th><th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {columns.map((col, i) => (
-                          <tr key={i}>
-                            <td>{i + 1}</td>
-                            <td>{col.column_name}</td>
-                            <td>{col.column_type}</td>
-                            <td>{col.column_desc}</td>
-                            <td>
-                              <Button variant="danger" onClick={() => handleRemoveColumn(i)}>ลบ</Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
+                <div className="col-md-3">
+                  <label className="form-label">ประเภท</label>
+                  <Select options={COLUMN_TYPES} value={colType} onChange={(e) => setColType(e.target.value)} />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">คำอธิบาย</label>
+                  <Input value={colDesc} onChange={(e) => setColDesc(e.target.value)} placeholder="คำอธิบาย" />
+                </div>
+                <div className="col-md-2">
+                  <Button onClick={handleAddColumn} variant="success" className="w-100">เพิ่ม</Button>
+                </div>
               </div>
-            )}
+
+              {/* Column preview table */}
+              {columns.length > 0 && (
+                <div className="table-responsive mb-4">
+                  <table className="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>#</th><th>ชื่อคอลัมน์</th><th>ประเภท</th><th>คำอธิบาย</th><th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {columns.map((col, i) => (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td>{col.column_name}</td>
+                          <td>{col.column_type}</td>
+                          <td>{col.column_desc}</td>
+                          <td>
+                            <Button variant="danger" onClick={() => handleRemoveColumn(i)}>ลบ</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+            </div>
 
             {/* Step 3 — Create */}
-            {showTable && (
-              <div className="d-flex gap-2 mt-3">
+            <div className="d-flex gap-2 mt-3">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleCreate}
+                loading={createMutation.isPending}
+                disabled={!division || !layername}
+              >
+                สร้างชั้นข้อมูล
+              </Button>
+              {createdFormid && (
                 <Button
                   type="button"
-                  variant="primary"
-                  onClick={handleCreate}
-                  loading={createMutation.isPending}
+                  variant="success"
+                  onClick={() => navigate(`/input-edit?formid=${createdFormid}&type=${layertype}`)}
                 >
-                  สร้างชั้นข้อมูล
+                  เพิ่มข้อมูล
                 </Button>
-                {createdFormid && (
-                  <Button
-                    type="button"
-                    variant="success"
-                    onClick={() => navigate(`/input-edit?formid=${createdFormid}&type=${layertype}`)}
-                  >
-                    เพิ่มข้อมูล
-                  </Button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
