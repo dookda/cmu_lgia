@@ -34,16 +34,7 @@ interface DataTableProps {
   pageLength?: number
 }
 
-const DT_LANG = {
-  search: 'ค้นหา:',
-  lengthMenu: 'แสดง _MENU_ รายการ',
-  info: 'แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ',
-  infoEmpty: 'ไม่พบข้อมูล',
-  infoFiltered: '(กรองจากทั้งหมด _MAX_ รายการ)',
-  zeroRecords: 'ไม่พบข้อมูลที่ค้นหา',
-  paginate: { first: '«', previous: '‹', next: '›', last: '»' },
-  emptyTable: 'ไม่มีข้อมูลในตาราง',
-}
+
 
 const DT_DOM =
   "<'row mb-3'<'col-sm-6'l><'col-sm-6 d-flex justify-content-end'f>>" +
@@ -71,8 +62,9 @@ export function AppDataTable({ data, columns, loading = false, pageLength = 10 }
   const options: Config = {
     pageLength,
     lengthMenu: [10, 25, 50, 100],
-    language: DT_LANG,
-    responsive: true,
+    // @ts-expect-error DataTables allows these extension options, but DT types omit them
+    responsive: false,
+    scrollX: true,
     autoWidth: false,
     dom: DT_DOM,
     columns: columns as Config['columns'],
@@ -83,7 +75,7 @@ export function AppDataTable({ data, columns, loading = false, pageLength = 10 }
       ref={tableRef}
       data={data}
       options={options}
-      className="table table-striped table-hover w-100"
+      className="table table-striped table-hover nowrap w-100"
     >
       <thead>
         <tr>

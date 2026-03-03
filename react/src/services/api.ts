@@ -76,7 +76,7 @@ export const layersApi = {
       return r.json() as Promise<{ success: boolean; formid: string; rows: number; columns: string[] }>
     }),
   insertRow: (payload: {
-    formid: string; refid: string; geojson: string; properties: Record<string, string>
+    formid: string; refid: string; geojson?: string; properties?: Record<string, string>
   }) => post<{ success: boolean }>('/api/v2/insert_row', payload),
   updateRow: (formid: string, refid: string, payload: Record<string, unknown>) =>
     put<{ success: boolean }>(`/api/v2/update_row/${formid}/${refid}`, payload),

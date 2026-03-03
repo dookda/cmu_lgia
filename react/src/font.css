@@ -1,0 +1,33 @@
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.btn,
+.f,
+.nk-menu-text,
+.card-title,
+.form-label,
+.form-control,
+.nk-block-title,
+.nk-notification-text,
+.sub-text,
+.lead-text,
+.dataTables_empty,
+.dataTables_info,
+.paginate_button,
+table.dataTable,
+.badge,
+.modal-title,
+.alert {
+    font-family: "Noto Sans Thai", serif !important;
+}
+
+body {
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}

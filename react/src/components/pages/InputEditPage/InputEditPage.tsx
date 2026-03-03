@@ -209,16 +209,17 @@ export function InputEditPage() {
         }
     }, [features, columns, formid, loadFeatures])
 
-    const handleNewFeature = () => {
-        if (layertype.toLowerCase() === 'point' && (!selectedLat || !selectedLng)) {
-            setMessage({ text: 'กรุณาคลิกบนแผนที่เพื่อเลือกตำแหน่งก่อน', variant: 'danger' })
-            return
+    const handleNewFeature = async () => {
+        setSaving(true)
+        try {
+            const refid = `ref_${Date.now()}`
+            await layersApi.insertRow({ formid, refid })
+            navigate(`/detail?formid=${formid}&refid=${refid}&type=${layertype}`)
+        } catch (err: unknown) {
+            setMessage({ text: (err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการสร้างข้อมูล'), variant: 'danger' })
+        } finally {
+            setSaving(false)
         }
-        setEditRefid(null)
-        const init: Record<string, string> = {}
-        columns.forEach((col) => { init[col.col_id] = '' })
-        setFormData(init)
-        setModalOpen(true)
     }
 
     const handleSearchLatLng = (e: FormEvent) => {
@@ -272,7 +273,7 @@ export function InputEditPage() {
                 <div className="row g-gs">
                     {/* Map */}
                     <div className="col-xxl-7 col-lg-7">
-                        <div style={{ width: '100%', height: 520, position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                        <div className="card card-full overflow-hidden" style={{ width: '100%', height: 520, position: 'relative' }}>
                             <div ref={mapCallbackRef} style={{ width: '100%', height: '100%' }} />
                         </div>
                     </div>
@@ -319,8 +320,8 @@ export function InputEditPage() {
                                                     <label className="form-label">ลองจิจูด</label>
                                                     <Input value={searchLng} onChange={(e) => setSearchLng(e.target.value)} placeholder="98.9853" />
                                                 </div>
-                                                <div className="gap-2 d-flex">
-                                                    <Button type="submit" variant="primary">ค้นหา</Button>
+                                                <div className="d-flex mt-2">
+                                                    <Button type="submit" variant="primary" className="me-2">ค้นหา</Button>
                                                     <Button type="button" variant="light" onClick={() => { setSearchLat(''); setSearchLng(''); }}>ยกเลิก</Button>
                                                 </div>
                                             </form>
@@ -335,8 +336,8 @@ export function InputEditPage() {
                     <div className="col-xxl-12 col-lg-12">
                         <div className="card card-full">
                             <div className="card-inner">
-                                <div className="d-flex gap-2">
-                                    <Button id="newFeature" variant="primary" onClick={handleNewFeature}>
+                                <div className="d-flex">
+                                    <Button id="newFeature" variant="primary" className="me-2" onClick={handleNewFeature} loading={saving}>
                                         <em className="icon ni ni-property-add" />&nbsp;เพิ่มข้อมูลใหม่
                                     </Button>
                                     <Button variant="light" onClick={() => navigate('/layers')}>
@@ -345,8 +346,8 @@ export function InputEditPage() {
                                 </div>
 
                                 {layertype.toLowerCase() === 'point' && (
-                                    <div className="alert alert-warning mt-3">
-                                        <em className="icon ni ni-info" />&nbsp;คลิกบนแผนที่เพื่อเลือกตำแหน่งก่อนเพิ่มข้อมูล
+                                    <div className="alert alert-info mt-3 py-2" style={{ fontSize: 'var(--text-sm)' }}>
+                                        <em className="icon ni ni-info" />&nbsp;ฟีเจอร์ใหม่จะถูกเพิ่มและนำคุณไปยังหน้ารายละเอียดเพื่อวาดและแก้ไขข้อมูล
                                     </div>
                                 )}
 
@@ -366,8 +367,8 @@ export function InputEditPage() {
                                                     {features.map((feat, i) => (
                                                         <tr key={i}>
                                                             <td style={{ whiteSpace: 'nowrap' }}>
-                                                                <div className="d-flex gap-1">
-                                                                    <Button variant="info" title="ซูม" onClick={() => {
+                                                                <div className="d-flex">
+                                                                    <Button variant="info" className="me-1" title="ซูม" onClick={() => {
                                                                         const mk = markers.current.get(String(feat.refid))
                                                                         if (mk) {
                                                                             const { lng, lat } = mk.getLngLat()
@@ -376,12 +377,12 @@ export function InputEditPage() {
                                                                     }}>
                                                                         <em className="icon ni ni-focus" />
                                                                     </Button>
-                                                                    <Button variant="warning" title="แก้ไข" onClick={() =>
+                                                                    <Button variant="warning" className="me-1" title="แก้ไข" onClick={() =>
                                                                         navigate(`/detail?formid=${formid}&refid=${String(feat.refid)}&type=${layertype}`)
                                                                     }>
                                                                         <em className="icon ni ni-edit" />
                                                                     </Button>
-                                                                    <Button variant="info" title="QR Code" onClick={() =>
+                                                                    <Button variant="info" className="me-1" title="QR Code" onClick={() =>
                                                                         navigate(`/detail-qr?formid=${formid}&refid=${String(feat.refid)}&type=${layertype}`)
                                                                     }>
                                                                         <em className="icon ni ni-scan" />

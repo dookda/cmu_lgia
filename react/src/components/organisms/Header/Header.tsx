@@ -19,10 +19,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   }
 
   return (
-    <div
-      className="nk-header is-light nk-header-fixed"
-      style={{ zIndex: 'var(--z-header)', height: 'var(--header-height)' }}
-    >
+    <div className="nk-header is-light nk-header-fixed">
       <div className="container-xl wide-xl">
         <div className="nk-header-wrap">
           {/* Mobile sidebar toggle */}

@@ -72,6 +72,8 @@ class UpdateLayerRequest(BaseModel):
 class InsertRowRequest(BaseModel):
     formid: str
     refid: str
+    geojson: Optional[str] = None
+    properties: Optional[dict[str, Any]] = None
 
     @field_validator("formid")
     @classmethod

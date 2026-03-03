@@ -24,7 +24,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     <div
       className={`nk-sidebar is-light nk-sidebar-fixed${isOpen ? ' nk-sidebar-active' : ''}`}
       data-content="sidebarMenu"
-      style={{ zIndex: 'var(--z-sidebar)' }}
     >
       {/* Logo + mobile close button */}
       <div className="nk-sidebar-element nk-sidebar-head">

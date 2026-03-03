@@ -60,64 +60,87 @@ export function InputDivisionPage() {
   }, [deleteMutation])
 
   const columns: DTColumn[] = [
-    { title: 'ID', data: 'id' },
-    { title: 'ชื่อหน่วยงาน', data: 'division_name' },
-    {
-      title: 'วันที่สร้าง',
-      data: 'created_at',
-      render: (val) =>
-        val ? new Date(val as string).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-',
-    },
     {
       title: '',
       data: null,
       orderable: false,
       searchable: false,
-      className: 'text-end',
       render: (_: unknown, __: string, row: unknown) => {
         const div = row as Division
-        return `<div class="d-flex gap-1 justify-content-end">
+        return `
           <button class="btn btn-primary" onclick="window._divEdit(${div.id},'${div.division_name.replace(/'/g, "\\'")}')">
-            <em class="icon ni ni-edit"></em>&nbsp;แก้ไข
-          </button>
+            <em class="icon ni ni-text-rich"></em>&nbsp;แก้ไข
+          </button>&nbsp;
           <button class="btn btn-danger" onclick="window._divDelete(${div.id})">
             <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
           </button>
-        </div>`
+        `
       },
+    },
+    { title: 'ลำดับ', data: 'id' },
+    { title: 'ชื่อหน่วยงาน', data: 'division_name' },
+    {
+      title: 'วันที่สร้างชื่อหน่วยงาน',
+      data: 'created_at',
+      render: (val) =>
+        val ? new Date(val as string).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-',
     },
   ]
 
   return (
     <AppLayout requireRole="admin">
       <div className="nk-block">
-        <div className="card card-full mb-4">
-          <div className="card-inner pb-3">
-            <h6 className="title mb-3">เพิ่มหน่วยงาน</h6>
-            {message && <Alert message={message.text} variant={message.variant} onDismiss={() => setMessage(null)} />}
-            <form
-              className="d-flex gap-2"
-              onSubmit={(e) => { e.preventDefault(); if (newName.trim()) createMutation.mutate({ division_name: newName.trim() }) }}
-            >
-              <Input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="ชื่อหน่วยงาน"
-                required
-                style={{ maxWidth: 320 }}
-              />
-              <Button type="submit" loading={createMutation.isPending}>เพิ่ม</Button>
-            </form>
+        {message && <Alert message={message.text} variant={message.variant} onDismiss={() => setMessage(null)} />}
+        <div className="row g-gs mb-4">
+          <div className="col-xxl-8 col-lg-7">
+            <div className="card card-full h-100">
+              <div className="card-inner">
+                <form
+                  className="row g-3"
+                  onSubmit={(e) => { e.preventDefault(); if (newName.trim()) createMutation.mutate({ division_name: newName.trim() }) }}
+                >
+                  <div className="mt-2">
+                    <h5>สร้างหน่วยงาน</h5>
+                    <div className="col-md">
+                      <Input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="ระบุชื่อหน่วยงาน"
+                        required
+                        className="form-control"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Button type="submit" variant="primary" loading={createMutation.isPending}>
+                      <em className="icon ni ni-property-add"></em>&nbsp;บันทึก
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div className="col-xxl-4 col-lg-5">
+            <div className="card card-full h-100">
+              <div className="card-inner">
+                <div className="card-title-group">
+                  <div className="card-title">
+                    <label className="form-label">จำนวนหน่วยงานในระบบ</label>
+                    <h5 className="title f fw-bold">{divisions.length} หน่วยงาน</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="card card-full">
-          <div className="card-inner">
-            <div className="card-title-group mb-3">
-              <h6 className="title">รายการหน่วยงาน</h6>
-              <span className="badge bg-primary">{divisions.length} หน่วยงาน</span>
+        <div className="row g-gs">
+          <div className="col-xxl-12 col-lg-12">
+            <div className="card card-full">
+              <div className="card-inner">
+                <AppDataTable data={divisions} columns={columns} loading={isLoading} />
+              </div>
             </div>
-            <AppDataTable data={divisions} columns={columns} loading={isLoading} />
           </div>
         </div>
       </div>

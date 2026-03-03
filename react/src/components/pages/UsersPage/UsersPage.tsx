@@ -64,6 +64,23 @@ export function UsersPage() {
   }, [users, deleteMutation]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: DTColumn[] = [
+    {
+      title: '',
+      data: null,
+      orderable: false,
+      searchable: false,
+      render: (_: unknown, __: string, row: unknown) => {
+        const user = row as User
+        return `
+          <button class="btn btn-primary" onclick="window._userEdit(${user.id})">
+            <em class="icon ni ni-text-rich"></em>&nbsp;แก้ไข
+          </button>&nbsp;
+          <button class="btn btn-danger" onclick="window._userDelete(${user.id})">
+            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
+          </button>
+        `
+      },
+    },
     { title: 'ID', data: 'id' },
     { title: 'Username', data: 'username' },
     { title: 'ชื่อ', data: 'displayname' },
@@ -75,24 +92,6 @@ export function UsersPage() {
       data: 'ts',
       render: (val) =>
         val ? new Date(val as string).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-',
-    },
-    {
-      title: '',
-      data: null,
-      orderable: false,
-      searchable: false,
-      className: 'text-end',
-      render: (_: unknown, __: string, row: unknown) => {
-        const user = row as User
-        return `<div class="d-flex gap-1 justify-content-end">
-          <button class="btn btn-primary" onclick="window._userEdit(${user.id})">
-            <em class="icon ni ni-edit"></em>&nbsp;แก้ไข
-          </button>
-          <button class="btn btn-danger" onclick="window._userDelete(${user.id})">
-            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
-          </button>
-        </div>`
-      },
     },
   ]
 

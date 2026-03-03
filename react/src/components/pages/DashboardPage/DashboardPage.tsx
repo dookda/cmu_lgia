@@ -296,7 +296,7 @@ export function DashboardPage() {
         {/* Map + Layer control */}
         <div className="row g-gs mb-4">
           <div className="col-xxl-8 col-lg-8">
-            <div className="card card-full" style={{ minHeight: 500, padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-md)' }}>
+            <div className="card card-full overflow-hidden" style={{ minHeight: 500, padding: 0 }}>
               <MapView baseMap={baseMap} onMapReady={handleMapReady} style={{ height: 500, borderRadius: 0 }} />
             </div>
           </div>

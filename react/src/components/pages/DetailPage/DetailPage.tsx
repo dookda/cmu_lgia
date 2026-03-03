@@ -449,7 +449,7 @@ export function DetailPage() {
         <div className="row g-gs">
           {/* ── Map (col-7) ─────────────────────────────────────────── */}
           <div className="col-xxl-7 col-lg-7">
-            <div style={{ width: '100%', height: 480, position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)' }}>
+            <div className="card card-full overflow-hidden" style={{ width: '100%', height: 480, position: 'relative' }}>
               <div ref={mapCallbackRef} style={{ width: '100%', height: '100%' }} />
             </div>
             {pendingLngLat && layertype === 'point' && (

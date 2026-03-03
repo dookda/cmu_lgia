@@ -43,6 +43,23 @@ export function LayersPage() {
   }, [navigate, deleteMutation])
 
   const columns: DTColumn[] = [
+    {
+      title: '',
+      data: null,
+      orderable: false,
+      searchable: false,
+      render: (_: unknown, __: string, row: unknown) => {
+        const layer = row as Layer
+        return `
+          <button class="btn btn-primary" onclick="window._layerOpen('${layer.formid}','${layer.layertype}')">
+            <em class="icon ni ni-text-rich"></em>&nbsp;เปิดชั้นข้อมูล
+          </button>&nbsp;
+          <button class="btn btn-danger" onclick="window._layerDelete(${layer.gid})">
+            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
+          </button>
+        `
+      },
+    },
     { title: 'ID', data: 'gid' },
     { title: 'หน่วยงาน', data: 'division' },
     { title: 'ชื่อชั้นข้อมูล', data: 'layername' },
@@ -52,24 +69,6 @@ export function LayersPage() {
       data: 'ts',
       render: (val) =>
         val ? new Date(val as string).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-',
-    },
-    {
-      title: '',
-      data: null,
-      orderable: false,
-      searchable: false,
-      className: 'text-end',
-      render: (_: unknown, __: string, row: unknown) => {
-        const layer = row as Layer
-        return `<div class="d-flex gap-1 justify-content-end">
-          <button class="btn btn-primary" onclick="window._layerOpen('${layer.formid}','${layer.layertype}')">
-            <em class="icon ni ni-text-rich"></em>&nbsp;เปิดชั้นข้อมูล
-          </button>
-          <button class="btn btn-danger" onclick="window._layerDelete(${layer.gid})">
-            <em class="icon ni ni-trash-alt"></em>&nbsp;ลบ
-          </button>
-        </div>`
-      },
     },
   ]
 

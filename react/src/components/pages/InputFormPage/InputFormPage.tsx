@@ -85,7 +85,7 @@ export function InputFormPage() {
             )}
 
             {/* Step 1 — Layer info */}
-            <div className="row g-3 mb-4">
+            <div className="row mt-2 mb-4">
               <div className="col-md-4">
                 <label className="form-label">หน่วยงาน</label>
                 <Select
@@ -122,7 +122,7 @@ export function InputFormPage() {
               </h6>
 
               {/* Add column row */}
-              <div className="row g-2 mb-3 align-items-end">
+              <div className="row mt-2 mb-3 align-items-end">
                 <div className="col-md-3">
                   <label className="form-label">ชื่อคอลัมน์</label>
                   <Input value={colName} onChange={(e) => setColName(e.target.value)} placeholder="column_name" />
@@ -169,13 +169,14 @@ export function InputFormPage() {
             </div>
 
             {/* Step 3 — Create */}
-            <div className="d-flex gap-2 mt-3">
+            <div className="d-flex mt-3">
               <Button
                 type="button"
                 variant="primary"
                 onClick={handleCreate}
                 loading={createMutation.isPending}
                 disabled={!division || !layername}
+                className="me-2"
               >
                 สร้างชั้นข้อมูล
               </Button>

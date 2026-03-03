@@ -60,7 +60,7 @@ export function AppLayout({ children, requireRole = 'editor' }: AppLayoutProps) 
 
   return (
     <div className="nk-app-root">
-      <div className="nk-main has-sidebar">
+      <div className="nk-main">
         <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
         {/* Mobile backdrop — clicking it closes the sidebar */}
@@ -79,10 +79,7 @@ export function AppLayout({ children, requireRole = 'editor' }: AppLayoutProps) 
 
         <div className="nk-wrap">
           <Header onToggleSidebar={toggleSidebar} />
-          <div
-            className="nk-content nk-content-fluid"
-            style={{ paddingTop: 'var(--header-height)' }}
-          >
+          <div className="nk-content nk-content-fluid">
             <div className="container-xl wide-xl">
               <div className="nk-content-body">
                 {children}
